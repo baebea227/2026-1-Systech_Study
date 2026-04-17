@@ -182,7 +182,8 @@ sudo fio \
   --rw=write \
   --bs=64k \
   --iodepth=1 \
-  --size=32m \
+  --size=64m \
+  --io_size=32m \
   --numjobs=1 \
   --output-format=normal 2>&amp;1 | grep -E <span class="str">'write:|IOPS'</span>
 

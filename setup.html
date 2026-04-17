@@ -279,7 +279,7 @@ sudo sh -c 'echo 64  > /sys/kernel/config/nullb/zns0/zone_size'       <span clas
 sudo sh -c 'echo 16  > /sys/kernel/config/nullb/zns0/zone_max_open'   <span class="comment"># 최대 Open Zone</span>
 sudo sh -c 'echo 16  > /sys/kernel/config/nullb/zns0/zone_max_active' <span class="comment"># 최대 Active Zone</span>
 sudo sh -c 'echo 4096 > /sys/kernel/config/nullb/zns0/blocksize'
-sudo sh -c 'echo 16  > /sys/kernel/config/nullb/zns0/gb'              <span class="comment"># 용량: 16GB</span>
+sudo sh -c 'echo 16384 > /sys/kernel/config/nullb/zns0/size'              <span class="comment"># 용량: 16GB</span>
 sudo sh -c 'echo 1   > /sys/kernel/config/nullb/zns0/memory_backed'
 sudo sh -c 'echo 1   > /sys/kernel/config/nullb/zns0/power'           <span class="comment"># 장치 활성화</span>
 
