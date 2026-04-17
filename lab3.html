@@ -242,9 +242,12 @@ printf <span class="str">'\n다음 단계: sudo bash workload.sh\n'</span></code
                     </div>
                     <pre><code>scp -P 2222 setup_f2fs.sh user@localhost:~/</code></pre>
                 </div>
-                <div class="callout ok">
-                    <span class="callout-icon">✅</span>
-                    <span><code>chmod +x setup_f2fs.sh &amp;&amp; sudo bash setup_f2fs.sh</code></span>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — QEMU VM 내부</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>chmod +x setup_f2fs.sh &amp;&amp; sudo bash setup_f2fs.sh</code></pre>
                 </div>
             </div>
         </div>
@@ -411,9 +414,12 @@ printf <span class="str">'완료 — 다음 단계: sudo bash calc_waf.sh\n'</sp
                     </div>
                     <pre><code>scp -P 2222 workload.sh user@localhost:~/</code></pre>
                 </div>
-                <div class="callout ok">
-                    <span class="callout-icon">✅</span>
-                    <span><code>chmod +x workload.sh &amp;&amp; sudo bash workload.sh</code> — 완료까지 약 3~5분 소요</span>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — QEMU VM 내부 (완료까지 약 3~5분 소요)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>chmod +x workload.sh &amp;&amp; sudo bash workload.sh</code></pre>
                 </div>
                 <div class="callout warn">
                     <span class="callout-icon">⚠️</span>
@@ -486,9 +492,12 @@ printf <span class="str">'  ZNS  WAF ≈ 1.0: Zone 단위 GC로 Copy-back 최소
                     </div>
                     <pre><code>scp -P 2222 calc_waf.sh user@localhost:~/</code></pre>
                 </div>
-                <div class="callout ok">
-                    <span class="callout-icon">✅</span>
-                    <span><code>chmod +x calc_waf.sh &amp;&amp; sudo bash calc_waf.sh</code></span>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — QEMU VM 내부</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>chmod +x calc_waf.sh &amp;&amp; sudo bash calc_waf.sh</code></pre>
                 </div>
 
                 <div class="output-block">
