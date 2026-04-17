@@ -173,6 +173,18 @@ qemu-system-x86_64 \
                     </div>
                     <pre><code>ssh -p 2222 user@localhost</code></pre>
                 </div>
+                <div class="callout warn">
+                    <span class="callout-icon">⚠️</span>
+                    <span>이전 실습에서 사용했던 <strong>DPAS 커널(5.18.0-dpas)</strong>로 부팅해야합니다.</span>
+                </div>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — VM 내부: DPAS 커널로 재부팅</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>sudo grub-reboot "Advanced options for Ubuntu>Ubuntu, with Linux 5.18.0-dpas"
+sudo reboot</code></pre>
+                </div>
             </div>
         </div>
 
