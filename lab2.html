@@ -141,16 +141,16 @@
                 <div class="code-block">
                     <div class="code-block-label"><span>bash — Zone 목록 조회</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
                     <pre><code><span class="comment"># 전체 Zone 목록 (처음 5개)</span>
-sudo blkzone report /dev/nullb0 | head -5
+sudo blkzone report /dev/nullb1 | head -5
 
 <span class="comment"># Zone 상태별 개수 집계</span>
-sudo blkzone report /dev/nullb0 \
+sudo blkzone report /dev/nullb1 \
   | grep -oP <span class="str">'zcond:\s*\d+\s*\(\K\w+'</span> \
   | sort | uniq -c \
   | awk <span class="str">'{printf "  %-8s : %s zones\n", $2, $1}'</span>
 
 <span class="comment"># 총 Zone 수 확인</span>
-cat /sys/block/nullb0/queue/nr_zones</code></pre>
+cat /sys/block/nullb1/queue/nr_zones</code></pre>
                 </div>
                 <div class="output-block">
                     <div class="output-label">예상 출력 — 초기 상태 (모두 EMPTY)</div>
@@ -158,9 +158,9 @@ cat /sys/block/nullb0/queue/nr_zones</code></pre>
   start: 0x000020000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span>   [type: 2(SEQ_WRITE_REQUIRED)]
   start: 0x000040000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span>   [type: 2(SEQ_WRITE_REQUIRED)]
 
-  <span class="grn">em</span>       : 256 zones   <span class="sep">← 모든 Zone이 EMPTY</span>
+  <span class="grn">em</span>       : 32 zones    <span class="sep">← 모든 Zone이 EMPTY</span>
 
-256</pre>
+32</pre>
                 </div>
             </div>
         </div>
@@ -175,7 +175,7 @@ cat /sys/block/nullb0/queue/nr_zones</code></pre>
                     <pre><code><span class="comment"># Zone 0에 32MB 순차 쓰기 (Implicit Open 유발, 절반만 채워 io 상태 유지)</span>
 sudo fio \
   --name=implicit_open \
-  --filename=/dev/nullb0 \
+  --filename=/dev/nullb1 \
   --ioengine=libaio \
   --direct=1 \
   --zonemode=zbd \
@@ -188,8 +188,8 @@ sudo fio \
   --output-format=normal 2>&amp;1 | grep -E <span class="str">'write:|IOPS'</span>
 
 <span class="comment"># Zone 상태 재확인</span>
-sudo blkzone report /dev/nullb0 | head -3
-sudo blkzone report /dev/nullb0 \
+sudo blkzone report /dev/nullb1 | head -3
+sudo blkzone report /dev/nullb1 \
   | grep -oP <span class="str">'zcond:\s*\d+\s*\(\K\w+'</span> \
   | sort | uniq -c</code></pre>
                 </div>
@@ -198,7 +198,7 @@ sudo blkzone report /dev/nullb0 \
                     <pre>  start: 0x000000000, len 0x020000, cap 0x020000, <span class="ylw">wptr 0x000010000</span> reset:0, zcond:<span class="ylw">2(io)</span>  [type: 2(SEQ_WRITE_REQUIRED)]
   <span class="sep">                                                    ↑ WP 이동: 0 → 0x10000 (32MB 기록됨)</span>
        1 <span class="ylw">io</span>    <span class="sep">← Implicit Open: 1개</span>
-     255 <span class="grn">em</span>    <span class="sep">← EMPTY: 255개</span></pre>
+      31 <span class="grn">em</span>    <span class="sep">← EMPTY: 31개</span></pre>
                 </div>
                 <div class="callout info">
                     <span class="callout-icon">ℹ️</span>
@@ -242,7 +242,7 @@ sudo blkzone report /dev/nullb0 \
 # 사용법: sudo bash zone_lifecycle.sh
 </span>
 <span class="kw">set</span> -euo pipefail
-DEV=<span class="str">/dev/nullb0</span>
+DEV=<span class="str">/dev/nullb1</span>
 
 <span class="fn">show_zone()</span> {
     printf <span class="str">'Zone 1 상태: '</span>
@@ -266,7 +266,7 @@ sudo fio \
   --filename=<span class="str">"${DEV}"</span> \
   --ioengine=libaio --direct=1 --zonemode=zbd \
   --rw=write --bs=4m --iodepth=1 \
-  --offset=64m --size=32m --numjobs=1 \
+  --offset=64m --size=64m --io_size=32m --numjobs=1 \
   --output-format=terse 2>/dev/null | cut -d<span class="str">';'</span> -f6 \
   | xargs -I{} printf <span class="str">'  BW: {} KiB/s\n'</span>
 show_zone
@@ -338,7 +338,7 @@ Zone 1 상태: wptr=<span class="ylw">0x000040000</span>    state=<span class="y
 # 사용법: sudo bash zone_reset.sh
 </span>
 <span class="kw">set</span> -euo pipefail
-DEV=<span class="str">/dev/nullb0</span>
+DEV=<span class="str">/dev/nullb1</span>
 
 <span class="comment"># ── 1) Reset 전 Zone 1 상태 확인 ─────────────────────</span>
 printf <span class="str">'[1/3] Reset 전 Zone 1 상태:\n'</span>
@@ -385,7 +385,7 @@ printf <span class="str">'\n✔ 모든 Zone EMPTY 복구 완료\n'</span></code>
   <span class="sep">                                                    ↑ WP 복귀: Zone 시작   ↑ EMPTY</span>
 
 <span class="hdr">[3/3] 전체 Zone 일괄 Reset...</span>
-  <span class="grn">em</span>       : 256 zones   <span class="sep">← 모든 Zone EMPTY 복구</span>
+  <span class="grn">em</span>       : 32 zones    <span class="sep">← 모든 Zone EMPTY 복구</span>
 
 처음 3개 Zone WP 확인:
   start: 0x000000000, ..., <span class="grn">wptr 0x000000000</span> reset:1, zcond:<span class="grn">1(em)</span>
