@@ -131,15 +131,18 @@
         <div class="step-item">
             <div class="step-num">1</div>
             <a href="background.html" class="step-card">
-                <h3>배경 지식: ZNS SSD 구조와 쓰기 인터페이스</h3>
-                <p>ZNS SSD의 등장 배경, Zone 구조와 Write Pointer, Zone 상태 머신(EMPTY → OPEN → FULL),
-                   Sequential Write 제약, Zone Append의 원자성과 LBA 반환, Active/Open Zone 제한,
-                   Bandwidth·Latency·Queue Depth(Little's Law)를 학습합니다.</p>
+                <h3>배경 지식: Zoned Storage Devices · Zone 동작 원리 · Zone 관리 명령 · Zone Append</h3>
+                <p>LBA 공간의 Zone 분할과 순차 쓰기 제약·성능 이점(Zoned Storage Devices),
+                   Write Pointer 동작과 Zone 상태 전이(Zone 동작 원리),
+                   Reset·Open·Close·Finish 명령 의미(Zone 관리 명령),
+                   원자적 LBA 할당과 병렬 I/O 지원(Zone Append)을 학습하고,
+                   Lab 1~3 실습과의 연결 관계를 확인합니다.</p>
                 <div class="tools">
                     <span class="tool-badge">개념 학습</span>
-                    <span class="tool-badge">Zone 상태 머신</span>
                     <span class="tool-badge">Write Pointer</span>
-                    <span class="tool-badge">Little's Law</span>
+                    <span class="tool-badge">Zone 관리 명령</span>
+                    <span class="tool-badge">Zone Append</span>
+                    <span class="tool-badge">실습 연결</span>
                 </div>
             </a>
         </div>

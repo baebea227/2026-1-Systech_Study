@@ -59,17 +59,6 @@
         .callout.lab   { background:#faf5ff; border-left:3px solid #7c3aed; color:#4c1d95; }
         .callout-icon  { font-size:1rem; flex-shrink:0; margin-top:.05rem; }
 
-        /* ── ZONE STATE MACHINE ── */
-        .state-machine { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; justify-content:center; margin:1rem 0; padding:1.2rem; background:#f8fafc; border-radius:8px; border:1px solid var(--border); }
-        .state-box { background:white; border:1.5px solid var(--border); border-radius:6px; padding:.45rem 1rem; font-family:'JetBrains Mono',monospace; font-size:.78rem; font-weight:500; color:var(--navy); text-align:center; min-width:5.5rem; }
-        .state-box.empty   { border-color:#94a3b8; color:#475569; }
-        .state-box.open    { border-color:#2563eb; color:#2563eb; background:#eff6ff; }
-        .state-box.full    { border-color:var(--success); color:var(--success); background:#f0fdf4; }
-        .state-box.closed  { border-color:var(--warn); color:#92400e; background:#fffbeb; }
-        .state-box.rdonly  { border-color:#94a3b8; color:#64748b; background:#f1f5f9; }
-        .state-box.offline { border-color:#dc2626; color:#dc2626; background:#fef2f2; }
-        .state-arrow { color:#94a3b8; font-size:1.1rem; font-weight:300; }
-
         /* ── FIGURE / DIAGRAM ── */
         .figure { background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:1.2rem; margin:1rem 0; }
         .figure-caption { font-size:.78rem; color:#64748b; text-align:center; margin-top:.7rem; }
@@ -102,15 +91,6 @@
         .bad  { color:#dc2626; font-weight:600; }
         .mid  { color:var(--warn); font-weight:500; }
 
-        /* ── FORMULA BOX ── */
-        .formula-box { background:#f8fafc; border:1px solid var(--border); border-left:3px solid var(--navy); border-radius:4px; padding:.9rem 1.2rem; margin:.6rem 0 1rem; }
-        .formula-box .formula { font-family:'JetBrains Mono',monospace; font-size:.95rem; color:var(--navy); font-weight:500; margin-bottom:.3rem; }
-        .formula-box .formula-desc { font-size:.82rem; color:#64748b; }
-
-        /* ── KEY CONCEPT PILL ── */
-        .concept-row { display:flex; flex-wrap:wrap; gap:.5rem; margin:.5rem 0 1rem; }
-        .concept-pill { background:#eff6ff; color:var(--blue); border:1px solid #bfdbfe; font-size:.78rem; font-weight:600; padding:.3em .8em; border-radius:20px; }
-
         /* ── ZONE MANAGEMENT COMMANDS ── */
         .cmd-grid { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin:.8rem 0; }
         .cmd-card { background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:1rem 1.2rem; }
@@ -138,33 +118,22 @@
         .ablk.wp-end { background:#ef4444; flex:0.5; }
         .append-qd { font-family:'JetBrains Mono',monospace; font-size:.72rem; color:#64748b; white-space:nowrap; }
 
-        /* ── LINUX STACK ── */
-        .stack-diagram { display:flex; flex-direction:column; gap:3px; margin:1rem 0; }
-        .stack-layer { border-radius:5px; padding:.55rem 1rem; font-size:.82rem; }
-        .stack-label { font-size:.68rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#64748b; margin:.8rem 0 .3rem; }
-        .stack-layer.app-legacy  { background:#dcfce7; color:#14532d; }
-        .stack-layer.app-zbd     { background:#fef9c3; color:#713f12; }
-        .stack-layer.fs          { background:#dbeafe; color:#1e40af; }
-        .stack-layer.kernel      { background:#ede9fe; color:#4c1d95; }
-        .stack-layer.hw          { background:#1e3a5f; color:white; font-weight:600; }
-        .stack-row { display:flex; gap:4px; }
-        .stack-row .stack-layer { flex:1; text-align:center; font-size:.78rem; }
-
-        /* ── PARAM TABLE ── */
-        .param-table { width:100%; border-collapse:collapse; font-size:.84rem; margin:.7rem 0; }
-        .param-table th { background:#f1f5f9; color:#374151; padding:.5rem .9rem; text-align:left; font-weight:600; border-bottom:2px solid var(--border); }
-        .param-table td { padding:.5rem .9rem; border-bottom:1px solid var(--border); color:#374151; vertical-align:top; }
-        .param-table td:first-child { font-family:'JetBrains Mono',monospace; font-size:.8rem; color:var(--blue); white-space:nowrap; }
-
         /* ── NAV ── */
         .nav-between { display:flex; justify-content:space-between; margin-top:2rem; }
         .nav-btn { font-size:.82rem; color:var(--blue); text-decoration:none; padding:.45em 1em; border:1px solid var(--border); border-radius:5px; background:white; transition:background .15s,border-color .15s; }
         .nav-btn:hover { background:#eff6ff; border-color:var(--blue); }
 
+        /* ── BULLET LIST ── */
+        .bullet-list { list-style:none; padding:0; margin:.5rem 0 1rem; }
+        .bullet-list li { font-size:.9rem; color:#374151; padding:.25rem 0 .25rem 1.4rem; position:relative; line-height:1.7; }
+        .bullet-list li::before { content:'•'; position:absolute; left:0; color:var(--blue); font-weight:700; }
+        .bullet-list .sub { padding-left:1.4rem; }
+        .bullet-list .sub li::before { content:'–'; color:#64748b; font-weight:400; }
+
         footer { text-align:center; color:#94a3b8; font-size:.8rem; padding:2rem 0; }
         @media(max-width:640px){
             .container{padding:1rem;} header h1{font-size:1.3rem;}
-            .state-machine{gap:.3rem;} .cmd-grid{grid-template-columns:1fr;}
+            .cmd-grid{grid-template-columns:1fr;}
             .append-label{min-width:6rem; font-size:.65rem;}
         }
     </style>
@@ -175,8 +144,8 @@
     <div class="container">
         <a class="back-link" href="index.html">← 목록으로</a>
         <h1>배경 지식</h1>
-        <p>Zoned Storage 개요 · SMR/ZNS 예시 장치 · Zone 구조와 관리 명령 · Zone 상태 머신 · Zone Append · Linux 커널 지원 구조 · 성능 측정 지표</p>
-        <span class="badge">Step 1 / 6 · 약 25분</span>
+        <p>Zoned Storage Devices · Zone 동작 원리 · Zone 관리 명령 · Zone Append</p>
+        <span class="badge">Step 1 / 6 · 약 15분</span>
     </div>
 </header>
 
@@ -186,32 +155,26 @@
     <div class="toc">
         <div class="toc-title">목차</div>
         <ol>
-            <li><a href="#s1">Zoned Storage Devices란? — 등장 배경과 성능 이점</a></li>
-            <li><a href="#s2">예시 장치 — SMR HDD와 NVMe ZNS SSD</a></li>
-            <li><a href="#s3">ZNS SSD 핵심: 데이터 배치 제어권의 이동</a></li>
-            <li><a href="#s4">Zone 구조 — Zone Size, Zone Capacity, Write Pointer</a></li>
-            <li><a href="#s5">Zone 관리 명령 — Reset / Open / Close / Finish</a></li>
-            <li><a href="#s6">Zone 상태 머신</a></li>
-            <li><a href="#s7">Sequential Write 제약과 동작 방식</a></li>
-            <li><a href="#s8">Zone Append — 병렬 쓰기와 원자성</a></li>
-            <li><a href="#s9">Active / Open Zone 제한</a></li>
-            <li><a href="#s10">Linux Zoned Storage 커널 지원 구조</a></li>
-            <li><a href="#s11">성능 측정 지표 — Bandwidth, Latency, Queue Depth</a></li>
+            <li><a href="#s1">Zoned Storage Devices</a></li>
+            <li><a href="#s2">Zones Storage Devices Principle</a></li>
+            <li><a href="#s3">Zone Management Commands</a></li>
+            <li><a href="#s4">Zone Append</a></li>
+            <li><a href="#s5">배경 지식과 실습 연결</a></li>
         </ol>
     </div>
 
-    <!-- ── 1. Zoned Storage Devices란? ── -->
+    <!-- ── 1. Zoned Storage Devices ── -->
     <div class="section" id="s1">
         <div class="section-num">01</div>
-        <h2>Zoned Storage Devices란? — 등장 배경과 성능 이점</h2>
+        <h2>Zoned Storage Devices</h2>
 
         <p>
-            <strong>Zoned Storage Device</strong>는 LBA(논리 블록 주소) 공간을 <strong>Zone</strong>이라는 고정 크기 영역으로 나누고,
-            각 Zone 내에서는 반드시 <strong>순차적으로(sequentially)</strong> 써야 한다는 제약을 갖는 저장 장치입니다.
+            ZNS SSD는 장치의 LBA 공간을 고정 크기의 <strong>Zone</strong>으로 분할합니다.
+            각 Zone에는 쓰기 제약이 부여되며, 반드시 순차적으로만 쓸 수 있습니다.
         </p>
 
         <div class="figure" style="padding:1rem 1.5rem;">
-            <div style="font-size:.82rem; color:#64748b; margin-bottom:.7rem; text-align:center;">Device LBA range divided in zones</div>
+            <div style="font-size:.82rem; color:#64748b; margin-bottom:.7rem; text-align:center;">장치 LBA 공간을 Zone으로 분할</div>
             <div style="display:flex; gap:3px; margin-bottom:1rem;">
                 <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#1e40af;">Zone 0</div>
                 <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#1e40af;">Zone 1</div>
@@ -225,156 +188,36 @@
                 <span style="font-family:'JetBrains Mono',monospace; font-size:.72rem; color:#ef4444;">▲ Write Pointer</span>
                 <span style="color:#2563eb; font-weight:600;">WRITE →</span>
             </div>
-            <div class="figure-caption">ZONE RESET은 Write Pointer를 Zone 시작으로 되돌리고, WRITE는 Write Pointer를 앞으로 전진시킨다.</div>
         </div>
 
-        <h3>왜 Zoned Storage가 필요한가?</h3>
-        <p>
-            일반 NVMe SSD(Conventional Block Device)는 호스트가 임의의 LBA에 자유롭게 읽고 쓸 수 있는 <strong>랜덤 쓰기 인터페이스</strong>를 제공합니다.
-            이를 위해 내부 <strong>FTL(Flash Translation Layer)</strong>이 논리 주소와 물리 플래시 주소 간 매핑, 가비지 컬렉션(GC), 웨어 레벨링을 수행합니다.
-            그러나 FTL의 GC는 다음 문제를 일으킵니다.
-        </p>
-
         <table class="cmp-table" style="margin-top:.5rem;">
-            <thead><tr><th>Zoned Storage의 이점</th><th>메커니즘</th></tr></thead>
+            <thead><tr><th>성능 이점</th><th>메커니즘</th></tr></thead>
             <tbody>
                 <tr>
-                    <td class="row-label good">Housekeeping 연산 감소</td>
+                    <td class="row-label good">하우스키핑 연산 감소</td>
                     <td>순차 쓰기 제약으로 내부 GC Copy-back 제거 → WAF ≈ 1.0</td>
                 </tr>
                 <tr>
-                    <td class="row-label good">Over-provisioning 감소</td>
+                    <td class="row-label good">오버 프로비저닝 감소</td>
                     <td>GC용 여유 공간 불필요 → 실제 용량 증가, 비용 절감</td>
                 </tr>
                 <tr>
-                    <td class="row-label good">I/O 응답 예측성 향상</td>
-                    <td>GC로 인한 갑작스러운 Tail Latency 스파이크 제거</td>
+                    <td class="row-label good">테일 레이턴시 감소</td>
+                    <td>GC로 인한 갑작스러운 레이턴시 스파이크 제거 → 예측 가능한 I/O 응답 시간</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <!-- ── 2. 예시 장치 ── -->
+    <!-- ── 2. Zones Storage Devices Principle ── -->
     <div class="section" id="s2">
         <div class="section-num">02</div>
-        <h2>예시 장치 — SMR HDD와 NVMe ZNS SSD</h2>
-
-        <h3>SMR(Shingled Magnetic Recording) HDD</h3>
-        <p>
-            자기 기록 방식에서 트랙을 기왓장(shingle)처럼 겹쳐 쌓아 기록 밀도를 높인 HDD입니다.
-            트랙이 겹치기 때문에 임의 위치에 쓰면 인접 트랙 데이터가 손상됩니다.
-            따라서 Zone 단위로 순차 쓰기만 허용하며, Zone 전체를 지운 후 다시 쓰는 패턴을 강제합니다.
-            Zoned Storage 개념이 처음으로 HDD에 적용된 사례로, 표준은 <strong>ZBC(Zoned Block Commands)</strong>입니다.
-        </p>
-
-        <h3>NVMe ZNS(Zoned Namespace) SSD</h3>
-        <p>
-            NVMe 표준에 정의된 ZNS Command Set을 지원하는 SSD입니다.
-            SMR HDD와 같은 Zone 제약을 NVMe 인터페이스로 노출하여 낸드 플래시 특성에 맞는 최적 I/O 패턴을 호스트에 강제합니다.
-            현재 데이터센터용 제품(예: Samsung ZNS SSD, WD Ultrastar DC ZN540)이 출시되어 있습니다.
-        </p>
-
-        <div class="callout info">
-            <span class="callout-icon">ℹ️</span>
-            <span>본 실습에서는 실제 ZNS SSD 대신 <code>null_blk</code> 커널 모듈로 ZNS 인터페이스를 에뮬레이션합니다(<code>/dev/nullb0</code>). 인터페이스 동작은 동일하나, 메모리 기반이므로 실제 낸드 지연 시간은 반영되지 않습니다.</span>
-        </div>
-
-        <div class="callout lab">
-            <span class="callout-icon">🔬</span>
-            <span><strong>Lab 연결:</strong> <code>blkzone report /dev/nullb0</code> 출력에서 <code>type: 2(SEQ_WRITE_REQUIRED)</code>를 확인하면 이 장치가 ZNS Zone임을 알 수 있습니다. Lab 2 Step 2.1에서 직접 확인합니다.</span>
-        </div>
-    </div>
-
-    <!-- ── 3. 데이터 배치 제어권 ── -->
-    <div class="section" id="s3">
-        <div class="section-num">03</div>
-        <h2>ZNS SSD 핵심: 데이터 배치 제어권의 이동</h2>
+        <h2>Zones Storage Devices Principle</h2>
 
         <p>
-            ZNS SSD와 일반 SSD의 가장 근본적인 차이는 <strong>데이터가 플래시에 실제로 기록되는 위치를 누가 결정하느냐</strong>에 있습니다.
-        </p>
-
-        <div class="figure" style="padding:1.2rem 1.5rem;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
-                <div>
-                    <div style="font-size:.78rem; font-weight:700; color:#dc2626; margin-bottom:.5rem; text-align:center;">일반 SSD (Regular SSD)</div>
-                    <div style="background:#1e2533; border-radius:6px; padding:.8rem; font-size:.75rem; font-family:'JetBrains Mono',monospace; color:#94a3b8;">
-                        <div style="color:#c084fc; margin-bottom:.4rem;">App 1 · App 2 · App 3</div>
-                        <div style="color:#7dd3fc; margin-bottom:.4rem;">↓ ↓ ↓</div>
-                        <div style="background:#2d3748; border-radius:3px; padding:.3rem .6rem; color:#fbbf24; margin-bottom:.3rem;">Conventional SSD Controller</div>
-                        <div style="display:grid; grid-template-columns:repeat(8,1fr); gap:2px; margin-top:.4rem;">
-                            <div style="background:#475569; height:12px; border-radius:1px;"></div>
-                            <div style="background:#475569; height:12px; border-radius:1px;"></div>
-                            <div style="background:#475569; height:12px; border-radius:1px;"></div>
-                            <div style="background:#475569; height:12px; border-radius:1px;"></div>
-                            <div style="background:#475569; height:12px; border-radius:1px;"></div>
-                            <div style="background:#475569; height:12px; border-radius:1px;"></div>
-                            <div style="background:#475569; height:12px; border-radius:1px;"></div>
-                            <div style="background:#475569; height:12px; border-radius:1px;"></div>
-                        </div>
-                        <div style="font-size:.65rem; color:#64748b; text-align:center; margin-top:.4rem;">Device controls data placement</div>
-                    </div>
-                </div>
-                <div>
-                    <div style="font-size:.78rem; font-weight:700; color:var(--success); margin-bottom:.5rem; text-align:center;">ZNS SSD</div>
-                    <div style="background:#1e2533; border-radius:6px; padding:.8rem; font-size:.75rem; font-family:'JetBrains Mono',monospace; color:#94a3b8;">
-                        <div style="color:#c084fc; margin-bottom:.4rem;">App 1 · App 2 · App 3</div>
-                        <div style="color:#7dd3fc; margin-bottom:.4rem;">↓ ↓ ↓</div>
-                        <div style="background:#2d3748; border-radius:3px; padding:.3rem .6rem; color:#fbbf24; margin-bottom:.3rem;">ZNS SSD Controller</div>
-                        <div style="display:grid; grid-template-columns:repeat(8,1fr); gap:2px; margin-top:.4rem;">
-                            <div style="background:#3b82f6; height:12px; border-radius:1px;"></div>
-                            <div style="background:#3b82f6; height:12px; border-radius:1px;"></div>
-                            <div style="background:#3b82f6; height:12px; border-radius:1px; border:1px dashed #60a5fa;"></div>
-                            <div style="background:#f59e0b; height:12px; border-radius:1px;"></div>
-                            <div style="background:#f59e0b; height:12px; border-radius:1px;"></div>
-                            <div style="background:#10b981; height:12px; border-radius:1px;"></div>
-                            <div style="background:#e2e8f0; height:12px; border-radius:1px;"></div>
-                            <div style="background:#e2e8f0; height:12px; border-radius:1px;"></div>
-                        </div>
-                        <div style="font-size:.65rem; color:#64748b; text-align:center; margin-top:.4rem;">Applications control data placement in zones</div>
-                    </div>
-                </div>
-            </div>
-            <div class="figure-caption">일반 SSD는 FTL이 내부적으로 데이터를 배치하지만, ZNS SSD는 각 애플리케이션이 자신의 Zone을 직접 관리한다.</div>
-        </div>
-
-        <p>
-            일반 SSD에서는 FTL이 데이터 배치를 모두 결정하므로 애플리케이션 간 GC 간섭이 불가피합니다.
-            ZNS SSD에서는 <strong>각 애플리케이션이 자신만의 Zone에 데이터를 직접 배치</strong>합니다.
-            서로 다른 애플리케이션의 데이터가 같은 플래시 블록에 섞이지 않으므로 GC Copy-back 없이 Zone 단위 Reset만으로 공간을 재활용할 수 있습니다.
-        </p>
-
-        <div class="callout ok">
-            <span class="callout-icon">✅</span>
-            <span>이 특성이 WAF ≈ 1.0을 가능하게 하는 근본 원인입니다. Lab 3에서 직접 측정합니다.</span>
-        </div>
-    </div>
-
-    <!-- ── 4. Zone 구조 ── -->
-    <div class="section" id="s4">
-        <div class="section-num">04</div>
-        <h2>Zone 구조 — Zone Size, Zone Capacity, Write Pointer</h2>
-
-        <p>
-            ZNS 장치의 LBA 공간 전체는 동일한 크기의 <strong>Zone</strong>들로 나뉩니다.
-            실습 환경에서는 Zone 크기 <strong>256 MB</strong> / 전체 장치 크기 <strong>10 GB</strong>이므로 총 40개의 Zone이 존재합니다.
-        </p>
-
-        <h3>Zone Size vs Zone Capacity</h3>
-        <p>
-            <strong>Zone Size</strong>는 Zone에 할당된 LBA 공간의 전체 크기이고,
-            <strong>Zone Capacity</strong>는 Zone 내에서 실제 쓰기가 가능한 공간입니다.
-            플래시 매체의 물리적 제약으로 Zone Capacity ≤ Zone Size일 수 있으나,
-            <code>null_blk</code> 에뮬레이션에서는 동일합니다.
-            <code>blkzone report</code> 출력에서 <code>len</code>(Zone Size)과 <code>cap</code>(Zone Capacity)으로 확인합니다.
-        </p>
-
-        <h3>Write Pointer (WP)</h3>
-        <p>
-            각 Zone은 <strong>Write Pointer(WP)</strong>를 가집니다.
-            WP는 해당 Zone에서 다음에 쓸 수 있는 LBA를 가리킵니다.
+            각 Zone은 <strong>Write Pointer (WP)</strong>를 유지합니다. WP는 해당 Zone 내에서 다음에 쓸 수 있는 LBA를 가리키는 커서입니다.
+            모든 쓰기는 반드시 WP가 가리키는 위치에서 시작해야 하며, 다른 오프셋에 쓰기를 시도하면 블록 레이어가 이를 거부합니다.
             쓰기가 성공하면 WP는 쓴 블록 수만큼 자동으로 전진합니다.
-            WP가 가리키지 않는 위치에 쓰기를 시도하면 커널 블록 레이어가 이를 거부하고 <code>-EINVAL</code> 오류를 반환합니다.
         </p>
 
         <div class="figure">
@@ -407,19 +250,24 @@
                     <span class="zone-state-tag tag-empty">EMPTY</span>
                 </div>
             </div>
-            <div class="figure-caption">Zone 0은 FULL (WP = Zone 끝), Zone 1은 OPEN (WP가 중간), Zone 2는 EMPTY (WP = Zone 시작)</div>
+            <div class="figure-caption">Zone 0: FULL (WP = Zone 끝) · Zone 1: OPEN (WP가 중간) · Zone 2: EMPTY (WP = Zone 시작)</div>
         </div>
 
-        <div class="callout lab">
-            <span class="callout-icon">🔬</span>
-            <span><strong>Lab 연결:</strong> Lab 1·2에서 fio 실험 전 <code>sudo blkzone reset /dev/nullb0</code>를 실행하는 이유가 바로 모든 Zone의 WP를 시작 위치로 초기화(EMPTY 상태)하기 위해서입니다.</span>
+        <p>
+            Zone은 <strong>Zone Reset</strong> 명령을 발행한 후에만 재사용할 수 있으며, 이 명령은 WP를 Zone 시작 위치로 되돌리고 모든 데이터를 삭제합니다.
+            이러한 추가 전용(append-only) 모델은 NAND 플래시의 쓰기 전 삭제(erase-before-write) 특성을 그대로 반영하여, 복잡한 FTL 없이도 장치 컨트롤러가 플래시 페이지를 효율적으로 관리할 수 있게 합니다.
+        </p>
+
+        <div class="callout info">
+            <span class="callout-icon">ℹ️</span>
+            <span>각 Zone이 순서대로만 쓰이고 원자적으로 초기화되기 때문에, 서로 다른 애플리케이션의 데이터가 같은 플래시 블록에 섞이지 않아 스트림 간 GC 간섭이 제거됩니다.</span>
         </div>
     </div>
 
-    <!-- ── 5. Zone 관리 명령 ── -->
-    <div class="section" id="s5">
-        <div class="section-num">05</div>
-        <h2>Zone 관리 명령 — Reset / Open / Close / Finish</h2>
+    <!-- ── 3. Zone Management Commands ── -->
+    <div class="section" id="s3">
+        <div class="section-num">03</div>
+        <h2>Zone 관리 명령</h2>
 
         <p>
             호스트는 아래 4가지 Zone 관리 명령으로 Zone의 상태를 명시적으로 제어합니다.
@@ -428,231 +276,59 @@
 
         <div class="cmd-grid">
             <div class="cmd-card reset">
-                <div class="cmd-name">RESET ZONE</div>
+                <div class="cmd-name">Zone Write Pointer 초기화</div>
                 <div class="cmd-desc">
-                    Write Pointer를 Zone의 <strong>시작 위치로 이동</strong>합니다.<br>
-                    Zone 내의 <strong>모든 데이터가 삭제</strong>됩니다.<br>
+                    포인터를 <strong>Zone의 시작 위치로 이동</strong>합니다.<br>
+                    <strong>데이터가 삭제됩니다.</strong><br>
                     상태: Any → <strong>EMPTY</strong><br>
-                    <code style="font-size:.75em;">blkzone reset [--offset --length] DEV</code>
+                    <code style="font-size:.75em;">blkzone reset DEV</code>
                 </div>
             </div>
             <div class="cmd-card open">
-                <div class="cmd-name">OPEN ZONE</div>
+                <div class="cmd-name">Zone 열기</div>
                 <div class="cmd-desc">
-                    앱이 해당 Zone에 쓰기 연산을 수행할 것임을 장치에 <strong>명시적으로 알립니다</strong>.<br>
-                    장치는 이 Zone에 내부 자원을 미리 할당합니다.<br>
+                    앱이 지정한 Zone에 쓰기 연산을 수행할 것임을 장치에 <strong>명시적으로 알립니다</strong>.<br>
+                    장치는 해당 Zone에 내부 자원을 미리 할당합니다.<br>
                     상태: EMPTY / CLOSED → <strong>EXPLICIT OPEN</strong><br>
                     <code style="font-size:.75em;">blkzone open --offset --length DEV</code>
                 </div>
             </div>
             <div class="cmd-card close">
-                <div class="cmd-name">CLOSE ZONE</div>
+                <div class="cmd-name">Zone 닫기</div>
                 <div class="cmd-desc">
-                    다음 OPEN 명령 전까지 이 Zone에 쓰기를 <strong>수행하지 않겠다</strong>고 선언합니다.<br>
-                    Write Pointer 위치는 유지되며 내부 자원이 해제됩니다.<br>
+                    다음 Open Zone 명령을 발행하기 전까지 앱이 이 Zone에 <strong>쓰기를 수행하지 않겠다</strong>고 선언합니다.<br>
+                    WP 위치는 유지되며 내부 자원이 해제됩니다.<br>
                     상태: OPEN → <strong>CLOSED</strong><br>
                     <code style="font-size:.75em;">blkzone close --offset --length DEV</code>
                 </div>
             </div>
             <div class="cmd-card finish">
-                <div class="cmd-name">FINISH ZONE</div>
+                <div class="cmd-name">Zone 완료</div>
                 <div class="cmd-desc">
-                    Write Pointer를 Zone의 <strong>끝으로 이동</strong>합니다.<br>
-                    Zone을 완전히 봉인(seal)하여 Reset 전까지 추가 쓰기를 차단합니다.<br>
+                    Write Pointer를 <strong>Zone의 끝으로 이동</strong>하여, <strong>해당 Zone을 초기화하기 전까지</strong> 추가 쓰기를 차단합니다.<br>
                     상태: Any → <strong>FULL</strong><br>
                     <code style="font-size:.75em;">blkzone finish --offset --length DEV</code>
                 </div>
             </div>
         </div>
-
-        <div class="callout lab">
-            <span class="callout-icon">🔬</span>
-            <span><strong>Lab 연결:</strong> Lab 2 Step 2.2에서 <code>zone_lifecycle.sh</code>로 EMPTY → Explicit Open → 쓰기 → Close → Finish → Reset의 전체 시퀀스를 직접 실행하고 각 단계의 WP 위치를 관찰합니다.</span>
-        </div>
     </div>
 
-    <!-- ── 6. Zone 상태 머신 ── -->
-    <div class="section" id="s6">
-        <div class="section-num">06</div>
-        <h2>Zone 상태 머신</h2>
+    <!-- ── 4. Zone Append ── -->
+    <div class="section" id="s4">
+        <div class="section-num">04</div>
+        <h2>Zone Append</h2>
 
         <p>
-            각 Zone은 아래 상태 중 하나에 있으며, 명령과 I/O에 따라 상태가 전이됩니다.
-            IMPLICIT OPEN과 EXPLICIT OPEN 모두 "Open Zones" 범주에 속하며,
-            OPEN + CLOSED 상태 모두 "Active Zones" 범주에 속합니다.
-        </p>
-
-        <!-- 상태 전이 다이어그램 -->
-        <div class="figure" style="padding:1.5rem;">
-            <div style="display:flex; flex-direction:column; gap:.6rem; align-items:center;">
-
-                <!-- Active Zones 박스 -->
-                <div style="border:1.5px dashed #94a3b8; border-radius:8px; padding:1rem 1.5rem; width:100%; max-width:580px;">
-                    <div style="font-size:.7rem; color:#94a3b8; font-weight:700; letter-spacing:.06em; margin-bottom:.8rem; text-align:center;">ACTIVE ZONES</div>
-
-                    <!-- Open Zones 박스 -->
-                    <div style="border:1.5px dashed #bfdbfe; border-radius:6px; padding:.8rem 1rem; margin-bottom:.6rem;">
-                        <div style="font-size:.68rem; color:#60a5fa; font-weight:700; letter-spacing:.06em; margin-bottom:.6rem; text-align:center;">OPEN ZONES</div>
-                        <div style="display:flex; gap:1rem; justify-content:center; align-items:center;">
-                            <div class="state-box open" style="font-size:.72rem;">IMPLICIT<br>OPEN</div>
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:.15rem;">
-                                <span style="font-size:.6rem; color:#2563eb; font-family:'JetBrains Mono',monospace;">OPEN ZONE ↓</span>
-                                <span class="state-arrow">⇄</span>
-                                <span style="font-size:.6rem; color:#475569; font-family:'JetBrains Mono',monospace;">↑ CLOSE ZONE</span>
-                            </div>
-                            <div class="state-box open" style="font-size:.72rem;">EXPLICIT<br>OPEN</div>
-                        </div>
-                    </div>
-
-                    <div style="text-align:center; font-size:.68rem; color:#94a3b8; font-family:'JetBrains Mono',monospace; margin-bottom:.3rem;">CLOSE ZONE ↓ &nbsp;|&nbsp; ↑ OPEN ZONE</div>
-                    <div style="display:flex; justify-content:center;">
-                        <div class="state-box closed" style="font-size:.72rem;">CLOSED</div>
-                    </div>
-                </div>
-
-                <!-- 외부 상태들 -->
-                <div style="display:flex; gap:2rem; align-items:center; width:100%; max-width:580px; justify-content:space-between;">
-                    <div style="display:flex; flex-direction:column; gap:.3rem; align-items:center;">
-                        <div class="state-box empty">EMPTY</div>
-                        <div style="font-size:.65rem; color:#94a3b8; font-family:'JetBrains Mono',monospace;">RESET ZONE ↑</div>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:.4rem; align-items:center;">
-                        <div style="font-size:.65rem; color:#dc2626; font-family:'JetBrains Mono',monospace;">FINISH ZONE →</div>
-                        <div class="state-box full">FULL</div>
-                        <div style="font-size:.65rem; color:#94a3b8; font-family:'JetBrains Mono',monospace;">← RESET ZONE</div>
-                    </div>
-                </div>
-
-                <!-- Device Internal Events -->
-                <div style="display:flex; gap:2rem; margin-top:.5rem;">
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:.25rem;">
-                        <div style="font-size:.65rem; color:#64748b; font-family:'JetBrains Mono',monospace;">Device Internal Event</div>
-                        <div class="state-box rdonly" style="font-size:.72rem;">READ ONLY</div>
-                    </div>
-                    <div style="display:flex; flex-direction:column; align-items:center; gap:.25rem;">
-                        <div style="font-size:.65rem; color:#64748b; font-family:'JetBrains Mono',monospace;">Device Internal Event</div>
-                        <div class="state-box offline" style="font-size:.72rem;">OFFLINE</div>
-                    </div>
-                </div>
-            </div>
-            <div class="figure-caption">Zone 상태 전이 다이어그램 (Lecture 3, Slide 8 기반)</div>
-        </div>
-
-        <table class="cmp-table">
-            <thead><tr><th>상태</th><th>설명</th><th>WP 위치</th><th>blkzone report zcond</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td class="row-label" style="color:#475569;">EMPTY</td>
-                    <td>초기 또는 Reset 후 상태. 쓰기 가능.</td>
-                    <td><code>Zone 시작</code></td>
-                    <td><code>1(em)</code></td>
-                </tr>
-                <tr>
-                    <td class="row-label" style="color:#2563eb;">Implicit OPEN</td>
-                    <td>OPEN 명령 없이 쓰기 발행 시 자동 전이.</td>
-                    <td><code>쓴 위치 이후</code></td>
-                    <td><code>2(io)</code></td>
-                </tr>
-                <tr>
-                    <td class="row-label" style="color:#2563eb;">Explicit OPEN</td>
-                    <td>OPEN ZONE 명령으로 명시적으로 연 상태.</td>
-                    <td><code>쓴 위치 이후</code></td>
-                    <td><code>3(eo)</code></td>
-                </tr>
-                <tr>
-                    <td class="row-label" style="color:var(--success);">FULL</td>
-                    <td>모든 블록이 쓰여진 상태. 또는 FINISH ZONE 후. 추가 쓰기 불가.</td>
-                    <td><code>Zone 끝</code></td>
-                    <td><code>14(full)</code></td>
-                </tr>
-                <tr>
-                    <td class="row-label" style="color:#92400e;">CLOSED</td>
-                    <td>CLOSE ZONE 명령 후. WP 유지, 자원 해제. 재OPEN 가능.</td>
-                    <td><code>유지</code></td>
-                    <td><code>4(cl)</code></td>
-                </tr>
-                <tr>
-                    <td class="row-label" style="color:#dc2626;">OFFLINE</td>
-                    <td>하드웨어 오류. 읽기도 불가.</td>
-                    <td>—</td>
-                    <td><code>15(offline)</code></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="callout lab">
-            <span class="callout-icon">🔬</span>
-            <span><strong>Lab 연결:</strong> Lab 1에서 2 GB 순차 쓰기 후 <code>blkzone report /dev/nullb0 | grep zcond</code>로 8개 Zone이 <code>14(full)</code>로 전이됨을 확인합니다. (256 MB × 8 = 2 GB)</span>
-        </div>
-    </div>
-
-    <!-- ── 7. Sequential Write ── -->
-    <div class="section" id="s7">
-        <div class="section-num">07</div>
-        <h2>Sequential Write 제약과 동작 방식</h2>
-
-        <p>
-            ZNS의 <strong>Sequential Write Required (SWR)</strong> Zone에 쓰기를 할 때,
-            모든 쓰기는 반드시 현재 WP가 가리키는 위치에서 시작해야 합니다.
-            이를 <strong>Sequential Write Constraint</strong>라고 합니다.
-        </p>
-
-        <h3>Sequential Write 제약의 부작용 — 낮은 병렬성</h3>
-        <p>
-            Sequential Write에서 호스트는 Zone당 WP를 추적하고 보장해야 합니다.
-            특히 <strong>한 Zone에 발행 가능한 동시 I/O는 사실상 1개로 제한</strong>됩니다.
-            (WP 순서를 보장하려면 이전 I/O가 완료된 후 다음 I/O를 발행해야 하기 때문)
-            이로 인해 소형 블록 쓰기에서는 성능이 저하될 수 있습니다.
-        </p>
-
-        <div class="figure">
-            <div class="code-block">
-                <div class="code-block-label">Sequential Write — 정상 흐름 vs 위반 예시</div>
-                <pre><code>Zone 0, WP = 0x0000
-  쓰기 I/O: LBA 0x0000, len 64KB → <span class="g">성공</span>, WP → 0x0020
-  쓰기 I/O: LBA 0x0020, len 64KB → <span class="g">성공</span>, WP → 0x0040
-  쓰기 I/O: LBA 0x0060, len 64KB → <span class="r">오류! (WP=0x0040, 0x0060에는 쓸 수 없음)</span>
-                                     <span class="r">커널: -EINVAL (Invalid argument)</span></code></pre>
-            </div>
-        </div>
-
-        <h3>fio의 zonemode=zbd</h3>
-        <p>
-            fio에서 <code>zonemode=zbd</code> 옵션을 사용하면 fio 내부적으로 Zone당 하나의 I/O만 순서에 맞게 발행하도록 관리합니다.
-            <code>numjobs=1</code> 환경에서는 이 덕분에 QD를 높여도 Sequential Write 오류 없이 처리량을 향상시킬 수 있습니다.
-        </p>
-
-        <div class="callout warn">
-            <span class="callout-icon">⚠️</span>
-            <span><code>zonemode=none</code>으로 ZNS 장치에 임의 쓰기를 시도하면 커널 블록 레이어가 WP 위반을 감지하여 <strong>-EINVAL</strong> 에러를 반환합니다. Lab 1 Step 1.2에서 이 에러를 의도적으로 유발합니다.</span>
-        </div>
-
-        <div class="callout lab">
-            <span class="callout-icon">🔬</span>
-            <span><strong>Lab 연결:</strong> Lab 1의 모든 fio 명령에 <code>--zonemode=zbd</code>가 포함됩니다. Step 1.2에서 <code>zonemode=none randwrite</code>로 <code>-EINVAL</code> 에러를 직접 확인합니다. (Lab 1 분석 Q3: 이 상황에서 dm-zoned나 F2FS가 어떤 역할을 하는지 → 섹션 10 참조)</span>
-        </div>
-    </div>
-
-    <!-- ── 8. Zone Append ── -->
-    <div class="section" id="s8">
-        <div class="section-num">08</div>
-        <h2>Zone Append — 병렬 쓰기와 원자성</h2>
-
-        <p>
-            Sequential Write의 "Zone당 동시 I/O = 1" 제약을 극복하기 위해 NVMe ZNS Command Set은
+            순차 쓰기의 "Zone당 동시 I/O = 1" 제약을 극복하기 위해 NVMe ZNS Command Set은
             <strong>Zone Append</strong> 명령을 정의합니다.
-            호스트는 정확한 LBA를 지정하지 않고 <em>"이 Zone에 붙여서 써줘"</em>라고 요청합니다.
-            SSD 컨트롤러가 WP를 원자적으로 갱신하고, 실제 기록 위치를 <strong>응답으로 반환</strong>합니다.
+            호스트는 정확한 LBA를 지정하지 않고 <em>"이 Zone의 다음 위치에 데이터를 기록해 달라"</em>는 방식으로 요청합니다.
+            SSD 컨트롤러가 WP를 원자적으로 갱신하고, 실제 기록된 LBA를 <strong>완료 응답으로 반환</strong>합니다.
         </p>
 
-        <h3>Regular Write (QD=1) vs Zone Append (QD=3) 비교</h3>
-        <p>
-            아래 예시는 A(4K), B(8K), C(16K) 세 I/O를 동시에 발행할 때의 차이입니다.
-        </p>
+        <h3>일반 쓰기 (QD=1) vs Zone Append (QD=3)</h3>
 
         <div class="figure" style="padding:1.2rem 1.5rem;">
             <div class="append-compare">
-                <!-- Regular Write -->
                 <div class="append-row">
                     <div class="append-label">Regular Write<br>QD = 1</div>
                     <div class="append-blocks">
@@ -666,7 +342,6 @@
                     </div>
                     <div class="append-qd" style="font-size:.7rem; color:#64748b;">순서 보장<br>(직렬)</div>
                 </div>
-                <!-- Zone Append -->
                 <div class="append-row">
                     <div class="append-label">Zone Append<br>QD = 3</div>
                     <div class="append-blocks">
@@ -681,219 +356,116 @@
                     <div class="append-qd" style="font-size:.7rem; color:var(--success);">병렬 발행<br>(순서 무관)</div>
                 </div>
             </div>
-            <div class="figure-caption">Zone Append에서는 B, C의 순서가 A와 달리 결정되었으나 WP는 정확하게 전진. 호스트는 응답 LBA를 추적해야 함.</div>
+            <div class="figure-caption">Zone Append에서 B와 C는 발행 순서와 다르게 기록되었지만 WP는 정확하게 전진합니다. 호스트는 각 I/O의 반환 LBA를 별도로 추적해야 합니다.</div>
         </div>
 
-        <h3>핵심 특성 1: 원자성 (Atomicity)</h3>
-        <p>
-            WP 갱신이 장치 내에서 원자적으로 수행됩니다.
-            여러 호스트 I/O가 동시에 발행되더라도 장치가 순서를 결정하고
-            겹치지 않는 LBA를 각각 할당합니다. 호스트 측에서 순서를 직접 제어할 필요가 없습니다.
-        </p>
-
-        <h3>핵심 특성 2: LBA 반환 — 호스트의 추적 의무</h3>
-        <p>
-            데이터가 실제로 기록된 위치를 호스트가 모를 수 있으므로,
-            Zone Append 명령의 응답에는 기록된 LBA가 포함됩니다.
-            파일 시스템(예: F2FS)이나 애플리케이션은 이 반환 LBA를 저장해두어야 이후 Read가 가능합니다.
-        </p>
-
-        <h3>Append Size Limit (ZASL)</h3>
-        <p>
-            한 번의 Zone Append 명령으로 쓸 수 있는 최대 크기를
-            <strong>ZASL(Zone Append Size Limit)</strong>이라 합니다. 장치마다 다르며,
-            <code>nvme id-ns /dev/nullb0 --human-readable</code>에서 <code>zasl</code> 필드로 확인합니다.
-        </p>
-
         <table class="cmp-table">
-            <thead><tr><th>비교 항목</th><th>Sequential Write</th><th>Zone Append</th></tr></thead>
+            <thead><tr><th>비교 항목</th><th>순차 쓰기 (Sequential Write)</th><th>Zone Append</th></tr></thead>
             <tbody>
                 <tr><td class="row-label">LBA 지정</td><td>호스트가 정확한 LBA 지정</td><td>LBA 미지정 (장치가 결정)</td></tr>
                 <tr><td class="row-label">WP 관리</td><td class="bad">호스트</td><td class="good">장치 (원자적)</td></tr>
                 <tr><td class="row-label">Zone당 동시 I/O</td><td class="bad">사실상 1개</td><td class="good">ZASL 내 다수 발행 가능</td></tr>
-                <tr><td class="row-label">다중 스레드 안전성</td><td class="bad">WP 충돌 위험</td><td class="good">원자성 보장</td></tr>
-                <tr><td class="row-label">기록 위치 추적</td><td class="good">호스트가 이미 알고 있음</td><td class="mid">응답 LBA를 별도 저장 필요</td></tr>
-                <tr><td class="row-label">적합한 사례</td><td>단일 스레드 순차 스트림</td><td>RocksDB WAL, F2FS 다중 스레드 쓰기</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ── 9. Active / Open Zone 제한 ── -->
-    <div class="section" id="s9">
-        <div class="section-num">09</div>
-        <h2>Active / Open Zone 제한</h2>
-
-        <p>
-            ZNS 장치는 동시에 열어 둘 수 있는 Zone의 수를 제한합니다.
-            이는 장치 내부 Write Buffer 등 자원 때문입니다.
-        </p>
-
-        <table class="cmp-table">
-            <thead><tr><th>파라미터</th><th>NVMe 명세 이름</th><th>의미</th><th>실습 환경 값</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td class="row-label"><code>zone_max_open</code></td>
-                    <td>MOR (Maximum Open Resources)</td>
-                    <td>동시에 OPEN 상태일 수 있는 최대 Zone 수</td>
-                    <td><strong>14</strong></td>
-                </tr>
-                <tr>
-                    <td class="row-label"><code>zone_max_active</code></td>
-                    <td>MAR (Maximum Active Resources)</td>
-                    <td>동시에 OPEN 또는 CLOSED(Active)일 수 있는 최대 Zone 수</td>
-                    <td><strong>14</strong></td>
-                </tr>
+                <tr><td class="row-label">멀티 스레드 안전성</td><td class="bad">WP 충돌 위험</td><td class="good">원자성 보장</td></tr>
+                <tr><td class="row-label">기록 위치 추적</td><td class="good">호스트가 이미 알고 있음</td><td class="mid">반환 LBA를 별도 저장 필요</td></tr>
             </tbody>
         </table>
 
-        <p>
-            이 제한을 초과하면 새 Zone을 열기 전에 기존 Zone을 CLOSE 또는 FINISH 해야 합니다.
-            fio의 <code>zonemode=zbd</code>는 이 제한을 자동으로 준수합니다.
-            <code>nvme id-ns</code> 출력에서 <code>mor</code>, <code>mar</code> 필드로 확인할 수 있습니다.
-        </p>
-    </div>
-
-    <!-- ── 10. Linux Zoned Storage 지원 구조 ── -->
-    <div class="section" id="s10">
-        <div class="section-num">10</div>
-        <h2>Linux Zoned Storage 커널 지원 구조</h2>
-
-        <p>
-            Linux 커널은 SMR HDD와 ZNS SSD를 모두 지원하는 통합 Zoned Storage 스택을 제공합니다.
-            <strong>기존 앱(Legacy apps)</strong>과 <strong>ZBD 지원 앱(ZBD-compliant apps)</strong> 두 경로로 나뉩니다.
-        </p>
-
-        <div class="figure" style="padding:1.2rem 1.5rem;">
-            <div class="stack-diagram">
-                <div class="stack-label">User Space</div>
-                <div class="stack-row">
-                    <div class="stack-layer app-legacy">Legacy Applications<br><span style="font-size:.72rem;">(기존 앱: Zoned Storage 인식 없음)</span></div>
-                    <div class="stack-layer app-zbd">ZBD-Compliant Applications<br><span style="font-size:.72rem;">(RocksDB + ZenFS, F2FS 등)</span></div>
-                </div>
-                <div class="stack-label">Kernel Space — 접근 방식</div>
-                <div class="stack-row">
-                    <div class="stack-layer fs" style="flex:1.5;">ZBD-compliant FS<br><span style="font-size:.7rem;">(F2FS, btrfs 등)</span></div>
-                    <div class="stack-layer fs">Legacy FS<br><span style="font-size:.7rem;">(ext4, xfs)</span></div>
-                    <div class="stack-layer fs">zonefs<br><span style="font-size:.7rem;">각 Zone → 파일</span></div>
-                    <div class="stack-layer fs">Zoned Raw Block<br><span style="font-size:.7rem;">직접 blk 접근</span></div>
-                    <div class="stack-layer fs">Passthrough<br><span style="font-size:.7rem;">Block Layer 우회</span></div>
-                </div>
-                <div class="stack-row" style="margin-top:3px;">
-                    <div class="stack-layer kernel" style="flex:1; background:#e9d5ff; color:#4c1d95;">Device Mapper<br>(dm-zoned)</div>
-                    <div class="stack-layer kernel" style="flex:3; background:#ede9fe; color:#4c1d95;">Block I/O Layer + Block I/O Scheduler</div>
-                    <div class="stack-layer kernel" style="flex:.8; background:#dbeafe; color:#1e40af; font-size:.72rem;">SCSI<br>Generic</div>
-                    <div class="stack-layer kernel" style="flex:.8; background:#dbeafe; color:#1e40af; font-size:.72rem;">NVMe<br>Driver</div>
-                </div>
-                <div class="stack-layer hw" style="margin-top:4px; text-align:center;">Hardware — ZBC/ZAC SMR HDDs &nbsp;|&nbsp; NVMe ZNS SSDs</div>
-            </div>
-            <div class="figure-caption">Linux Zoned Storage Support 아키텍처 (Lecture 3, Slides 11-12 기반)</div>
-        </div>
-
-        <h3>Legacy Apps 경로 (기존 앱을 변경 없이 사용)</h3>
-        <table class="cmp-table">
-            <thead><tr><th>방법</th><th>설명</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td class="row-label">ZBD-compliant FS<br><span style="font-weight:400; font-size:.82em;">(F2FS, btrfs)</span></td>
-                    <td>파일 시스템이 내부적으로 Zoned Storage를 인식하고 순차 쓰기를 보장. 앱은 일반 파일 I/O 사용.</td>
-                </tr>
-                <tr>
-                    <td class="row-label">dm-zoned</td>
-                    <td>Device Mapper 레이어에서 랜덤 쓰기를 순차 쓰기로 변환. 기존 파일 시스템(ext4 등)을 그대로 사용 가능. 내부적으로 쓰기 버퍼링 + 작은 랜덤 존 유지.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h3>ZBD-compliant Apps 경로 (앱이 직접 Zone 제어)</h3>
-        <table class="cmp-table">
-            <thead><tr><th>방법</th><th>설명</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td class="row-label">zonefs</td>
-                    <td>각 Zone을 파일로 노출하는 단순 파일 시스템. Zone당 파일 하나. 파일 크기 = Zone 용량. 파일 쓰기 = 순차 쓰기.</td>
-                </tr>
-                <tr>
-                    <td class="row-label">Zoned Raw Block Access</td>
-                    <td>Block Layer를 통해 Zone 정보 및 관리 연산에 직접 접근. <code>blkzone</code> 유틸리티가 이 경로 사용. 본 실습의 주요 경로.</td>
-                </tr>
-                <tr>
-                    <td class="row-label">Passthrough Device Access</td>
-                    <td>Linux Block Layer를 완전히 우회하여 NVMe 드라이버에 직접 접근. ZNS 명령을 앱에서 직접 발행.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="callout lab">
-            <span class="callout-icon">🔬</span>
-            <span><strong>Lab 연결:</strong> Lab 1 분석 Q3 "기존 앱이 ZNS에서 Random Write를 수행해야 한다면?"에 대한 답이 여기 있습니다. <strong>dm-zoned</strong>(랜덤 쓰기 변환 레이어)나 <strong>F2FS</strong>(ZBD-compliant 파일 시스템)가 이를 처리할 수 있습니다. 본 실습은 <strong>Zoned Raw Block Access</strong> 경로(<code>blkzone</code>, <code>fio --zonemode=zbd</code>)를 직접 사용합니다.</span>
+        <div class="callout info">
+            <span class="callout-icon">ℹ️</span>
+            <span>하나의 Zone Append 명령으로 쓸 수 있는 최대 크기는 <strong>ZASL (Zone Append Size Limit)</strong>로 제한되며, 장치마다 다르고 NVMe Identify Namespace 응답에서 확인할 수 있습니다.</span>
         </div>
     </div>
 
-    <!-- ── 11. 성능 측정 지표 ── -->
-    <div class="section" id="s11">
-        <div class="section-num">11</div>
-        <h2>성능 측정 지표 — Bandwidth, Latency, Queue Depth</h2>
+    <!-- ── 5. 배경 지식과 실습 연결 ── -->
+    <div class="section" id="s5">
+        <div class="section-num">05</div>
+        <h2>배경 지식과 실습 연결</h2>
 
-        <h3>Bandwidth (처리량, MB/s)</h3>
         <p>
-            단위 시간당 전송된 데이터 양입니다.
-            fio 출력에서 <code>write: bw=XXX MiB/s</code>로 확인합니다.
-            일반적으로 QD가 높을수록, 장치가 병렬 처리를 지원할수록 Bandwidth가 증가합니다.
+            앞서 학습한 개념들이 아래 세 가지 실습에서 직접 확인됩니다.
+            각 실습 항목에 연결된 배경 지식 섹션을 참고하여 실험 결과를 해석하세요.
         </p>
 
-        <h3>Latency (지연 시간, µs)</h3>
-        <p>
-            하나의 I/O 요청이 발행된 후 완료될 때까지의 시간입니다.
-            fio 출력에서 <code>lat (usec): min=..., max=..., avg=...</code>로 확인합니다.
-            QD가 높아지면 큐 대기 시간이 늘어나 평균 Latency도 증가합니다.
-            ZNS는 GC가 없으므로 Conventional SSD 대비 <strong>Tail Latency(최대 지연)</strong>가 크게 낮습니다.
-        </p>
-
-        <h3>Queue Depth (QD)와 Little's Law</h3>
-        <p>
-            Queue Depth는 장치에 동시에 발행되는 I/O 요청의 수입니다.
-            QD와 Bandwidth·Latency의 관계는 <strong>Little's Law</strong>로 설명합니다.
-        </p>
-
-        <div class="formula-box">
-            <div class="formula">L = λ × W</div>
-            <div class="formula-desc">
-                L: 시스템 내 평균 요청 수 (≈ Queue Depth) &nbsp;|&nbsp;
-                λ: 처리율 (IOPS) &nbsp;|&nbsp;
-                W: 평균 응답 시간 (Latency)
-                <br>→ QD ↑ = IOPS ↑ × Latency ↑ &nbsp;|&nbsp; Bandwidth = IOPS × Block Size
+        <!-- Lab 1 -->
+        <h3>Lab 1 — 쓰기 제약 및 기본 성능 비교</h3>
+        <div class="cmd-grid">
+            <div class="cmd-card open">
+                <div class="cmd-name">순차 쓰기 성능 비교</div>
+                <div class="cmd-desc">
+                    ZNS vs Conventional SSD의 <strong>처리량(BW)</strong>과 <strong>평균 지연 시간</strong> 비교<br><br>
+                    <span style="font-size:.78rem; color:#64748b;">→ 배경 지식 §1 성능 이점 (하우스키핑·테일 레이턴시 감소)</span>
+                </div>
+            </div>
+            <div class="cmd-card reset">
+                <div class="cmd-name">랜덤 쓰기 예외 처리</div>
+                <div class="cmd-desc">
+                    ZNS에서 랜덤 쓰기 시 Write Pointer 위반 → <strong>EINVAL 에러</strong> 발생 확인<br>
+                    Conventional SSD는 랜덤 쓰기 정상 처리<br><br>
+                    <span style="font-size:.78rem; color:#64748b;">→ 배경 지식 §2 Write Pointer 동작 원리</span>
+                </div>
             </div>
         </div>
 
-        <div class="figure">
-            <div class="code-block">
-                <div class="code-block-label">fio 출력 읽는 방법</div>
-                <pre><code>write: IOPS=1234, BW=77.1MiB/s (80.9MB/s)(2048MiB/26544msec)
-<span class="c">         ↑ IOPS          ↑ Bandwidth (MB/s)</span>
-  lat (usec): min=101, max=2893, avg=<span class="h">812.34</span>, stdev=93.21
-<span class="c">                                  ↑ 평균 지연 시간 (µs) — 결과표에 기록</span></code></pre>
-            </div>
-        </div>
+        <!-- Lab 2 -->
+        <h3>Lab 2 — Zone 관리 상태 전이</h3>
+        <table class="cmp-table">
+            <thead><tr><th>실습 항목</th><th>수행 내용</th><th>연결 개념</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td class="row-label">Zone 상태 조회 및 자동 전이</td>
+                    <td>
+                        <code>blkzone report</code>로 상태 및 Write Pointer 확인<br>
+                        쓰기 시 <strong>Implicit Open</strong>으로 자동 전이 확인
+                    </td>
+                    <td>§2 Write Pointer · §3 Open zone</td>
+                </tr>
+                <tr>
+                    <td class="row-label">명시적 수명주기 제어</td>
+                    <td>
+                        Explicit Open → Write → Close → Finish 과정 수행<br>
+                        단계별 Write Pointer 변화 관찰
+                    </td>
+                    <td>§3 Zone 관리 명령 4종</td>
+                </tr>
+                <tr>
+                    <td class="row-label">Zone 초기화</td>
+                    <td>
+                        Reset 수행 시 <strong>FULL → EMPTY</strong> 상태 복구 확인<br>
+                        Write Pointer 초기화 검증
+                    </td>
+                    <td>§3 Reset zone write pointer</td>
+                </tr>
+            </tbody>
+        </table>
 
-        <div class="callout lab">
-            <span class="callout-icon">🔬</span>
-            <span><strong>Lab 연결:</strong> Lab 1에서 ZNS와 Conventional SSD의 순차 쓰기 Bandwidth와 Avg Latency를 비교합니다. null_blk 에뮬레이터에서는 두 장치의 처리량이 유사하게 나타나지만, 실제 낸드 기반 SSD에서는 GC 개입 유무로 인해 Tail Latency 차이가 두드러집니다.</span>
-        </div>
+        <!-- Lab 3 -->
+        <h3>Lab 3 — WAF 비교 측정</h3>
+        <table class="cmp-table">
+            <thead><tr><th>단계</th><th>Conventional SSD</th><th>ZNS SSD</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td class="row-label">Steady-State 조성</td>
+                    <td>순차 Fill + 랜덤 워크로드</td>
+                    <td>순차 Fill</td>
+                </tr>
+                <tr>
+                    <td class="row-label">워크로드 인가</td>
+                    <td>랜덤 70% + 순차 30%</td>
+                    <td>100% 순차</td>
+                </tr>
+                <tr>
+                    <td class="row-label">WAF 계산 및 분석</td>
+                    <td colspan="2" style="text-align:left;">
+                        <code>write_sectors</code> 변화량 기반 WAF 계산<br>
+                        Host Write vs Device Write 비교 → ZNS vs Conventional WAF 차이 분석
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
-        <div class="concept-row">
-            <span class="concept-pill">ZONE RESET</span>
-            <span class="concept-pill">Write Pointer</span>
-            <span class="concept-pill">Sequential Constraint</span>
-            <span class="concept-pill">-EINVAL 에러</span>
-            <span class="concept-pill">Zone Append 원자성</span>
-            <span class="concept-pill">ZASL</span>
-            <span class="concept-pill">MAR / MOR</span>
-            <span class="concept-pill">dm-zoned</span>
-            <span class="concept-pill">F2FS</span>
-            <span class="concept-pill">zonefs</span>
-            <span class="concept-pill">WAF</span>
-            <span class="concept-pill">Little's Law</span>
-            <span class="concept-pill">Tail Latency</span>
+        <div class="callout ok">
+            <span class="callout-icon">✅</span>
+            <span>WAF(Write Amplification Factor) = Device Write / Host Write. ZNS는 순차 쓰기만 허용하므로 GC Copy-back이 발생하지 않아 WAF ≈ 1.0에 근접합니다. §1의 성능 이점을 수치로 직접 검증하는 실습입니다.</span>
         </div>
     </div>
 
