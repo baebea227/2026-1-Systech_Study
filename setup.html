@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실습 환경 준비 — ZNS SSD 성능 비교 실습</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --success:#16a34a; --warn:#d97706; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.7; }
+        .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+
+        header { background:linear-gradient(135deg, var(--navy), var(--blue)); color:white; padding:2.5rem 0; margin-bottom:2rem; }
+        header .container { padding-top:0; padding-bottom:0; }
+        .back-link { color:rgba(255,255,255,.75); font-size:.85rem; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-bottom:.8rem; }
+        .back-link:hover { color:white; }
+        header h1 { font-size:1.6rem; font-weight:700; margin-bottom:.3rem; }
+        header p  { font-size:.9rem; opacity:.82; }
+        .badge-warn { display:inline-block; background:var(--warn); color:white; font-size:.72rem; font-weight:600; padding:.2em .7em; border-radius:4px; margin-top:.7rem; }
+
+        .step-flow { position:relative; margin-bottom:2rem; }
+        .step-flow::before { content:''; position:absolute; left:20px; top:28px; bottom:28px; width:2px; background:var(--border); }
+        .step-entry { display:flex; gap:1.1rem; align-items:flex-start; margin-bottom:1.4rem; }
+        .step-entry:last-child { margin-bottom:0; }
+        .step-dot { flex-shrink:0; width:40px; height:40px; border-radius:50%; background:var(--navy); color:white; font-size:.95rem; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:1; position:relative; }
+        .step-body { flex:1; }
+        .step-body h3 { font-size:1rem; font-weight:600; color:var(--navy); margin-bottom:.4rem; }
+        .step-body p  { font-size:.88rem; color:#475569; margin-bottom:.7rem; }
+
+        .card { background:white; border:1px solid var(--border); border-radius:8px; padding:1.5rem 2rem; margin-bottom:1.5rem; }
+        .card h2 { font-size:1.1rem; color:var(--navy); margin-bottom:1rem; }
+        .card p  { font-size:.88rem; color:#374151; margin-bottom:.6rem; }
+
+        code { font-family:'JetBrains Mono',monospace; font-size:.83em; background:#eff6ff; padding:.1em .35em; border-radius:3px; color:var(--blue); }
+        .code-block { position:relative; background:#1e2533; border-radius:6px; margin:.5rem 0 1rem; overflow:hidden; }
+        .code-block-label { background:#2d3748; color:#a0aec0; font-family:'JetBrains Mono',monospace; font-size:.7rem; padding:.35rem .9rem; letter-spacing:.06em; display:flex; align-items:center; justify-content:space-between; }
+        .code-block-label span { display:flex; align-items:center; gap:.5rem; }
+        .code-block pre { padding:1rem 1.2rem; overflow-x:auto; }
+        .code-block pre code { font-family:'JetBrains Mono',monospace; font-size:.82rem; background:none; padding:0; color:#e2e8f0; line-height:1.65; }
+        .code-block pre code .comment { color:#6b7a99; }
+        .code-block pre code .kw { color:#79c0ff; }
+        .code-block pre code .str { color:#a5d6a7; }
+        .copy-btn { background:#2d3748; border:1px solid #4a5568; color:#a0aec0; font-size:.7rem; padding:.25em .6em; border-radius:3px; cursor:pointer; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
+        .copy-btn:hover { background:#4a5568; color:white; }
+
+        .callout { border-radius:6px; padding:.85rem 1.1rem; font-size:.86rem; margin:.5rem 0 1rem; display:flex; gap:.7rem; align-items:flex-start; }
+        .callout.info  { background:#eff6ff; border-left:3px solid var(--blue); color:#1e40af; }
+        .callout.warn  { background:#fffbeb; border-left:3px solid var(--warn); color:#92400e; }
+        .callout.ok    { background:#f0fdf4; border-left:3px solid var(--success); color:#14532d; }
+        .callout-icon  { font-size:1rem; flex-shrink:0; margin-top:.05rem; }
+
+        .output-block { background:#0f1724; border:1px solid #2d3748; border-radius:6px; margin:.4rem 0 1rem; overflow:hidden; }
+        .output-label { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:#64748b; letter-spacing:.06em; padding:.5rem .9rem; background:#1a2233; border-bottom:1px solid #2d3748; display:flex; align-items:center; gap:.5rem; }
+        .output-label::before { content:'▶'; color:#4ade80; font-size:.65rem; }
+        .output-block pre { font-family:'JetBrains Mono',monospace; font-size:.8rem; color:#94a3b8; line-height:1.7; overflow-x:auto; padding:.9rem 1.1rem; }
+        .output-block pre .grn { color:#4ade80; font-weight:600; }
+        .output-block pre .ylw { color:#fde68a; }
+        .output-block pre .blu { color:#7dd3fc; }
+        .output-block pre .sep { color:#334155; }
+
+        /* 디바이스 맵 */
+        .dev-map { display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem; margin:.7rem 0 1rem; }
+        .dev-box { border-radius:7px; padding:.85rem 1rem; text-align:center; }
+        .dev-box.os   { background:#f0f4ff; border:1px solid #bfcfef; }
+        .dev-box.conv { background:#fff8f0; border:1px solid #f6c090; }
+        .dev-box.zns  { background:#f0fff4; border:1px solid #86efac; }
+        .dev-box-name { font-family:'JetBrains Mono',monospace; font-size:.9rem; font-weight:700; margin-bottom:.2rem; }
+        .dev-box.os   .dev-box-name { color:#3b5bdb; }
+        .dev-box.conv .dev-box-name { color:#d97706; }
+        .dev-box.zns  .dev-box-name { color:var(--success); }
+        .dev-box-desc { font-size:.75rem; color:#64748b; }
+
+        .tool-row { display:flex; flex-wrap:wrap; gap:.5rem; margin:.5rem 0; }
+        .tool-badge { font-size:.75rem; background:#eff6ff; color:var(--blue); padding:.25em .7em; border-radius:3px; font-weight:500; }
+
+        .checklist { list-style:none; display:flex; flex-direction:column; gap:.5rem; margin:.5rem 0; }
+        .checklist li { display:flex; align-items:flex-start; gap:.7rem; font-size:.88rem; color:#374151; }
+        .checklist li::before { content:'☐'; font-size:1rem; color:#94a3b8; flex-shrink:0; }
+
+        .section-label { font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#94a3b8; margin:1.8rem 0 .8rem; padding-bottom:.4rem; border-bottom:1px solid var(--border); }
+
+        .nav-between { display:flex; justify-content:space-between; margin-top:2rem; }
+        .nav-btn { font-size:.82rem; color:var(--blue); text-decoration:none; padding:.45em 1em; border:1px solid var(--border); border-radius:5px; background:white; transition:background .15s,border-color .15s; }
+        .nav-btn:hover { background:#eff6ff; border-color:var(--blue); }
+
+        footer { text-align:center; color:#94a3b8; font-size:.8rem; padding:2rem 0; }
+        @media(max-width:640px){ .container { padding:1rem; } header h1 { font-size:1.3rem; } .dev-map { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <a class="back-link" href="index.html">← 목록으로</a>
+        <h1>실습 환경 준비</h1>
+        <p>QEMU VM 실행 · null_blk ZNS 장치 구성 · 도구 설치</p>
+
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- 환경 전제 -->
+    <div class="card">
+        <h2>환경 전제 조건</h2>
+        <p>이전 실습에서 구성한 QEMU 환경을 그대로 재사용합니다. 호스트에 아래 파일이 있어야 합니다.</p>
+        <div class="tool-row">
+            <span class="tool-badge">ubuntu.qcow2 (30G)</span>
+            <span class="tool-badge">nvme_disk.raw (16G)</span>
+            <span class="tool-badge">QEMU 5.x 이상</span>
+            <span class="tool-badge">Linux 커널 5.18.0</span>
+        </div>
+
+    </div>
+
+    <!-- 장치 구성 목표 -->
+    <div class="card">
+        <h2>장치 구성 목표</h2>
+        <p>실습에서 사용할 세 가지 블록 장치의 역할을 미리 파악합니다.</p>
+        <div class="dev-map">
+            <div class="dev-box os">
+                <div class="dev-box-name">/dev/vda</div>
+                <div class="dev-box-desc">OS 디스크<br>virtio · ubuntu.qcow2</div>
+            </div>
+            <div class="dev-box conv">
+                <div class="dev-box-name">/dev/nvme0n1</div>
+                <div class="dev-box-desc">Conventional SSD<br>NVMe · nvme_disk.raw</div>
+            </div>
+            <div class="dev-box zns">
+                <div class="dev-box-name">/dev/nullb0</div>
+                <div class="dev-box-desc">ZNS SSD<br>null_blk · zoned=1</div>
+            </div>
+        </div>
+        <div class="callout info">
+            <span class="callout-icon">ℹ️</span>
+            <span><code>null_blk</code>은 메모리 기반 에뮬레이터입니다. VM 재시작 시 데이터는 사라지지만 Zone 동작은 실제 ZNS SSD와 동일하게 재현됩니다.</span>
+        </div>
+    </div>
+
+    <!-- ── STEP FLOW ── -->
+    <div class="section-label">단계별 설치 및 구성</div>
+    <div class="step-flow">
+
+        <!-- Step 1 -->
+        <div class="step-entry">
+            <div class="step-dot">1</div>
+            <div class="step-body">
+                <h3>QEMU VM 실행 (호스트에서)</h3>
+                <p>이전 실습과 동일한 명령입니다. <code>zns_disk.raw</code>는 불필요하므로 기존 명령 그대로 사용합니다.</p>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — 호스트</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>cd ~/qemu-lab
+
+qemu-system-x86_64 \
+  -m 4G -smp 4 \
+  -enable-kvm \
+  -drive file=ubuntu.qcow2,if=virtio,format=qcow2 \
+  -drive file=nvme_disk.raw,id=nvm,if=none,format=raw \
+  -device nvme,drive=nvm,serial=deadbeef \
+  -net nic -net user,hostfwd=tcp::2222-:22 \
+  -nographic</code></pre>
+                </div>
+                <p>VM이 부팅되면 SSH로 접속합니다.</p>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — 호스트에서 SSH 접속</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>ssh -p 2222 user@localhost</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-entry">
+            <div class="step-dot">2</div>
+            <div class="step-body">
+                <h3>필수 도구 설치 (VM 내부)</h3>
+                <p>실습에 필요한 패키지를 설치합니다. <code>blkzone</code>은 <code>util-linux</code>에 포함되어 있습니다.</p>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — VM 내부</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>sudo apt-get update
+sudo apt-get install -y \
+  fio \           <span class="comment"># 벤치마크 도구 (zonemode=zbd 내장)</span>
+  util-linux \    <span class="comment"># blkzone 포함</span>
+  nvme-cli        <span class="comment"># nvme list, smart-log 등</span>
+
+<span class="comment"># 버전 확인</span>
+fio --version
+blkzone --version</code></pre>
+                </div>
+                <div class="output-block">
+                    <div class="output-label">예상 출력</div>
+                    <pre>fio-3.28
+blkzone from util-linux 2.37.2</pre>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-entry">
+            <div class="step-dot">3</div>
+            <div class="step-body">
+                <h3>null_blk 커널 모듈 빌드 (VM 내부)</h3>
+                <p>커널 5.18.0 소스 트리에서 <code>null_blk</code>을 모듈로 빌드합니다. 이미 빌드된 경우 이 단계를 건너뜁니다.</p>
+
+                <p><strong>① menuconfig에서 모듈 선택</strong></p>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — VM 내부</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>cd /linux-5.18.0
+make menuconfig
+<span class="comment"># Device Drivers → Block devices
+#   → Null test block driver  →  M (모듈) 선택 후 Save</span></code></pre>
+                </div>
+
+                <p><strong>② 빌드 및 설치</strong></p>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — VM 내부</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code><span class="comment"># 블록 드라이버 디렉토리만 빌드 (전체 빌드 불필요)</span>
+make M=drivers/block -j$(nproc)
+sudo make M=drivers/block modules_install
+
+<span class="comment"># 모듈 확인</span>
+modinfo null_blk | grep filename</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-entry">
+            <div class="step-dot">4</div>
+            <div class="step-body">
+                <h3>null_blk 장치 생성 — configfs 방식 (VM 내부)</h3>
+                <p>
+                    <code>nr_devices=0</code>으로 모듈만 먼저 올린 뒤
+                    <code>configfs</code>로 ZNS 장치(<code>nullb0</code>)를 생성합니다.
+                    Conventional은 QEMU가 연결한 <code>nvme0n1</code>을 그대로 사용합니다.
+                </p>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — VM 내부</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>sudo modprobe null_blk nr_devices=0
+
+<span class="comment">## ── nullb0: ZNS 장치 ────────────────────────────────</span>
+sudo mkdir /sys/kernel/config/nullb/zns0
+
+sudo sh -c 'echo 1   > /sys/kernel/config/nullb/zns0/zoned'           <span class="comment"># ZNS 활성화</span>
+sudo sh -c 'echo 64  > /sys/kernel/config/nullb/zns0/zone_size'       <span class="comment"># Zone 크기: 64MB</span>
+sudo sh -c 'echo 16  > /sys/kernel/config/nullb/zns0/zone_max_open'   <span class="comment"># 최대 Open Zone</span>
+sudo sh -c 'echo 16  > /sys/kernel/config/nullb/zns0/zone_max_active' <span class="comment"># 최대 Active Zone</span>
+sudo sh -c 'echo 4096 > /sys/kernel/config/nullb/zns0/blocksize'
+sudo sh -c 'echo 16  > /sys/kernel/config/nullb/zns0/gb'              <span class="comment"># 용량: 16GB</span>
+sudo sh -c 'echo 1   > /sys/kernel/config/nullb/zns0/memory_backed'
+sudo sh -c 'echo 1   > /sys/kernel/config/nullb/zns0/power'           <span class="comment"># 장치 활성화</span>
+
+<span class="comment"># 장치 확인</span>
+lsblk /dev/nullb0 /dev/nvme0n1</code></pre>
+                </div>
+
+                <div class="output-block">
+                    <div class="output-label">예상 출력</div>
+                    <pre>NAME      MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+<span class="grn">nullb0</span>    251:0    0  <span class="grn">16G</span>  0 disk   <span class="sep">← ZNS</span>
+<span class="ylw">nvme0n1</span>   259:0    0  <span class="ylw">16G</span>  0 disk   <span class="sep">← Conventional</span></pre>
+                </div>
+
+                <div class="callout warn">
+                    <span class="callout-icon">⚠️</span>
+                    <span>VM을 재시작하면 <code>null_blk</code> 장치가 사라집니다. 재부팅 후에는 이 Step 4를 다시 실행하세요.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-entry">
+            <div class="step-dot">5</div>
+            <div class="step-body">
+                <h3>ZNS 장치 동작 확인</h3>
+                <p><code>blkzone report</code>로 Zone 목록을 조회하여 ZNS 장치가 정상 구성됐는지 확인합니다.</p>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — VM 내부</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code><span class="comment"># Zone 목록 (처음 5개)</span>
+sudo blkzone report /dev/nullb0 | head -5
+
+<span class="comment"># 총 Zone 수</span>
+cat /sys/block/nullb0/queue/nr_zones
+
+<span class="comment"># Zone 크기 (섹터 단위)</span>
+cat /sys/block/nullb0/queue/chunk_sectors
+
+<span class="comment"># Conventional 장치 확인</span>
+lsblk /dev/nvme0n1</code></pre>
+                </div>
+                <div class="output-block">
+                    <div class="output-label">예상 출력</div>
+                    <pre>  start: 0x000000000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000020000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000040000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000060000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000080000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+
+256         <span class="sep">← Zone 수 (16GB / 64MB)</span>
+131072      <span class="sep">← chunk_sectors (64MB = 131072 × 512B)</span>
+
+NAME      MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+<span class="ylw">nvme0n1</span>   259:0    0  16G  0 disk</pre>
+                </div>
+                <div class="callout ok">
+                    <span class="callout-icon">✅</span>
+                    <span>모든 Zone이 <code>zcond: 1(em)</code>, 타입이 <code>SEQ_WRITE_REQUIRED</code>이면 ZNS 장치가 정상입니다.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-entry">
+            <div class="step-dot">6</div>
+            <div class="step-body">
+                <h3>최종 체크리스트</h3>
+                <p>실습 시작 전 아래 항목을 모두 확인합니다.</p>
+                <ul class="checklist">
+                    <li><code>lsblk /dev/nullb0</code> → 16G 디스크 인식, TYPE=disk</li>
+                    <li><code>lsblk /dev/nvme0n1</code> → 16G 디스크 인식, TYPE=disk</li>
+                    <li><code>sudo blkzone report /dev/nullb0 | head -3</code> → zcond: 1(em), SEQ_WRITE_REQUIRED</li>
+                    <li><code>fio --version</code> → 3.19 이상</li>
+                    <li><code>which blkzone</code> → 경로 출력 확인</li>
+                </ul>
+                <div class="callout ok" style="margin-top:.8rem;">
+                    <span class="callout-icon">🚀</span>
+                    <span>모든 항목이 확인되면 실습 1로 넘어갑니다.</span>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /step-flow -->
+
+    <!-- 재사용 팁 -->
+    <div class="card">
+        <h2>VM 재시작 후 빠른 복구</h2>
+        <p>null_blk 장치는 메모리 기반이라 VM 재부팅 시 사라집니다. 아래 스크립트를 저장해 두면 <code>nullb0</code>을 빠르게 복구할 수 있습니다. <code>nvme0n1</code>은 재부팅 후에도 그대로 유지됩니다.</p>
+        <div class="code-block">
+            <div class="code-block-label">
+                <span>bash — setup_nullb.sh (저장 후 재사용)</span>
+                <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><code><span class="comment">#!/usr/bin/env bash
+# setup_nullb.sh — null_blk ZNS 장치 초기화
+# 사용법: sudo bash setup_nullb.sh
+</span>
+<span class="kw">set</span> -euo pipefail
+
+sudo modprobe null_blk nr_devices=0
+
+<span class="comment">## nullb0: ZNS</span>
+sudo mkdir /sys/kernel/config/nullb/zns0
+sudo sh -c <span class="str">'echo 1    > /sys/kernel/config/nullb/zns0/zoned'</span>
+sudo sh -c <span class="str">'echo 64   > /sys/kernel/config/nullb/zns0/zone_size'</span>
+sudo sh -c <span class="str">'echo 16   > /sys/kernel/config/nullb/zns0/zone_max_open'</span>
+sudo sh -c <span class="str">'echo 16   > /sys/kernel/config/nullb/zns0/zone_max_active'</span>
+sudo sh -c <span class="str">'echo 4096 > /sys/kernel/config/nullb/zns0/blocksize'</span>
+sudo sh -c <span class="str">'echo 16   > /sys/kernel/config/nullb/zns0/gb'</span>
+sudo sh -c <span class="str">'echo 1    > /sys/kernel/config/nullb/zns0/memory_backed'</span>
+sudo sh -c <span class="str">'echo 1    > /sys/kernel/config/nullb/zns0/power'</span>
+
+lsblk /dev/nullb0 /dev/nvme0n1
+printf <span class="str">'\n✔ nullb0 (ZNS) · nvme0n1 (Conventional) 준비 완료\n'</span></code></pre>
+        </div>
+    </div>
+
+    <div class="nav-between">
+        <a class="nav-btn" href="index.html">← 목록으로</a>
+        <a class="nav-btn" href="lab1.html">실습 1 →</a>
+    </div>
+
+</div>
+
+<footer><p>시스템최신기술 &middot; ZNS SSD 성능 비교 실습</p></footer>
+
+<script>
+function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    const tmp = document.createElement('div');
+    tmp.innerHTML = pre.innerHTML;
+    const text = tmp.innerText || tmp.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'copied!';
+        setTimeout(() => btn.textContent = 'copy', 1800);
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZNS SSD 성능 비교 실습 — 2026-1 시스템최신기술</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #003366;
+            --blue:   #004a99;
+            --accent: #c9a227;
+            --light:  #f7f9fc;
+            --border: #e2e8f0;
+            --success:#16a34a;
+            --warn:   #d97706;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.7; }
+        .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+
+        /* ── HEADER ── */
+        header { background:linear-gradient(135deg, var(--navy), var(--blue)); color:white; padding:3rem 0; margin-bottom:2rem; }
+        header .container { padding-top:0; padding-bottom:0; }
+        header h1 { font-size:1.8rem; font-weight:700; margin-bottom:.3rem; }
+        header p  { font-size:.95rem; opacity:.85; }
+        .badge { display:inline-block; background:var(--accent); color:var(--navy); font-size:.75rem; font-weight:600; padding:.2em .7em; border-radius:4px; margin-top:.8rem; }
+
+        /* ── INTRO ── */
+        .intro { background:white; border:1px solid var(--border); border-radius:8px; padding:1.5rem 2rem; margin-bottom:2rem; font-size:.92rem; }
+        .intro h2 { font-size:1.2rem; color:var(--navy); margin-bottom:.8rem; }
+        .intro p  { color:#374151; margin-bottom:.5rem; }
+        .intro p:last-child { margin-bottom:0; }
+        code { font-family:'JetBrains Mono',monospace; font-size:.85em; background:#eff6ff; padding:.1em .35em; border-radius:3px; color:var(--blue); }
+
+        /* ── STEP LIST ── */
+        .step-list { position:relative; margin-bottom:2rem; }
+        .step-list::before {
+            content:''; position:absolute;
+            left:22px; top:30px; bottom:30px;
+            width:2px; background:var(--border);
+        }
+        .step-item { display:flex; gap:1.2rem; align-items:flex-start; margin-bottom:1rem; position:relative; }
+        .step-item:last-child { margin-bottom:0; }
+        .step-num {
+            flex-shrink:0; width:44px; height:44px; border-radius:50%;
+            background:var(--navy); color:white;
+            font-size:1.1rem; font-weight:700;
+            display:flex; align-items:center; justify-content:center;
+            position:relative; z-index:1;
+        }
+        .step-num.setup { background:var(--warn); }
+        .step-num.lab   { background:var(--success); }
+        .step-num.lab4  { background:var(--accent); color:#1a202c; }
+
+        .step-card {
+            flex:1; background:white; border:1px solid var(--border);
+            border-radius:8px; padding:1.2rem 1.5rem;
+            transition:box-shadow .2s, border-color .2s;
+            text-decoration:none; color:inherit; display:block;
+        }
+        .step-card:hover { box-shadow:0 4px 12px rgba(0,51,102,.1); border-color:var(--blue); }
+        .step-card h3 { font-size:1.05rem; color:var(--navy); margin-bottom:.4rem; }
+        .step-card p  { font-size:.85rem; color:#475569; margin:0 0 .7rem; }
+        .step-card p:last-of-type { margin-bottom:0; }
+        .tools { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.7rem; }
+        .tool-badge { font-size:.72rem; background:#eff6ff; color:var(--blue); padding:.2em .6em; border-radius:3px; font-weight:500; }
+        .tool-badge.warn  { background:#fffbeb; color:#92400e; }
+        .tool-badge.ok    { background:#f0fdf4; color:#14532d; }
+        .tool-badge.bonus { background:#f5f3ff; color:#4c1d95; }
+
+        .sub-links { margin-top:.6rem; display:flex; flex-wrap:wrap; gap:.5rem; }
+        .sub-link {
+            font-size:.8rem; color:var(--blue); text-decoration:none;
+            padding:.25em .8em; border:1px solid var(--border); border-radius:4px;
+            transition:background .15s, border-color .15s;
+        }
+        .sub-link:hover { background:#eff6ff; border-color:var(--blue); }
+
+        /* ── TIME ESTIMATE ── */
+        .time-row { display:flex; flex-wrap:wrap; gap:.8rem; margin-bottom:2rem; }
+        .time-box { background:white; border:1px solid var(--border); border-radius:8px; padding:.9rem 1.2rem; flex:1; min-width:150px; }
+        .time-label { font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#64748b; margin-bottom:.25rem; }
+        .time-val { font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:500; color:var(--navy); }
+
+        footer { text-align:center; color:#94a3b8; font-size:.8rem; padding:2rem 0; }
+
+        @media(max-width:640px){
+            .container { padding:1rem; }
+            .step-list::before { left:18px; }
+            .step-num { width:36px; height:36px; font-size:.95rem; }
+            .step-card { padding:1rem; }
+            .time-row { flex-direction:column; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>ZNS SSD 성능 비교 실습</h1>
+        <p>배경지식 &rarr; 실습 준비 &rarr; Lab 1: 쓰기 제약 &rarr; Lab 2: Zone 상태 전이 &rarr; Lab 3: WAF 측정 &rarr; Lab 4: Zoned UFS Case Study</p>
+        <span class="badge">2026-1 시스템최신기술</span>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- 실습 개요 -->
+    <div class="intro">
+        <h2>실습 개요</h2>
+        <p>
+            본 실습은 ZNS(Zoned Namespace) SSD의 핵심 특성인 <strong>쓰기 제약</strong>,
+            <strong>Zone 상태 전이</strong>, <strong>WAF(Write Amplification Factor)</strong>를
+            직접 측정하고 Conventional SSD와 비교·분석합니다.
+        </p>
+        <p>
+            QEMU + Linux 커널 환경에서 <code>null_blk</code> 모듈로 가상 ZNS 장치(<code>/dev/nullb0</code>)를 구성하고,
+            <code>fio</code>·<code>blkzone</code> 명령으로 순차 쓰기 처리량 비교, Zone 상태 머신 조작,
+            WAF 계산까지 Lab 1~3에서 단계별로 실험합니다.
+            이어지는 <strong>Lab 4 (Case Study)</strong>에서는 동일한 Zone 개념이
+            모바일 스마트폰(Zoned UFS)에 이식될 때 발생하는 시스템 과제와 해결 전략을 FAST '26 논문을 통해 탐구합니다.
+        </p>
+    </div>
+
+    <!-- Step Flow -->
+    <div class="step-list">
+
+        <!-- Step 1: 배경 지식 -->
+        <div class="step-item">
+            <div class="step-num">1</div>
+            <a href="background.html" class="step-card">
+                <h3>배경 지식: ZNS SSD 구조와 쓰기 인터페이스</h3>
+                <p>ZNS SSD의 등장 배경, Zone 구조와 Write Pointer, Zone 상태 머신(EMPTY → OPEN → FULL),
+                   Sequential Write 제약, Zone Append의 원자성과 LBA 반환, Active/Open Zone 제한,
+                   Bandwidth·Latency·Queue Depth(Little's Law)를 학습합니다.</p>
+                <div class="tools">
+                    <span class="tool-badge">개념 학습</span>
+                    <span class="tool-badge">Zone 상태 머신</span>
+                    <span class="tool-badge">Write Pointer</span>
+                    <span class="tool-badge">Little's Law</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Step 2: 환경 준비 -->
+        <div class="step-item">
+            <div class="step-num setup">2</div>
+            <a href="setup.html" class="step-card">
+                <h3>실습 환경 준비: null_blk 기반 가상 ZNS 장치 구성</h3>
+                <p><code>null_blk</code> 커널 모듈을 소스에서 빌드·적재하고, <code>configfs</code>를 이용해
+                   Zone 크기 256 MB / 전체 10 GB의 가상 ZNS 장치(<code>/dev/nullb0</code>)를 생성합니다.
+                   Zone 인식과 EMPTY 상태를 확인하고, <code>fio</code> 버전을 검증합니다.</p>
+                <div class="tools">
+                    <span class="tool-badge warn">QEMU</span>
+                    <span class="tool-badge warn">null_blk</span>
+
+                    <span class="tool-badge warn">fio 3.19+</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Step 3: Lab 1 -->
+        <div class="step-item">
+            <div class="step-num lab">3</div>
+            <a href="lab1.html" class="step-card">
+                <h3>Lab 1: 쓰기 제약 및 기본 성능 비교</h3>
+                <p>ZNS(<code>/dev/nullb0</code>)와 Conventional SSD(<code>/dev/nvme0n1</code>)에 동일한 순차 쓰기를 수행해
+                   처리량(Bandwidth)과 지연 시간을 비교합니다.
+                   이어서 ZNS에 Random Write를 시도하여 Write Pointer 위반 에러(<code>-EINVAL</code>)를 직접 확인합니다.</p>
+                <div class="tools">
+                    <span class="tool-badge ok">fio (libaio)</span>
+                    <span class="tool-badge ok">zonemode=zbd</span>
+                    <span class="tool-badge ok">Sequential Write</span>
+                    <span class="tool-badge ok">Random Write 위반</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Step 4: Lab 2 -->
+        <div class="step-item">
+            <div class="step-num lab">4</div>
+            <a href="lab2.html" class="step-card">
+                <h3>Lab 2: Zone 관리 상태 전이</h3>
+                <p><code>blkzone report</code>로 Zone 상태를 조회하고, Explicit Open → 쓰기 → Close → Finish → Reset
+                   의 전체 상태 전이 시퀀스를 직접 실행하며 Write Pointer 이동을 관찰합니다.</p>
+                <div class="tools">
+                    <span class="tool-badge ok">blkzone report</span>
+                    <span class="tool-badge ok">blkzone open/close/finish</span>
+                    <span class="tool-badge ok">blkzone reset</span>
+                    <span class="tool-badge ok">Write Pointer</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Step 5: Lab 3 -->
+        <div class="step-item">
+            <div class="step-num lab">5</div>
+            <a href="lab3.html" class="step-card">
+                <h3>Lab 3: WAF(쓰기 증폭 지수) 비교 측정</h3>
+                <p>Pre-conditioning으로 Steady-State를 조성한 후 혼합 워크로드(랜덤 70% + 순차 30%)를 인가하고,
+                   <code>/sys/block/DEV/stat</code> 기반으로 WAF를 계산합니다.
+                   ZNS의 WAF ≈ 1과 Conventional SSD의 GC Copy-back 구조를 비교 분석합니다.</p>
+                <div class="tools">
+                    <span class="tool-badge ok">Pre-conditioning</span>
+                    <span class="tool-badge ok">혼합 워크로드</span>
+                    <span class="tool-badge ok">WAF = NAND / Host</span>
+                    <span class="tool-badge ok">GC 구조 비교</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Step 6: Lab 4 Case Study -->
+        <div class="step-item">
+            <div class="step-num lab4">6</div>
+            <a href="zufs_study.html" class="step-card">
+                <h3>Lab 4 (Case Study): ZNS 기술의 모바일 스토리지 확장 — Zoned UFS</h3>
+                <p>Lab 1~3에서 직접 경험한 ZNS 제약들(쓰기 위반 에러, Zone 상태 전이, WAF≈1)이 모바일 스마트폰 환경(ZUFS)에서 어떤 시스템 과제로 이어지는지 탐구합니다. FAST '26 논문 <em>Unleashing Zoned UFS</em>를 통해 펌웨어~Android 5계층 크로스 레이어 최적화 전략을 학습합니다.</p>
+                <p style="font-size:.82rem; color:#64748b; margin-top:.3rem;">
+                    <strong>Step 4.1</strong> 스토리지 패러다임 변화 분석 (CUFS vs ZUFS, L2P 오버헤드 수백MB→수십KB) &bull;
+                    <strong>Step 4.2</strong> 3대 과제 분석 (제한된 SRAM · 쓰기 순서 · GC 오버헤드) &bull;
+                    <strong>Step 4.3</strong> 5계층 협력 아키텍처 (펌웨어~Android 크로스 레이어) &bull;
+                    <strong>Step 4.4</strong> 실무 성능 평가 (단편화 환경 쓰기 2× 이상, 게임 로딩 14% 단축)
+                </p>
+                <div class="tools">
+                    <span class="tool-badge bonus">Lab 4 Case Study</span>
+                    <span class="tool-badge bonus">Zoned UFS</span>
+                    <span class="tool-badge bonus">크로스 레이어 최적화</span>
+                    <span class="tool-badge bonus">FAST '26</span>
+                </div>
+            </a>
+        </div>
+
+    </div><!-- /step-list -->
+
+</div>
+
+<footer>
+    <p>2026-1 시스템최신기술 &middot; ZNS SSD 성능 비교 실습</p>
+</footer>
+
+</body>
+</html>

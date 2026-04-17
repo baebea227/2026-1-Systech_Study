@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 4 (Case Study): Zoned UFS — 2026-1 시스템최신기술</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #003366;
+            --blue:   #004a99;
+            --accent: #c9a227;
+            --light:  #f7f9fc;
+            --border: #e2e8f0;
+            --success:#16a34a;
+            --warn:   #d97706;
+            --danger: #dc2626;
+            --purple: #7c3aed;
+            --teal:   #0d9488;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.75; }
+        .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+
+        header { background:linear-gradient(135deg, #1a0050, #2d0080, var(--purple)); color:white; padding:3rem 0; margin-bottom:2rem; }
+        header .container { padding-top:0; padding-bottom:0; }
+        .back-link { color:rgba(255,255,255,.7); font-size:.85rem; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-bottom:.8rem; }
+        .back-link:hover { color:white; }
+        header h1 { font-size:1.7rem; font-weight:700; margin-bottom:.35rem; line-height:1.35; }
+        header .subtitle { font-size:.92rem; opacity:.82; }
+        .badge { display:inline-block; background:var(--accent); color:#1a202c; font-size:.72rem; font-weight:700; padding:.2em .75em; border-radius:4px; margin-top:.8rem; letter-spacing:.03em; }
+        .badge-outline { display:inline-block; border:1px solid rgba(255,255,255,.5); color:rgba(255,255,255,.85); font-size:.72rem; padding:.2em .75em; border-radius:4px; margin-top:.8rem; margin-left:.4rem; }
+
+        .meta-row { display:flex; flex-wrap:wrap; gap:.75rem; margin-bottom:2rem; }
+        .meta-box { background:white; border:1px solid var(--border); border-radius:8px; padding:.85rem 1.2rem; flex:1; min-width:140px; }
+        .meta-label { font-size:.7rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#64748b; margin-bottom:.25rem; }
+        .meta-val { font-size:.95rem; font-weight:600; color:var(--navy); }
+
+        .section-label {
+            font-size:.73rem; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+            color:#94a3b8; margin:2rem 0 .9rem;
+            padding-bottom:.45rem; border-bottom:2px solid var(--border);
+            display:flex; align-items:center; gap:.6rem;
+        }
+        .section-label .num {
+            display:inline-flex; align-items:center; justify-content:center;
+            width:24px; height:24px; border-radius:50%;
+            background:var(--purple); color:white; font-size:.7rem; font-weight:700; flex-shrink:0;
+        }
+
+        .card { background:white; border:1px solid var(--border); border-radius:10px; padding:1.6rem 2rem; margin-bottom:1.5rem; }
+        .card h2 { font-size:1.1rem; color:var(--navy); margin-bottom:.9rem; }
+        .card h3 { font-size:1rem; color:var(--navy); margin-bottom:.6rem; font-weight:600; }
+        .card p  { font-size:.88rem; color:#374151; margin-bottom:.65rem; }
+        .card p:last-child { margin-bottom:0; }
+
+        code { font-family:'JetBrains Mono',monospace; font-size:.82em; background:#eff6ff; padding:.1em .38em; border-radius:3px; color:var(--blue); }
+
+        .callout { border-radius:6px; padding:.85rem 1.15rem; font-size:.86rem; margin:.6rem 0 1rem; display:flex; gap:.75rem; align-items:flex-start; }
+        .callout.info   { background:#eff6ff; border-left:3px solid var(--blue);    color:#1e40af; }
+        .callout.warn   { background:#fffbeb; border-left:3px solid var(--warn);    color:#92400e; }
+        .callout.ok     { background:#f0fdf4; border-left:3px solid var(--success); color:#14532d; }
+        .callout.purple { background:#f5f3ff; border-left:3px solid var(--purple);  color:#4c1d95; }
+        .callout.teal   { background:#f0fdfa; border-left:3px solid var(--teal);    color:#134e4a; }
+        .callout-icon { font-size:1rem; flex-shrink:0; margin-top:.05rem; }
+
+        .cmp-table-wrap { overflow-x:auto; margin:.6rem 0 1rem; }
+        .cmp-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+        .cmp-table th { background:var(--navy); color:white; padding:.55rem 1rem; text-align:left; font-weight:600; }
+        .cmp-table th:not(:first-child) { text-align:center; }
+        .cmp-table td { padding:.5rem 1rem; border-bottom:1px solid var(--border); color:#374151; }
+        .cmp-table td:not(:first-child) { text-align:center; }
+        .cmp-table tr:nth-child(even) td { background:#f8fafc; }
+        .cmp-table .good { color:var(--success); font-weight:600; }
+        .cmp-table .bad  { color:var(--danger);  font-weight:600; }
+        .cmp-table .mid  { color:var(--warn);    font-weight:600; }
+        .cmp-table .label-col { font-weight:600; color:var(--navy); }
+
+        .challenge-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:.8rem 0 1.2rem; }
+        .challenge-card { border-radius:8px; padding:1.1rem 1.2rem; }
+        .challenge-card.c1 { background:#fff7ed; border:1px solid #fed7aa; }
+        .challenge-card.c2 { background:#fef2f2; border:1px solid #fca5a5; }
+        .challenge-card.c3 { background:#faf5ff; border:1px solid #d8b4fe; }
+        .ch-icon { font-size:1.4rem; margin-bottom:.45rem; }
+        .ch-title { font-size:.82rem; font-weight:700; color:var(--navy); margin-bottom:.4rem; }
+        .ch-body  { font-size:.78rem; color:#374151; line-height:1.6; }
+
+        .layer-stack { display:flex; flex-direction:column; gap:.35rem; margin:.8rem 0 1.2rem; }
+        .layer-item { display:flex; align-items:center; gap:.85rem; border-radius:6px; padding:.7rem 1rem; border:1px solid; }
+        .layer-item.l-android { background:#e8f5e9; border-color:#a5d6a7; }
+        .layer-item.l-f2fs    { background:#e3f2fd; border-color:#90caf9; }
+        .layer-item.l-block   { background:#f3e5f5; border-color:#ce93d8; }
+        .layer-item.l-driver  { background:#fff8e1; border-color:#ffe082; }
+        .layer-item.l-fw      { background:#fce4ec; border-color:#f48fb1; }
+        .layer-num { flex-shrink:0; width:28px; height:28px; border-radius:50%; background:var(--navy); color:white; font-size:.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+        .layer-label { font-size:.82rem; font-weight:700; color:var(--navy); min-width:110px; }
+        .layer-opt { font-size:.8rem; color:#374151; flex:1; }
+        .layer-badge { font-size:.68rem; background:rgba(0,51,102,.1); color:var(--navy); padding:.15em .5em; border-radius:3px; font-weight:600; white-space:nowrap; }
+
+        .result-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:.8rem 0 1.2rem; }
+        .result-box { background:white; border:1px solid var(--border); border-radius:8px; padding:1rem 1.1rem; text-align:center; }
+        .result-box.highlight { background:#f0fdf4; border-color:#86efac; }
+        .result-num { font-family:'JetBrains Mono',monospace; font-size:1.6rem; font-weight:700; color:var(--success); }
+        .result-box:not(.highlight) .result-num { color:var(--navy); }
+        .result-label { font-size:.75rem; color:#64748b; margin-top:.25rem; line-height:1.4; }
+
+        .concept-pills { display:flex; flex-wrap:wrap; gap:.5rem; margin:.5rem 0 1rem; }
+        .pill { font-size:.75rem; padding:.3em .75em; border-radius:20px; font-weight:500; }
+        .pill.blue   { background:#dbeafe; color:#1e40af; }
+        .pill.green  { background:#dcfce7; color:#14532d; }
+        .pill.purple { background:#ede9fe; color:#5b21b6; }
+        .pill.amber  { background:#fef3c7; color:#92400e; }
+        .pill.teal   { background:#ccfbf1; color:#134e4a; }
+
+        .question-list { display:flex; flex-direction:column; gap:.75rem; }
+        .question-item { background:white; border:1px solid var(--border); border-radius:8px; padding:1rem 1.3rem; }
+        .q-head { display:flex; align-items:flex-start; gap:.75rem; }
+        .q-num { flex-shrink:0; width:26px; height:26px; border-radius:50%; background:var(--purple); color:white; font-size:.78rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:.05rem; }
+        .q-text { font-size:.88rem; font-weight:600; color:var(--navy); }
+        .q-hint { font-size:.8rem; color:#64748b; margin-top:.4rem; margin-left:2rem; }
+
+        .diagram-box { background:#0f1724; border:1px solid #2d3748; border-radius:8px; overflow:hidden; margin:.5rem 0 1.1rem; }
+        .diagram-label { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:#64748b; letter-spacing:.06em; padding:.5rem 1rem; background:#1a2233; border-bottom:1px solid #2d3748; display:flex; align-items:center; gap:.5rem; }
+        .diagram-label::before { content:'◈'; color:#a78bfa; font-size:.65rem; }
+        .diagram-box pre { font-family:'JetBrains Mono',monospace; font-size:.78rem; color:#94a3b8; line-height:1.75; overflow-x:auto; padding:1rem 1.2rem; }
+        .diagram-box pre .hl  { color:#c084fc; font-weight:600; }
+        .diagram-box pre .grn { color:#4ade80; font-weight:600; }
+        .diagram-box pre .ylw { color:#fde68a; }
+        .diagram-box pre .blu { color:#7dd3fc; }
+        .diagram-box pre .red { color:#f87171; font-weight:600; }
+        .diagram-box pre .sep { color:#334155; }
+
+        .paper-ref { background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:1.1rem 1.4rem; margin-bottom:1.5rem; display:flex; gap:1rem; align-items:flex-start; }
+        .paper-icon { font-size:1.6rem; flex-shrink:0; }
+        .paper-body { flex:1; }
+        .paper-title { font-size:.9rem; font-weight:700; color:var(--navy); margin-bottom:.25rem; line-height:1.4; }
+        .paper-authors { font-size:.78rem; color:#64748b; margin-bottom:.25rem; }
+        .paper-venue { font-size:.75rem; background:#ede9fe; color:var(--purple); padding:.15em .6em; border-radius:3px; font-weight:600; display:inline-block; }
+
+        .nav-between { display:flex; justify-content:space-between; margin-top:2.5rem; }
+        .nav-btn { font-size:.82rem; color:var(--blue); text-decoration:none; padding:.5em 1.1em; border:1px solid var(--border); border-radius:5px; background:white; transition:background .15s,border-color .15s; }
+        .nav-btn:hover { background:#eff6ff; border-color:var(--blue); }
+
+        footer { text-align:center; color:#94a3b8; font-size:.8rem; padding:2rem 0; }
+
+        @media(max-width:640px){
+            .container { padding:1rem; }
+            header h1 { font-size:1.35rem; }
+            .challenge-grid { grid-template-columns:1fr; }
+            .result-row { grid-template-columns:1fr 1fr; }
+            .meta-row { flex-direction:column; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <a class="back-link" href="index.html">← 목록으로</a>
+        <h1>Lab 4 (Case Study): Zoned UFS</h1>
+        <p class="subtitle">ZNS 가상 실습(Lab 1~3, QEMU + null_blk)의 연장선 — 동일한 Zone 개념이 실제 모바일 스마트폰(ZUFS)에 이식될 때 발생하는 시스템 과제와 크로스 레이어 최적화 (FAST '26 논문 분석)</p>
+        <span class="badge">2026-1 시스템최신기술</span>
+        <span class="badge-outline">Lab 4 Case Study</span>
+        <span class="badge-outline">논문 스터디</span>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- 논문 정보 -->
+    <div class="paper-ref">
+        <div class="paper-icon">📄</div>
+        <div class="paper-body">
+            <div class="paper-title">Unleashing Zoned UFS: Cross-Layer Optimizations for Next-Generation Mobile Storage</div>
+            <div class="paper-authors">Jungae Kim (SK hynix) · Jaegeuk Kim (Google) · Kyu-Jin Cho (SNU) · Sungjin Park, Jinwoo Kim, Jieun Kim, Iksung Oh (SK hynix) · Chul Lee, Bart Van Assche, Daeho Jeong, Konstantin Vyshetsky (Google) · Jin-Soo Kim (SNU)</div>
+            <span class="paper-venue">FAST '26 — Open Access (NetApp Sponsored)</span>
+        </div>
+    </div>
+
+    <!-- 학습 목표 -->
+    <div class="card">
+        <h2>학습 목표</h2>
+        <p>이 Case Study를 마치면 다음을 설명할 수 있습니다.</p>
+        <div class="concept-pills">
+            <span class="pill teal">Lab 1~3 실습 제약과 ZUFS 과제의 1:1 대응 관계</span>
+            <span class="pill blue">Zoned UFS(ZUFS)와 CUFS의 차이</span>
+            <span class="pill amber">모바일 스토리지 스택의 3가지 핵심 과제</span>
+            <span class="pill purple">크로스 레이어 최적화 5계층 협력 전략</span>
+            <span class="pill green">ZUFS의 성능 개선 수치 및 실용적 의의</span>
+        </div>
+    </div>
+
+    <!-- Bridge Section -->
+    <div class="section-label" style="border-bottom-color:var(--teal); color:var(--teal);">
+        <span class="num" style="background:var(--teal);">🔗</span>Lab 1~3에서 여기까지 — 연결 고리
+    </div>
+
+    <div class="card">
+        <h2>"왜 굳이 까다로운 순차 쓰기를 써야 하는가?" — 그 다음 질문</h2>
+        <p>
+            Lab 1~3은 <strong>QEMU + <code>null_blk</code> 가상 ZNS 장치</strong>를 사용한 실습입니다.
+            실제 ZNS SSD 하드웨어가 아니지만, Zone 구조·Write Pointer·상태 전이·WAF 등
+            <em>핵심 개념은 실제 장치와 동일</em>합니다.
+            Lab 3에서 WAF ≈ 1을 확인했다면 이제 <strong>"이 개념을 스마트폰에 넣으려면 무슨 문제가 생길까?"</strong>라는 질문이 자연스럽게 이어집니다.
+        </p>
+        <p>
+            아래 매핑표로 가상 실습에서 경험한 제약들이 실제 모바일 환경(ZUFS)에서 어떤 시스템 과제로 이어지는지 확인한 뒤,
+            Step 4.1 ~ 4.4에서 각 과제의 해결책을 순서대로 학습합니다.
+        </p>
+
+        <div class="cmp-table-wrap">
+            <table class="cmp-table">
+                <thead>
+                    <tr><th>기존 실습</th><th>직접 경험한 제약</th><th>→ ZUFS 핵심 과제</th><th>해결 계층</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="label-col"><a href="lab1.html" style="color:var(--blue);">Lab 1</a><br><small style="font-weight:400;color:#64748b;">순차 쓰기 제약</small></td>
+                        <td><code>zonemode=none</code> 랜덤 쓰기 시도 → <code>-EINVAL</code> 에러 직접 확인</td>
+                        <td><strong>과제 2: 쓰기 순서 보장</strong><br><small style="color:#64748b;">I/O 재정렬이 동일한 에러 유발 → 블록 레이어 큐 분리 필요</small></td>
+                        <td>블록 레이어<br>드라이버</td>
+                    </tr>
+                    <tr>
+                        <td class="label-col"><a href="lab2.html" style="color:var(--blue);">Lab 2</a><br><small style="font-weight:400;color:#64748b;">Zone 상태 전이</small></td>
+                        <td>Open → Close → Finish → Reset 전체 상태 전이 직접 제어</td>
+                        <td><strong>과제 1: 제한된 SRAM 관리</strong><br><small style="color:#64748b;">Zone Open마다 SRAM 버퍼 필요, 모바일은 SRAM 극소 → 동적 버퍼 공유 필요</small></td>
+                        <td>장치 펌웨어</td>
+                    </tr>
+                    <tr>
+                        <td class="label-col"><a href="lab3.html" style="color:var(--blue);">Lab 3</a><br><small style="font-weight:400;color:#64748b;">WAF 측정 및 GC</small></td>
+                        <td>ZNS WAF ≈ 1 달성, GC 없는 깔끔한 쓰기 경로 확인</td>
+                        <td><strong>과제 3: GC 오버헤드 완화</strong><br><small style="color:#64748b;">Zone 크기가 커서 유효 데이터가 조금만 남아도 재사용 불가 → 선제적 GC 필요</small></td>
+                        <td>F2FS<br>Android</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout teal">
+            <span class="callout-icon">💡</span>
+            <span>이 세 과제를 해결하기 위해 논문은 <strong>펌웨어 → 드라이버 → 블록 레이어 → F2FS → Android</strong>에 이르는 5계층 협력 최적화를 제안합니다. Step 4.1~4.4에서 순서대로 살펴봅니다.</span>
+        </div>
+    </div>
+
+    <!-- ──────────────────── 섹션 1 ──────────────────── -->
+    <div class="section-label"><span class="num">1</span>Step 4.1 — 스토리지 패러다임 변화 분석</div>
+
+    <div class="card">
+        <h2>1-1. 기존 CUFS의 한계: 수백 MB 규모의 L2P 매핑 오버헤드</h2>
+        <p>
+            스마트폰에 사용되는 <strong>Conventional UFS(CUFS)</strong>는 낸드 플래시 특성상
+            <strong>논리 주소(LBA)를 물리 주소로 변환하는 L2P 매핑 테이블</strong>을
+            SRAM에 보관해야 합니다. 스토리지 용량이 커질수록 이 테이블 크기가 선형으로 증가해
+            256GB 기기에서는 <strong>약 256MB의 SRAM</strong>을 L2P 테이블만으로 소진합니다.
+            ZUFS는 순차 쓰기 제약을 통해 이를 <strong>수십 KB 수준</strong>으로 혁신적으로 줄입니다.
+        </p>
+
+        <div class="diagram-box">
+            <div class="diagram-label">CUFS vs ZUFS — L2P 매핑 구조 비교</div>
+            <pre><span class="hl">CUFS (Conventional UFS)</span>
+<span class="sep">──────────────────────────────────────────────────</span>
+  Host LBA 0 → Physical Page 1047    <span class="red">← 모든 페이지마다</span>
+  Host LBA 1 → Physical Page 5200    <span class="red">   1:1 매핑 항목 필요</span>
+  Host LBA 2 → Physical Page  312
+  ...
+  ▶ 256GB 장치: L2P 테이블 약 <span class="red">256MB SRAM</span> 필요
+
+<span class="hl">ZUFS (Zoned UFS)</span>
+<span class="sep">──────────────────────────────────────────────────</span>
+  Zone 0 시작점 → Physical Block X
+  Zone 내부는 <span class="grn">순차 쓰기만</span> → 오프셋으로 위치 계산 가능
+
+  ▶ 256GB 장치: L2P 테이블 <span class="grn">수십 KB SRAM</span>만 필요
+    (Zone 수 × 포인터 크기 — Zone당 1항목)</pre>
+        </div>
+
+        <div class="callout info">
+            <span class="callout-icon">💡</span>
+            <span><strong>핵심 아이디어:</strong> ZUFS는 쓰기를 순차적으로만 허용함으로써 L2P 매핑을 Zone 단위로만 유지하면 되어 SRAM 사용량을 수십~수백 배 줄입니다.</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>1-2. CUFS vs ZUFS 핵심 차이</h2>
+        <div class="cmp-table-wrap">
+            <table class="cmp-table">
+                <thead>
+                    <tr><th>항목</th><th>CUFS (기존)</th><th>ZUFS (신규)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="label-col">쓰기 방식</td><td>임의(Random) 쓰기 가능</td><td class="good">순차(Sequential) 쓰기 전용</td></tr>
+                    <tr><td class="label-col">L2P 테이블 크기</td><td class="bad">전체 페이지 1:1 매핑 (수백 MB)</td><td class="good">Zone당 1항목 (수십 KB)</td></tr>
+                    <tr><td class="label-col">SRAM 사용</td><td class="bad">많음 (L2P 캐시 필요)</td><td class="good">적음</td></tr>
+                    <tr><td class="label-col">GC(Garbage Collection)</td><td class="bad">장치 내부에서 자동 발생</td><td class="mid">호스트/파일시스템이 관리</td></tr>
+                    <tr><td class="label-col">WAF(쓰기 증폭)</td><td class="bad">GC로 인해 2~10+</td><td class="good">≈ 1.0</td></tr>
+                    <tr><td class="label-col">적용 대상</td><td>스마트폰 (현재 주류)</td><td>차세대 스마트폰</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout purple">
+            <span class="callout-icon">🔗</span>
+            <span>ZUFS는 서버/데이터센터의 <strong>ZNS SSD</strong>와 같은 개념을 모바일 UFS 인터페이스에 적용한 것입니다. 앞서 실습한 Zone 구조, Write Pointer, Zone Reset, WAF 개념이 ZUFS에도 동일하게 적용됩니다.</span>
+        </div>
+    </div>
+
+    <!-- ──────────────────── 섹션 2 ──────────────────── -->
+    <div class="section-label"><span class="num">2</span>Step 4.2 — 3대 과제 분석</div>
+
+    <div class="card">
+        <h2>ZUFS 상용 배포의 3대 장벽</h2>
+        <p>개념은 간단하지만, 실제 스마트폰에 ZUFS를 탑재하려면 세 가지 비자명한(non-trivial) 문제를 해결해야 합니다.</p>
+
+        <div class="challenge-grid">
+            <div class="challenge-card c1">
+                <div class="ch-icon">🧠</div>
+                <div class="ch-title">과제 1: 제한된 SRAM 관리</div>
+                <div class="ch-body">
+                    순차 쓰기를 지원하려면 다수의 Zone을 동시에 열어야(Open) 합니다.
+                    Zone을 열 때마다 데이터를 임시 버퍼링할 <strong>SRAM이 필요</strong>하지만,
+                    모바일 기기의 SRAM은 극히 제한적입니다.
+                </div>
+            </div>
+            <div class="challenge-card c2">
+                <div class="ch-icon">🔒</div>
+                <div class="ch-title">과제 2: 쓰기 순서 보장</div>
+                <div class="ch-body">
+                    ZUFS는 순차 쓰기만 허용하므로 <strong>쓰기 순서 위반이 치명적</strong>입니다.
+                    블록 레이어, 드라이버, 펌웨어를 거치는 동안 I/O 요청 순서가
+                    뒤바뀌면 데이터 손상이 발생할 수 있습니다.
+                </div>
+            </div>
+            <div class="challenge-card c3">
+                <div class="ch-icon">🗑️</div>
+                <div class="ch-title">과제 3: GC 오버헤드 완화</div>
+                <div class="ch-body">
+                    Zone 크기가 매우 크기 때문에, 유효 데이터가 조금이라도
+                    남아 있으면 Zone을 재사용하지 못합니다. 파일시스템이 GC를 늦게 실행하면
+                    빈 Zone 부족으로 <strong>심각한 성능 저하</strong>가 발생합니다.
+                </div>
+            </div>
+        </div>
+
+        <div class="callout info">
+            <span class="callout-icon">🔗</span>
+            <div>
+                <strong>Lab 실습과의 1:1 연결점 요약</strong>
+                <ul style="margin-top:.4rem; margin-left:1rem; font-size:.84rem; line-height:1.8;">
+                    <li><strong>과제 1 ← Lab 2:</strong> Zone Open/Close 상태 전이를 직접 제어하며 SRAM 버퍼의 역할을 체감</li>
+                    <li><strong>과제 2 ← Lab 1:</strong> <code>zonemode=none</code> 랜덤 쓰기 시 발생한 <code>-EINVAL</code>이 I/O 재정렬 위반의 대표 사례</li>
+                    <li><strong>과제 3 ← Lab 3:</strong> WAF ≈ 1은 달성했지만 Zone 단위 재사용 제약이 GC 타이밍 문제로 이어짐</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="callout warn">
+            <span class="callout-icon">⚠️</span>
+            <span>이 세 과제는 서로 연결되어 있습니다. SRAM을 아끼려고 Open Zone 수를 줄이면 GC 유연성이 떨어지고, 쓰기 순서를 지키려고 큐를 제한하면 처리량이 감소합니다. 따라서 계층 간 협력 설계가 필수입니다.</span>
+        </div>
+    </div>
+
+    <div class="section-label"><span class="num">3</span>Step 4.3 — 5계층 협력 아키텍처</div>
+
+    <div class="card">
+        <h2>3-1. 소프트웨어 스택 전반의 최적화</h2>
+        <p>논문은 세 가지 과제를 해결하기 위해 <strong>5개 계층</strong>에 걸친 최적화를 제안합니다. 위 계층이 아래 계층의 특성을 인지하고 협력하는 것이 핵심입니다.</p>
+
+        <div class="layer-stack">
+            <div class="layer-item l-android">
+                <div class="layer-num">5</div>
+                <div class="layer-label">Android 프레임워크</div>
+                <div class="layer-opt">백그라운드 GC 스케줄링 — 앱 포그라운드 활동이 적을 때 선제적으로 GC 수행</div>
+                <span class="layer-badge">과제 3 해결</span>
+            </div>
+            <div class="layer-item l-f2fs">
+                <div class="layer-num">4</div>
+                <div class="layer-label">F2FS 파일시스템</div>
+                <div class="layer-opt">선제적 GC(Proactive GC) — 빈 Zone 임계값 모니터링 후 조기 회수; Zone 정렬 쓰기 정책</div>
+                <span class="layer-badge">과제 3 해결</span>
+            </div>
+            <div class="layer-item l-block">
+                <div class="layer-num">3</div>
+                <div class="layer-label">블록 레이어</div>
+                <div class="layer-opt">쓰기 순서 보장 — Zone별 요청 큐 분리, 재정렬 방지 플러시 포인트 삽입</div>
+                <span class="layer-badge">과제 2 해결</span>
+            </div>
+            <div class="layer-item l-driver">
+                <div class="layer-num">2</div>
+                <div class="layer-label">SCSI/UFS 드라이버</div>
+                <div class="layer-opt">Zone 상태 추적 및 Open Zone 수 제한 시행; 재정렬 감지 시 오류 처리 경로 추가</div>
+                <span class="layer-badge">과제 1·2 해결</span>
+            </div>
+            <div class="layer-item l-fw">
+                <div class="layer-num">1</div>
+                <div class="layer-label">장치 펌웨어</div>
+                <div class="layer-opt">동적 SRAM 공유(Dynamic Buffer Sharing) — 비활성 Zone의 버퍼를 활성 Zone에 기회주의적으로 재할당</div>
+                <span class="layer-badge">과제 1 해결</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3-2. 각 최적화 기법 상세</h2>
+
+        <h3>① 동적 장치-사이드 버퍼 관리 (과제 1 해결)</h3>
+        <p>
+            SRAM을 Zone별로 정적으로 할당하면 유휴 Zone이 생길 때 낭비가 발생합니다.
+            <strong>동적 버퍼 공유</strong>는 현재 데이터를 수신 중인 Zone에만 SRAM을 집중 할당하고,
+            유휴 Zone의 버퍼는 회수해 다른 Zone에 재사용합니다.
+        </p>
+        <div class="callout teal">
+            <span class="callout-icon">🏦</span>
+            <span>비유: 은행 창구처럼 손님(I/O)이 있을 때만 창구(SRAM)를 열고, 손님이 없으면 다른 창구로 직원을 이동시킵니다.</span>
+        </div>
+
+        <h3 style="margin-top:1.2rem;">② 쓰기 순서 보장 메커니즘 (과제 2 해결)</h3>
+        <p>
+            블록 레이어는 성능을 위해 요청을 <strong>재정렬(reordering)</strong>할 수 있습니다.
+            그러나 ZUFS에서 Zone 내 순서 위반은 즉각적인 오류를 유발합니다.
+            Zone 경계에서 <strong>배리어(barrier) 삽입</strong>과 동일 Zone 요청의 순서 보존 큐잉으로 해결합니다.
+        </p>
+
+        <div class="diagram-box">
+            <div class="diagram-label">쓰기 순서 위반 시나리오와 해결</div>
+            <pre><span class="red">문제: 블록 레이어 재정렬 발생</span>
+<span class="sep">──────────────────────────────────────────────</span>
+  F2FS 발행 순서: [Zone0: 0→4KB] → [Zone0: 4→8KB] → [Zone0: 8→12KB]
+  블록 레이어 재정렬: [Zone0: 8→12KB] → [Zone0: 0→4KB]  <span class="red">← 순서 역전!</span>
+  ZUFS 장치: 8KB 위치에 쓰기 시도 → WP=0 → <span class="red">오류(-EINVAL)</span>
+
+<span class="grn">해결: Zone별 순서 보존 큐</span>
+<span class="sep">──────────────────────────────────────────────</span>
+  Zone 0 큐: [0→4KB] → [4→8KB] → [8→12KB]  <span class="grn">순서 보장</span>
+  Zone 1 큐: [0→4KB] → ...                  <span class="grn">Zone 간 독립 병렬 처리</span>
+  드라이버: Zone 경계 감지 시 배리어 삽입하여 플러시</pre>
+        </div>
+
+        <h3 style="margin-top:1.2rem;">③ 선제적 GC 프레임워크 (과제 3 해결)</h3>
+        <p>
+            F2FS는 기존에 빈 공간이 부족해질 때(반응적 GC) 가비지 컬렉션을 수행했습니다.
+            ZUFS 환경에서는 Zone 크기가 크기 때문에 반응적 GC는 너무 늦습니다.
+            <strong>선제적 GC</strong>는 빈 Zone 수가 임계값 아래로 떨어지기 전에 미리 GC를 실행하고,
+            Android 프레임워크와 연동해 <strong>화면이 꺼진 유휴 시간</strong>에 집중 수행합니다.
+        </p>
+        <div class="callout ok">
+            <span class="callout-icon">✅</span>
+            <span>핵심: <em>공간이 없어서 급히 GC하는 것</em>이 아니라, <em>여유가 있을 때 미리 정리해두는 것</em>. 사용자 체감 지연을 최소화합니다.</span>
+        </div>
+    </div>
+
+    <!-- ──────────────────── 섹션 3 ──────────────────── -->
+    <div class="section-label"><span class="num">4</span>Step 4.4 — 실무 성능 평가 및 리뷰</div>
+
+    <div class="card">
+        <h2>4-1. 주요 실험 결과</h2>
+        <p>논문은 <strong>상용 스마트폰</strong>에서 ZUFS를 구현하고 CUFS와 비교 평가했습니다. Lab 3에서 측정한 WAF ≈ 1이 실제 기기에서 어떤 사용자 체감 성능으로 이어지는지 수치로 확인합니다.</p>
+
+        <div class="result-row">
+            <div class="result-box highlight">
+                <div class="result-num">2×+</div>
+                <div class="result-label">단편화 환경에서의 쓰기 처리량 향상</div>
+            </div>
+            <div class="result-box highlight">
+                <div class="result-num">14%</div>
+                <div class="result-label">모바일 게임 로딩 시간 단축 (CUFS 대비)</div>
+            </div>
+            <div class="result-box">
+                <div class="result-num">≈ 1.0</div>
+                <div class="result-label">WAF (CUFS의 2~10 대비)</div>
+            </div>
+        </div>
+
+        <div class="callout info">
+            <span class="callout-icon">📊</span>
+            <span>읽기 성능은 CUFS와 동등하게 유지되었습니다. 쓰기 성능 개선이 읽기 지연 증가 없이 달성된 것이 실용적 의의입니다.</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>4-2. 단편화가 ZUFS에 유리한 이유</h2>
+        <p>
+            스마트폰을 오래 사용하면 스토리지 내부에 <strong>단편화(Fragmentation)</strong>가 심해집니다.
+            CUFS는 단편화된 환경에서 GC가 빈번히 발생해 성능이 크게 저하되지만,
+            ZUFS는 순차 쓰기 구조 덕분에 단편화 상황에서도 성능이 안정적입니다.
+        </p>
+
+        <div class="diagram-box">
+            <div class="diagram-label">단편화 진행에 따른 쓰기 처리량 변화 (개념도)</div>
+            <pre>쓰기 처리량 (MB/s)
+  ↑
+  │ <span class="grn">ZUFS ─────────────────────────────────────</span>  ← 안정 유지
+  │
+  │   <span class="ylw">CUFS ───────────────╲</span>
+  │                        <span class="red">╲─────────────────</span>  ← 단편화로 급락
+  │
+  └──────────────────────────────────────→ 사용 시간
+     초기                       장기 사용 후
+
+  ▶ 단편화 심화 시: <span class="grn">ZUFS 처리량 2× 이상 우위</span></pre>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>4-3. 종합 평가 및 의의</h2>
+        <p>
+            WAF ≈ 1.0 달성이 스토리지 수명 연장에 그치지 않고 <strong>사용자 체감 성능 전반에 영향</strong>을 미칩니다.
+            특히 장기 사용으로 단편화가 심해진 기기일수록 ZUFS의 이점이 극대화됩니다.
+        </p>
+        <div class="cmp-table-wrap" style="margin-top:.8rem;">
+            <table class="cmp-table">
+                <thead>
+                    <tr><th>평가 항목</th><th>CUFS (기존)</th><th>ZUFS (신규)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="label-col">단편화 심화 시 쓰기 처리량</td><td class="bad">급격히 저하</td><td class="good">안정 유지 (2× 이상 우위)</td></tr>
+                    <tr><td class="label-col">게임 로딩 시간</td><td class="bad">기준</td><td class="good">14% 단축</td></tr>
+                    <tr><td class="label-col">읽기 성능</td><td>기준</td><td class="good">동등 수준 유지</td></tr>
+                    <tr><td class="label-col">WAF (쓰기 증폭)</td><td class="bad">2~10+</td><td class="good">≈ 1.0</td></tr>
+                    <tr><td class="label-col">스토리지 수명</td><td class="bad">GC로 낸드 마모 가속</td><td class="good">낸드 마모 최소화</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="concept-pills" style="margin-top:.8rem;">
+            <span class="pill blue">하나의 레이어만 바꿔서는 성능을 끌어내기 어렵다</span>
+            <span class="pill green">펌웨어~앱 프레임워크까지 공동 설계가 핵심</span>
+            <span class="pill purple">모바일과 서버 스토리지 기술의 수렴 트렌드</span>
+            <span class="pill amber">오픈 소스(Linux, F2FS, AOSP) 생태계 활용</span>
+        </div>
+        <div class="callout purple" style="margin-top:.8rem;">
+            <span class="callout-icon">🔭</span>
+            <span><strong>Lab 1~3과의 최종 연결:</strong> Lab 1에서 경험한 쓰기 위반 에러, Lab 2에서 조작한 Zone 상태 전이, Lab 3에서 측정한 WAF 개념이 ZUFS 5계층 최적화 각각에 그대로 녹아 있습니다. <em>서버 NVMe</em>와 <em>모바일 UFS</em>는 인터페이스가 다를 뿐, Zone 기반 스토리지의 핵심 원리는 동일합니다.</span>
+        </div>
+    </div>
+
+    <!-- 토론 질문 -->
+    <div class="section-label" style="border-bottom-color:var(--purple); color:var(--purple);">
+        <span class="num">?</span>생각해보기
+    </div>
+
+    <div class="card">
+        <h2>토론 질문</h2>
+        <div class="question-list">
+            <div class="question-item">
+                <div class="q-head">
+                    <div class="q-num">1</div>
+                    <div class="q-text">ZUFS에서 Zone 크기가 매우 크면(예: 1GB) 어떤 문제가 심해질까요? 반대로 너무 작으면(예: 1MB)?</div>
+                </div>
+                <div class="q-hint">힌트: Zone 크기가 크면 GC 회수 단위가 커집니다. SRAM 버퍼 요구량과 Zone 내 부분 유효 데이터 문제는 어떻게 변할까요?</div>
+            </div>
+            <div class="question-item">
+                <div class="q-head">
+                    <div class="q-num">2</div>
+                    <div class="q-text">Android 프레임워크가 GC 스케줄링에 참여하는 것이 왜 중요한가요? 커널만으로 처리하면 부족한 이유는?</div>
+                </div>
+                <div class="q-hint">힌트: 커널은 앱이 포그라운드인지 백그라운드인지를 어느 정도까지 알 수 있나요? 배터리 상태, 충전 중 여부 같은 정보는 어디서 얻을 수 있나요?</div>
+            </div>
+            <div class="question-item">
+                <div class="q-head">
+                    <div class="q-num">3</div>
+                    <div class="q-text">ZUFS를 지원하는 파일시스템이 F2FS인 이유는 무엇일까요? ext4나 FAT32로 ZUFS를 사용하면 어떤 문제가 생길까요?</div>
+                </div>
+                <div class="q-hint">힌트: F2FS의 로그 구조적 쓰기 방식을 생각해보세요. 임의 덮어쓰기(in-place update)를 하는 파일시스템은 Zone 쓰기 제약을 어떻게 충족할 수 있을까요?</div>
+            </div>
+            <div class="question-item">
+                <div class="q-head">
+                    <div class="q-num">4</div>
+                    <div class="q-text">쓰기 처리량이 2배 향상되었는데 게임 로딩 시간은 왜 14%만 단축되었을까요?</div>
+                </div>
+                <div class="q-hint">힌트: 앱 로딩 시간에는 스토리지 읽기, CPU 파싱, GPU 셰이더 컴파일, 네트워크 초기화 등 다양한 단계가 포함됩니다. 스토리지가 전체 지연 중 몇 %를 차지할까요?</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-between">
+        <a class="nav-btn" href="lab3.html">← 실습 3</a>
+        <a class="nav-btn" href="index.html">목록으로 →</a>
+    </div>
+
+</div>
+
+<footer>
+    <p>2026-1 시스템최신기술 &middot; Zoned UFS 논문 스터디 &middot; FAST '26</p>
+</footer>
+
+</body>
+</html>
