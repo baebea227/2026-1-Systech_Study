@@ -104,7 +104,7 @@
 
     <div class="card">
         <h2>실습 목표</h2>
-        <p>NVMe SSD(<code>/dev/nullb0</code>)와 ZNS 장치(<code>/dev/nullb1</code>)에 <strong>동일한 순차 쓰기</strong>를 수행하여 처리량(Throughput)을 비교합니다.</p>
+        <p>Conventional SSD(<code>/dev/nullb0</code>)와 ZNS 장치(<code>/dev/nullb1</code>)에 <strong>동일한 순차 쓰기</strong>를 수행하여 처리량(Throughput)을 비교합니다.</p>
         <p>이어서 ZNS 장치에 <strong>임의 쓰기(Random Write)</strong>를 시도하여 Write Pointer 위반 에러가 발생하는 것을 직접 확인하고, ZNS의 쓰기 제약 조건을 체득합니다.</p>
         <div class="metric-row">
             <div class="metric-box"><div class="metric-label">Step 1.1</div><div class="metric-val" style="font-size:.88rem;">Sequential Write</div></div>
@@ -130,7 +130,7 @@
                         <ul class="script-steps">
                             <li>ZNS Zone 초기화 — <code>blkzone reset /dev/nullb0</code></li>
                             <li>ZNS 순차 쓰기 — <code>fio zonemode=zbd rw=write</code> → <code>/tmp/fio_zns_seq.log</code></li>
-                            <li>NVMe SSD 순차 쓰기 — <code>fio rw=write /dev/nullb0</code> → <code>/tmp/fio_conv_seq.log</code></li>
+                            <li>Conventional SSD 순차 쓰기 — <code>fio rw=write /dev/nullb0</code> → <code>/tmp/fio_conv_seq.log</code></li>
                             <li>BW / Latency 자동 파싱 후 비교표 출력</li>
                         </ul>
                     </div>
@@ -142,8 +142,8 @@
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment">#!/usr/bin/env bash
-# bench_seqwrite.sh — Sequential Write 처리량 비교 (ZNS vs Conventional)
-# 사용법: sudo bash bench_seqwrite.sh
+# bench_seqwrite.sh — sequential write throughput comparison (ZNS vs Conventional)
+# usage: sudo bash bench_seqwrite.sh
 </span>
 <span class="kw">set</span> -euo pipefail
 ZNS_DEV=<span class="str">/dev/nullb1</span>
@@ -154,13 +154,13 @@ QD=<span class="str">4</span>
 
 <span class="fn">sep()</span> { printf <span class="str">'%s\n'</span> <span class="str">"$(printf '─%.0s' {1..52})"</span>; }
 
-<span class="comment"># ── 1) ZNS Zone 초기화 ───────────────────────────────</span>
-printf <span class="str">'[1/4] ZNS Zone 초기화 중...\n'</span>
+<span class="comment"># ── 1) reset ZNS zones ───────────────────────────────</span>
+printf <span class="str">'[1/4] Initializing ZNS zones...\n'</span>
 sudo blkzone reset <span class="str">"${ZNS_DEV}"</span>
-printf <span class="str">'      ✔ 완료 — 모든 Zone EMPTY\n\n'</span>
+printf <span class="str">'      done — all zones EMPTY\n\n'</span>
 
-<span class="comment"># ── 2) ZNS 순차 쓰기 ─────────────────────────────────</span>
-printf <span class="str">'[2/4] ZNS 순차 쓰기 실행 (iodepth=%s)...\n'</span> <span class="str">"${QD}"</span>
+<span class="comment"># ── 2) ZNS sequential write ──────────────────────────</span>
+printf <span class="str">'[2/4] ZNS sequential write (iodepth=%s)...\n'</span> <span class="str">"${QD}"</span>
 sudo fio \
   --name=zns_seqwrite \
   --filename=<span class="str">"${ZNS_DEV}"</span> \
@@ -176,11 +176,11 @@ sudo fio \
   --output-format=normal 2>&amp;1 | tee /tmp/fio_zns_seq.log | grep -E <span class="str">'IOPS|lat \(usec\)'</span>
 
 ZNS_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
-ZNS_LAT=$(grep -oP <span class="str">'lat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
-printf <span class="str">'      ✔ ZNS  BW=%s  Lat=%s µs\n\n'</span> <span class="str">"${ZNS_BW}"</span> <span class="str">"${ZNS_LAT}"</span>
+ZNS_LAT=$(grep -oP <span class="str">'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
+printf <span class="str">'      ZNS  BW=%s  cLat=%s us\n\n'</span> <span class="str">"${ZNS_BW}"</span> <span class="str">"${ZNS_LAT}"</span>
 
-<span class="comment"># ── 3) Conventional 순차 쓰기 ────────────────────────</span>
-printf <span class="str">'[3/4] Conventional 순차 쓰기 실행 (iodepth=%s)...\n'</span> <span class="str">"${QD}"</span>
+<span class="comment"># ── 3) Conventional sequential write ─────────────────</span>
+printf <span class="str">'[3/4] Conventional sequential write (iodepth=%s)...\n'</span> <span class="str">"${QD}"</span>
 sudo fio \
   --name=conv_seqwrite \
   --filename=<span class="str">"${CONV_DEV}"</span> \
@@ -195,18 +195,18 @@ sudo fio \
   --output-format=normal 2>&amp;1 | tee /tmp/fio_conv_seq.log | grep -E <span class="str">'IOPS|lat \(usec\)'</span>
 
 CONV_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
-CONV_LAT=$(grep -oP <span class="str">'lat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
-printf <span class="str">'      ✔ CONV BW=%s  Lat=%s µs\n\n'</span> <span class="str">"${CONV_BW}"</span> <span class="str">"${CONV_LAT}"</span>
+CONV_LAT=$(grep -oP <span class="str">'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
+printf <span class="str">'      CONV BW=%s  cLat=%s us\n\n'</span> <span class="str">"${CONV_BW}"</span> <span class="str">"${CONV_LAT}"</span>
 
-<span class="comment"># ── 4) 비교 출력 ─────────────────────────────────────</span>
-printf <span class="str">'[4/4] 결과 비교\n'</span>
+<span class="comment"># ── 4) result summary ────────────────────────────────</span>
+printf <span class="str">'[4/4] Result summary\n'</span>
 sep
-printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Device"</span> <span class="str">"Bandwidth"</span> <span class="str">"Avg Latency"</span>
+printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Device"</span> <span class="str">"Bandwidth"</span> <span class="str">"Avg clat"</span>
 sep
-printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"ZNS (nullb1)"</span>   <span class="str">"${ZNS_BW}"</span>  <span class="str">"${ZNS_LAT} µs"</span>
-printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"NVMe (nullb0)"</span> <span class="str">"${CONV_BW}"</span> <span class="str">"${CONV_LAT} µs"</span>
+printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"ZNS (nullb1)"</span>   <span class="str">"${ZNS_BW}"</span>  <span class="str">"${ZNS_LAT} us"</span>
+printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Conv (nullb0)"</span> <span class="str">"${CONV_BW}"</span> <span class="str">"${CONV_LAT} us"</span>
 sep
-printf <span class="str">'\n완료! 수치를 결과표에 기록하세요.\n'</span></code></pre>
+printf <span class="str">'\nDone. Record the values in the result table.\n'</span></code></pre>
                 </div>
 
                 <div class="code-block">
@@ -225,29 +225,29 @@ printf <span class="str">'\n완료! 수치를 결과표에 기록하세요.\n'</
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상 출력</div>
-                    <pre><span class="hdr">[1/4] ZNS Zone 초기화 중...</span>
-      ✔ 완료 — 모든 Zone EMPTY
+                    <div class="output-label">Expected output</div>
+                    <pre><span class="hdr">[1/4] Initializing ZNS zones...</span>
+      done — all zones EMPTY
 
-<span class="hdr">[2/4] ZNS 순차 쓰기 실행 (iodepth=4)...</span>
-  <span class="ylw">write: IOPS=10597, BW=662MiB/s (694MB/s)(2048MiB/3093msec)</span>
-  <span class="ylw">lat (usec): min=195, max=2859, avg=375.88, stdev=102.71</span>
-      ✔ ZNS  BW=662MiB/s  Lat=375.88 µs
+<span class="hdr">[2/4] ZNS sequential write (iodepth=4)...</span>
+  <span class="ylw">write: IOPS=17.3k, BW=1079MiB/s (1131MB/s)(2048MiB/1898msec); 0 zone resets</span>
+  <span class="ylw">clat (usec): min=11, max=12010, avg=213.38, stdev=301.49</span>
+      ZNS  BW=1079MiB/s  cLat=213.38 us
 
-<span class="hdr">[3/4] Conventional 순차 쓰기 실행 (iodepth=4)...</span>
-  <span class="ylw">write: IOPS=10814, BW=676MiB/s (709MB/s)(2048MiB/3030msec)</span>
-  <span class="ylw">lat (usec): min=190, max=2768, avg=369.57, stdev=98.21</span>
-      ✔ CONV BW=676MiB/s  Lat=369.57 µs
+<span class="hdr">[3/4] Conventional sequential write (iodepth=4)...</span>
+  <span class="ylw">write: IOPS=17.9k, BW=1122MiB/s (1176MB/s)(2048MiB/1826msec)</span>
+  <span class="ylw">clat (usec): min=3, max=28437, avg=168.83, stdev=508.84</span>
+      CONV BW=1122MiB/s  cLat=168.83 us
 
-<span class="hdr">[4/4] 결과 비교</span>
+<span class="hdr">[4/4] Result summary</span>
 <span class="sep">────────────────────────────────────────────────────</span>
-  Device            Bandwidth           Avg Latency
+  Device            Bandwidth           Avg clat
 <span class="sep">────────────────────────────────────────────────────</span>
-  <span class="grn">ZNS (nullb1)      662MiB/s            375.88 µs</span>
-  <span class="blu">NVMe (nullb0)     676MiB/s            369.57 µs</span>
+  <span class="grn">ZNS (nullb1)      1079MiB/s           213.38 us</span>
+  <span class="blu">Conv (nullb0)     1122MiB/s           168.83 us</span>
 <span class="sep">────────────────────────────────────────────────────</span>
 
-완료! 수치를 결과표에 기록하세요.</pre>
+Done. Record the values in the result table.</pre>
                 </div>
 
                 <div class="callout info">
@@ -262,10 +262,10 @@ printf <span class="str">'\n완료! 수치를 결과표에 기록하세요.\n'</
         <h2>결과 기록표 — Sequential Write 비교</h2>
         <div class="result-table-wrap">
             <table class="result-table">
-                <thead><tr><th>장치</th><th>Bandwidth (MB/s)</th><th>Avg Latency (µs)</th><th>비고</th></tr></thead>
+                <thead><tr><th>장치</th><th>Bandwidth (MB/s)</th><th>Avg clat (µs)</th><th>비고</th></tr></thead>
                 <tbody>
                     <tr><td class="tag-col">ZNS (/dev/nullb1)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">zonemode=zbd</td></tr>
-                    <tr><td class="tag-col">NVMe SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">일반 write</td></tr>
+                    <tr><td class="tag-col">Conventional SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">일반 write</td></tr>
                 </tbody>
             </table>
         </div>
@@ -305,8 +305,8 @@ printf <span class="str">'\n완료! 수치를 결과표에 기록하세요.\n'</
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment">#!/usr/bin/env bash
-# bench_randwrite.sh — ZNS Random Write 제약 확인
-# 사용법: sudo bash bench_randwrite.sh
+# bench_randwrite.sh — ZNS random write constraint verification
+# usage: sudo bash bench_randwrite.sh
 </span>
 <span class="kw">set</span> -euo pipefail
 ZNS_DEV=<span class="str">/dev/nullb1</span>
@@ -314,8 +314,8 @@ CONV_DEV=<span class="str">/dev/nullb0</span>
 
 <span class="fn">sep()</span> { printf <span class="str">'%s\n'</span> <span class="str">"$(printf '─%.0s' {1..52})"</span>; }
 
-<span class="comment"># ── 1) ZNS Random Write 시도 (에러 유발) ─────────────</span>
-printf <span class="str">'[1/3] ZNS Zone 초기화 후 Random Write 시도...\n'</span>
+<span class="comment"># ── 1) attempt ZNS random write (expects error) ───────</span>
+printf <span class="str">'[1/3] Resetting ZNS zones, attempting random write...\n'</span>
 sudo blkzone reset <span class="str">"${ZNS_DEV}"</span>
 
 sudo fio \
@@ -331,16 +331,16 @@ sudo fio \
   --numjobs=1 \
   --output-format=normal 2>&amp;1 | tee /tmp/fio_zns_rand.log || true
 
-ZNS_ERR=$(grep -oP <span class="str">'error.*$|Invalid argument'</span> /tmp/fio_zns_rand.log | head -1 || echo <span class="str">'에러 없음'</span>)
-printf <span class="str">'      ZNS 결과: %s\n\n'</span> <span class="str">"${ZNS_ERR}"</span>
+ZNS_ERR=$(grep -oP <span class="str">'error.*$|Invalid argument'</span> /tmp/fio_zns_rand.log | head -1 || echo <span class="str">'no error'</span>)
+printf <span class="str">'      ZNS result: %s\n\n'</span> <span class="str">"${ZNS_ERR}"</span>
 
-<span class="comment"># ── 2) dmesg 위반 로그 확인 ──────────────────────────</span>
-printf <span class="str">'[2/3] 커널 에러 로그 확인...\n'</span>
+<span class="comment"># ── 2) check kernel error log ────────────────────────</span>
+printf <span class="str">'[2/3] Kernel error log...\n'</span>
 sudo dmesg | grep -i <span class="str">'zone\|write pointer\|unaligned'</span> | tail -5 || true
 printf <span class="str">'\n'</span>
 
-<span class="comment"># ── 3) Conventional Random Write (정상) ──────────────</span>
-printf <span class="str">'[3/3] Conventional Random Write 실행...\n'</span>
+<span class="comment"># ── 3) Conventional random write (expected OK) ───────</span>
+printf <span class="str">'[3/3] Conventional random write...\n'</span>
 sudo fio \
   --name=conv_randwrite \
   --filename=<span class="str">"${CONV_DEV}"</span> \
@@ -355,12 +355,12 @@ sudo fio \
 
 CONV_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_conv_rand.log | head -1 || echo <span class="str">'N/A'</span>)
 
-<span class="comment"># ── 결과 요약 ─────────────────────────────────────────</span>
+<span class="comment"># ── result summary ────────────────────────────────────</span>
 sep
-printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"Device"</span> <span class="str">"Random Write 결과"</span>
+printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"Device"</span> <span class="str">"Random Write Result"</span>
 sep
-printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"ZNS (nullb1)"</span>   <span class="str">"❌ 에러: ${ZNS_ERR}"</span>
-printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"NVMe (nullb0)"</span> <span class="str">"✔  정상: BW=${CONV_BW}"</span>
+printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"ZNS (nullb1)"</span>   <span class="str">"FAIL: ${ZNS_ERR}"</span>
+printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"Conv (nullb0)"</span> <span class="str">"OK:   BW=${CONV_BW}"</span>
 sep</code></pre>
                 </div>
 
@@ -380,23 +380,23 @@ sep</code></pre>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상 출력</div>
-                    <pre><span class="hdr">[1/3] ZNS Zone 초기화 후 Random Write 시도...</span>
+                    <div class="output-label">Expected output</div>
+                    <pre><span class="hdr">[1/3] Resetting ZNS zones, attempting random write...</span>
 <span class="red">zns_randwrite: io_u error on file /dev/nullb1: Invalid argument: write to non-sequential zone</span>
-      ZNS 결과: Invalid argument
+      ZNS result: Invalid argument
 
-<span class="hdr">[2/3] 커널 에러 로그 확인...</span>
+<span class="hdr">[2/3] Kernel error log...</span>
 <span class="red">[12345.678] nullb1: Unaligned write command to zone 3 (write pointer: 0x180000)</span>
 
-<span class="hdr">[3/3] Conventional Random Write 실행...</span>
+<span class="hdr">[3/3] Conventional random write...</span>
   <span class="grn">write: IOPS=245k, BW=956MiB/s (1003MB/s)(64.0MiB/67msec)</span>
   lat (usec): min=2, max=128, avg=3.98, stdev=2.11
 
 <span class="sep">────────────────────────────────────────────────────</span>
-  Device            Random Write 결과
+  Device            Random Write Result
 <span class="sep">────────────────────────────────────────────────────</span>
-  <span class="red">ZNS (nullb1)      ❌ 에러: Invalid argument</span>
-  <span class="grn">NVMe (nullb0)     ✔  정상: BW=956MiB/s</span>
+  <span class="red">ZNS (nullb1)      FAIL: Invalid argument</span>
+  <span class="grn">Conv (nullb0)     OK:   BW=956MiB/s</span>
 <span class="sep">────────────────────────────────────────────────────</span></pre>
                 </div>
 
@@ -415,7 +415,7 @@ sep</code></pre>
                 <thead><tr><th>장치</th><th>Random Write 결과</th><th>에러 메시지</th></tr></thead>
                 <tbody>
                     <tr><td class="tag-col">ZNS (/dev/nullb1)</td><td class="fill">기록하세요</td><td class="fill">에러 내용 기록</td></tr>
-                    <tr><td class="tag-col">NVMe SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">정상 / N/A</td></tr>
+                    <tr><td class="tag-col">Conventional SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">정상 / N/A</td></tr>
                 </tbody>
             </table>
         </div>

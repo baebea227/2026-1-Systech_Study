@@ -153,12 +153,12 @@ sudo blkzone report /dev/nullb1 \
 cat /sys/block/nullb1/queue/nr_zones</code></pre>
                 </div>
                 <div class="output-block">
-                    <div class="output-label">예상 출력 — 초기 상태 (모두 EMPTY)</div>
+                    <div class="output-label">Expected output — initial state (all EMPTY)</div>
                     <pre>  start: 0x000000000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span>   [type: 2(SEQ_WRITE_REQUIRED)]
   start: 0x000020000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span>   [type: 2(SEQ_WRITE_REQUIRED)]
   start: 0x000040000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000000</span> reset:0, zcond:<span class="grn">1(em)</span>   [type: 2(SEQ_WRITE_REQUIRED)]
 
-  <span class="grn">em</span>       : 32 zones    <span class="sep">← 모든 Zone이 EMPTY</span>
+  <span class="grn">em</span>       : 32 zones    <span class="sep">← all zones EMPTY</span>
 
 32</pre>
                 </div>
@@ -194,11 +194,11 @@ sudo blkzone report /dev/nullb1 \
   | sort | uniq -c</code></pre>
                 </div>
                 <div class="output-block">
-                    <div class="output-label">예상 출력 — Implicit Open 상태</div>
+                    <div class="output-label">Expected output — Implicit Open state</div>
                     <pre>  start: 0x000000000, len 0x020000, cap 0x020000, <span class="ylw">wptr 0x000010000</span> reset:0, zcond:<span class="ylw">2(io)</span>  [type: 2(SEQ_WRITE_REQUIRED)]
-  <span class="sep">                                                    ↑ WP 이동: 0 → 0x10000 (32MB 기록됨)</span>
-       1 <span class="ylw">io</span>    <span class="sep">← Implicit Open: 1개</span>
-      31 <span class="grn">em</span>    <span class="sep">← EMPTY: 31개</span></pre>
+  <span class="sep">                                                    ↑ WP moved: 0 → 0x10000 (32MB written)</span>
+       1 <span class="ylw">io</span>    <span class="sep">← Implicit Open: 1</span>
+      31 <span class="grn">em</span>    <span class="sep">← EMPTY: 31</span></pre>
                 </div>
                 <div class="callout info">
                     <span class="callout-icon">ℹ️</span>
@@ -238,21 +238,21 @@ sudo blkzone report /dev/nullb1 \
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment">#!/usr/bin/env bash
-# zone_lifecycle.sh — Zone 상태 전이 (Open→Write→Close→Finish)
-# 사용법: sudo bash zone_lifecycle.sh
+# zone_lifecycle.sh — zone state transition (Open -> Write -> Close -> Finish)
+# usage: sudo bash zone_lifecycle.sh
 </span>
 <span class="kw">set</span> -euo pipefail
 DEV=<span class="str">/dev/nullb1</span>
 
 <span class="fn">show_zone()</span> {
-    printf <span class="str">'Zone 1 상태: '</span>
+    printf <span class="str">'Zone 1 state: '</span>
     sudo blkzone report <span class="str">"${DEV}"</span> | sed -n <span class="str">'2p'</span> \
       | grep -oP <span class="str">'wptr\s+\K0x\S+|zcond:\s*\d+\s*\(\K\w+(?=\))'</span> \
       | paste - - \
       | awk <span class="str">'{printf "wptr=%-14s state=%s\n", $1, $2}'</span>
 }
 
-printf <span class="str">'── [1] 전체 Reset ───────────────────────────────\n'</span>
+printf <span class="str">'── [1] Full reset ───────────────────────────────\n'</span>
 sudo blkzone reset <span class="str">"${DEV}"</span>
 show_zone
 
@@ -260,7 +260,7 @@ printf <span class="str">'── [2] Explicit Open ─────────�
 sudo blkzone open --offset 0x20000 --length 0x20000 <span class="str">"${DEV}"</span>
 show_zone
 
-printf <span class="str">'── [3] 32MB 쓰기 ────────────────────────────────\n'</span>
+printf <span class="str">'── [3] Write 32MB ───────────────────────────────\n'</span>
 sudo fio \
   --name=write_z1 \
   --filename=<span class="str">"${DEV}"</span> \
@@ -278,7 +278,7 @@ show_zone
 printf <span class="str">'── [5] Finish Zone ──────────────────────────────\n'</span>
 sudo blkzone finish --offset 0x20000 --length 0x20000 <span class="str">"${DEV}"</span>
 show_zone
-printf <span class="str">'\n✔ 완료\n'</span></code></pre>
+printf <span class="str">'\ndone\n'</span></code></pre>
                 </div>
 
                 <div class="code-block">
@@ -297,20 +297,20 @@ printf <span class="str">'\n✔ 완료\n'</span></code></pre>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상 출력 — zone_lifecycle.sh</div>
-                    <pre>── [1] 전체 Reset ───────────────────────────────
-Zone 1 상태: wptr=0x000020000    state=<span class="grn">em</span>
+                    <div class="output-label">Expected output — zone_lifecycle.sh</div>
+                    <pre>── [1] Full reset ───────────────────────────────
+Zone 1 state: wptr=0x000020000    state=<span class="grn">em</span>
 ── [2] Explicit Open ────────────────────────────
-Zone 1 상태: wptr=0x000020000    state=<span class="prp">eo</span>
-── [3] 32MB 쓰기 ────────────────────────────────
+Zone 1 state: wptr=0x000020000    state=<span class="prp">eo</span>
+── [3] Write 32MB ───────────────────────────────
   BW: 636483 KiB/s
-Zone 1 상태: wptr=<span class="ylw">0x000030000</span>    state=<span class="prp">eo</span>
+Zone 1 state: wptr=<span class="ylw">0x000030000</span>    state=<span class="prp">eo</span>
 ── [4] Close Zone ───────────────────────────────
-Zone 1 상태: wptr=0x000030000    state=<span class="ylw">cl</span>
+Zone 1 state: wptr=0x000030000    state=<span class="ylw">cl</span>
 ── [5] Finish Zone ──────────────────────────────
-Zone 1 상태: wptr=<span class="ylw">0x000040000</span>    state=<span class="ylw">full</span>
+Zone 1 state: wptr=<span class="ylw">0x000040000</span>    state=<span class="ylw">full</span>
 
-✔ 완료</pre>
+done</pre>
                 </div>
 
                 <div class="callout warn">
@@ -337,23 +337,23 @@ Zone 1 상태: wptr=<span class="ylw">0x000040000</span>    state=<span class="y
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment">#!/usr/bin/env bash
-# zone_reset.sh — 단일 Zone Reset → 전체 Zone Reset
-# 사용법: sudo bash zone_reset.sh
+# zone_reset.sh — single zone reset, then bulk reset all zones
+# usage: sudo bash zone_reset.sh
 </span>
 <span class="kw">set</span> -euo pipefail
 DEV=<span class="str">/dev/nullb1</span>
 
-<span class="comment"># ── 1) Reset 전 Zone 1 상태 확인 ─────────────────────</span>
-printf <span class="str">'[1/3] Reset 전 Zone 1 상태:\n'</span>
+<span class="comment"># ── 1) Zone 1 state before reset ─────────────────────</span>
+printf <span class="str">'[1/3] Zone 1 state before reset:\n'</span>
 sudo blkzone report <span class="str">"${DEV}"</span> | sed -n <span class="str">'2p'</span>
 
-<span class="comment"># ── 2) Zone 1 단일 Reset ─────────────────────────────</span>
+<span class="comment"># ── 2) single zone 1 reset ───────────────────────────</span>
 printf <span class="str">'\n[2/3] Zone 1 Reset...\n'</span>
 sudo blkzone reset --offset 0x20000 --length 0x20000 <span class="str">"${DEV}"</span>
 sudo blkzone report <span class="str">"${DEV}"</span> | sed -n <span class="str">'2p'</span>
 
-<span class="comment"># ── 3) 전체 Zone 일괄 Reset ──────────────────────────</span>
-printf <span class="str">'\n[3/3] 전체 Zone 일괄 Reset...\n'</span>
+<span class="comment"># ── 3) bulk reset all zones ──────────────────────────</span>
+printf <span class="str">'\n[3/3] Bulk reset all zones...\n'</span>
 sudo blkzone reset <span class="str">"${DEV}"</span>
 
 sudo blkzone report <span class="str">"${DEV}"</span> \
@@ -361,9 +361,9 @@ sudo blkzone report <span class="str">"${DEV}"</span> \
   | sort | uniq -c \
   | awk <span class="str">'{printf "  %-8s : %s zones\n", $2, $1}'</span>
 
-printf <span class="str">'\n처음 3개 Zone WP 확인:\n'</span>
+printf <span class="str">'\nFirst 3 zones WP check:\n'</span>
 sudo blkzone report <span class="str">"${DEV}"</span> | head -3
-printf <span class="str">'\n✔ 모든 Zone EMPTY 복구 완료\n'</span></code></pre>
+printf <span class="str">'\nAll zones restored to EMPTY\n'</span></code></pre>
                 </div>
 
                 <div class="code-block">
@@ -382,23 +382,23 @@ printf <span class="str">'\n✔ 모든 Zone EMPTY 복구 완료\n'</span></code>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상 출력 — zone_reset.sh</div>
-                    <pre><span class="hdr">[1/3] Reset 전 Zone 1 상태:</span>
+                    <div class="output-label">Expected output — zone_reset.sh</div>
+                    <pre><span class="hdr">[1/3] Zone 1 state before reset:</span>
   start: 0x000020000, len 0x020000, cap 0x020000, <span class="ylw">wptr 0x000040000</span> reset:0, zcond:<span class="ylw">14(full)</span> [type: 2(SEQ_WRITE_REQUIRED)]
 
 <span class="hdr">[2/3] Zone 1 Reset...</span>
   start: 0x000020000, len 0x020000, cap 0x020000, <span class="grn">wptr 0x000020000</span> reset:1, zcond:<span class="grn">1(em)</span>   [type: 2(SEQ_WRITE_REQUIRED)]
-  <span class="sep">                                                    ↑ WP 복귀: Zone 시작   ↑ EMPTY</span>
+  <span class="sep">                                                    ↑ WP reset to zone start   ↑ EMPTY</span>
 
-<span class="hdr">[3/3] 전체 Zone 일괄 Reset...</span>
-  <span class="grn">em</span>       : 32 zones    <span class="sep">← 모든 Zone EMPTY 복구</span>
+<span class="hdr">[3/3] Bulk reset all zones...</span>
+  <span class="grn">em</span>       : 32 zones    <span class="sep">← all zones EMPTY</span>
 
-처음 3개 Zone WP 확인:
+First 3 zones WP check:
   start: 0x000000000, ..., <span class="grn">wptr 0x000000000</span> reset:1, zcond:<span class="grn">1(em)</span>
   start: 0x000020000, ..., <span class="grn">wptr 0x000020000</span> reset:1, zcond:<span class="grn">1(em)</span>
   start: 0x000040000, ..., <span class="grn">wptr 0x000040000</span> reset:1, zcond:<span class="grn">1(em)</span>
 
-✔ 모든 Zone EMPTY 복구 완료</pre>
+All zones restored to EMPTY</pre>
                 </div>
 
                 <div class="callout info">

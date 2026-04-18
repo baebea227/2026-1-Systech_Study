@@ -112,7 +112,7 @@
     <div class="container">
         <a class="back-link" href="lab2.html">← 실습 2로</a>
         <h1>실습 3: F2FS 파일시스템 레벨 WAF 측정</h1>
-        <p>nullb1 재구성 · F2FS 포맷/마운트 · GC 유발 워크로드 · NVMe vs ZNS 비교 분석</p>
+        <p>nullb1 재구성 · F2FS 포맷/마운트 · GC 유발 워크로드 · Conv vs ZNS 비교 분석</p>
     </div>
 </header>
 
@@ -122,7 +122,7 @@
     <div class="card">
         <h2>실습 목표</h2>
         <p><strong>F2FS(Flash-Friendly File System)</strong>는 로그 구조 파일시스템으로, 파일시스템 레벨에서 자체 GC(Garbage Collection)를 수행합니다. 이 GC는 NAND 펌웨어 GC와 달리 <strong>null_blk 에뮬레이터에서도 실제로 동작</strong>하므로, 파일시스템 레벨 WAF가 1보다 클 수 있습니다.</p>
-        <p>NVMe SSD(<code>/dev/nullb0</code>)에 F2FS를 마운트해 랜덤 쓰기 부하를 주면, F2FS GC가 유효 데이터를 세그먼트 간에 복사(Copy-back)하여 블록 장치 실제 기록량이 앱 요청량보다 커집니다. ZNS SSD(<code>/dev/nullb1</code>)에서는 F2FS가 Zone 단위로 GC를 수행하므로 Copy-back이 줄어들어 WAF가 낮게 측정됩니다.</p>
+        <p>Conventional SSD(<code>/dev/nullb0</code>)에 F2FS를 마운트해 랜덤 쓰기 부하를 주면, F2FS GC가 유효 데이터를 세그먼트 간에 복사(Copy-back)하여 블록 장치 실제 기록량이 앱 요청량보다 커집니다. ZNS SSD(<code>/dev/nullb1</code>)에서는 F2FS가 Zone 단위로 GC를 수행하므로 Copy-back이 줄어들어 WAF가 낮게 측정됩니다.</p>
         <div class="formula-box">
             <div class="formula">WAF<sub style="font-size:.7em;">fs</sub> = 블록 장치 실제 기록량 / 애플리케이션 요청 기록량</div>
             <div class="formula-note">측정 근거: <code>/sys/block/nullb*/stat</code> field 7 (write_sectors) 전후 차이</div>
@@ -134,7 +134,7 @@
         </div>
         <div class="waf-compare" style="margin-top:1rem;">
             <div class="waf-box conv">
-                <div class="waf-box-title">NVMe F2FS (/dev/nullb0)</div>
+                <div class="waf-box-title">Conv F2FS (/dev/nullb0)</div>
                 <div class="waf-val">1.2 ~ 2.0×</div>
                 <div class="waf-sub">세그먼트 GC Copy-back으로 인한 추가 블록 쓰기</div>
             </div>
@@ -319,8 +319,8 @@ df -Th /mnt/conv /mnt/zns</code></pre>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment">#!/usr/bin/env bash
-# workload.sh — F2FS WAF 측정 워크로드
-# 사용법: sudo bash workload.sh
+# workload.sh — F2FS WAF measurement workload
+# usage: sudo bash workload.sh
 </span>
 <span class="kw">set</span> -euo pipefail
 CONV_FILE=<span class="str">/mnt/conv/testfile</span>
@@ -328,8 +328,8 @@ ZNS_FILE=<span class="str">/mnt/zns/testfile</span>
 FILL_SIZE=<span class="str">1600m</span>   <span class="comment"># ~80% of 2GB</span>
 RUNTIME=<span class="str">60</span>
 
-<span class="comment"># ── 1) Conventional F2FS — 초기 카운터 + fill ────────</span>
-printf <span class="str">'[1/4] NVMe F2FS 초기 fill (1,600 MB)...\n'</span>
+<span class="comment"># ── 1) Conv F2FS — baseline counter + fill ───────────</span>
+printf <span class="str">'[1/4] Conv F2FS initial fill (1,600 MB)...\n'</span>
 CONV_B=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb0/stat)
 
 fio --name=conv_fill \
@@ -338,10 +338,10 @@ fio --name=conv_fill \
     --ioengine=libaio --direct=1 --numjobs=1 \
     --output-format=json --output=/tmp/fio_conv_fill.json \
     2&gt;/dev/null
-printf <span class="str">'  ✔ fill 완료\n\n'</span>
+printf <span class="str">'  fill done\n\n'</span>
 
-<span class="comment"># ── 2) Conventional F2FS — 랜덤 쓰기 (GC 유발) ───────</span>
-printf <span class="str">'[2/4] NVMe F2FS 랜덤 쓰기 (%ds, GC 유발)...\n'</span> <span class="str">"${RUNTIME}"</span>
+<span class="comment"># ── 2) Conv F2FS — random write (trigger GC) ─────────</span>
+printf <span class="str">'[2/4] Conv F2FS random write (%ds, triggers GC)...\n'</span> <span class="str">"${RUNTIME}"</span>
 fio --name=conv_rand \
     --filename=<span class="str">"${CONV_FILE}"</span> \
     --size=<span class="str">"${FILL_SIZE}"</span> --bs=4k --rw=randwrite \
@@ -363,11 +363,11 @@ print(total)
 <span class="str">EOF</span>
 )
 echo <span class="str">"${CONV_APP} ${CONV_BLK}"</span> &gt; /tmp/conv_waf_stat
-printf <span class="str">'  ✔ 앱: %d MB  |  블록: %d MB\n\n'</span> \
+printf <span class="str">'  app: %d MB  |  blk: %d MB\n\n'</span> \
     "$(( CONV_APP / 1024 / 1024 ))" "$(( CONV_BLK / 1024 / 1024 ))"
 
-<span class="comment"># ── 3) ZNS F2FS — 초기 카운터 + fill ────────────────</span>
-printf <span class="str">'[3/4] ZNS F2FS 초기 fill (1,600 MB)...\n'</span>
+<span class="comment"># ── 3) ZNS F2FS — baseline counter + fill ────────────</span>
+printf <span class="str">'[3/4] ZNS F2FS initial fill (1,600 MB)...\n'</span>
 ZNS_B=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb1/stat)
 
 fio --name=zns_fill \
@@ -376,10 +376,10 @@ fio --name=zns_fill \
     --ioengine=libaio --direct=1 --numjobs=1 \
     --output-format=json --output=/tmp/fio_zns_fill.json \
     2&gt;/dev/null
-printf <span class="str">'  ✔ fill 완료\n\n'</span>
+printf <span class="str">'  fill done\n\n'</span>
 
-<span class="comment"># ── 4) ZNS F2FS — 랜덤 쓰기 (동일 워크로드) ─────────</span>
-printf <span class="str">'[4/4] ZNS F2FS 랜덤 쓰기 (%ds)...\n'</span> <span class="str">"${RUNTIME}"</span>
+<span class="comment"># ── 4) ZNS F2FS — random write (same workload) ───────</span>
+printf <span class="str">'[4/4] ZNS F2FS random write (%ds)...\n'</span> <span class="str">"${RUNTIME}"</span>
 fio --name=zns_rand \
     --filename=<span class="str">"${ZNS_FILE}"</span> \
     --size=<span class="str">"${FILL_SIZE}"</span> --bs=4k --rw=randwrite \
@@ -401,10 +401,10 @@ print(total)
 <span class="str">EOF</span>
 )
 echo <span class="str">"${ZNS_APP} ${ZNS_BLK}"</span> &gt; /tmp/zns_waf_stat
-printf <span class="str">'  ✔ 앱: %d MB  |  블록: %d MB\n\n'</span> \
+printf <span class="str">'  app: %d MB  |  blk: %d MB\n\n'</span> \
     "$(( ZNS_APP / 1024 / 1024 ))" "$(( ZNS_BLK / 1024 / 1024 ))"
 
-printf <span class="str">'완료 — 다음 단계: sudo bash calc_waf.sh\n'</span></code></pre>
+printf <span class="str">'done — next: sudo bash calc_waf.sh\n'</span></code></pre>
                 </div>
 
                 <div class="code-block">
@@ -445,22 +445,22 @@ printf <span class="str">'완료 — 다음 단계: sudo bash calc_waf.sh\n'</sp
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment">#!/usr/bin/env bash
-# calc_waf.sh — F2FS WAF 계산 및 비교 출력
-# 사용법: sudo bash calc_waf.sh
+# calc_waf.sh — compute and display F2FS WAF
+# usage: sudo bash calc_waf.sh
 </span>
 <span class="kw">set</span> -euo pipefail
 
 <span class="fn">sep()</span> { printf <span class="str">'%s\n'</span> <span class="str">"$(printf '─%.0s' {1..58})"</span>; }
 
 <span class="kw">if</span> [[ ! -f /tmp/conv_waf_stat || ! -f /tmp/zns_waf_stat ]]; <span class="kw">then</span>
-    printf <span class="str">'오류: workload.sh를 먼저 실행하세요.\n'</span>; exit 1
+    printf <span class="str">'error: run workload.sh first.\n'</span>; exit 1
 <span class="kw">fi</span>
 
 read CONV_APP CONV_BLK &lt; /tmp/conv_waf_stat
 read ZNS_APP  ZNS_BLK  &lt; /tmp/zns_waf_stat
 
 <span class="kw">if</span> [[ <span class="str">"${CONV_APP}"</span> -eq 0 || <span class="str">"${ZNS_APP}"</span> -eq 0 ]]; <span class="kw">then</span>
-    printf <span class="str">'오류: 기록량이 0입니다. workload.sh를 다시 실행하세요.\n'</span>; exit 1
+    printf <span class="str">'error: write count is 0. re-run workload.sh.\n'</span>; exit 1
 <span class="kw">fi</span>
 
 CONV_APP_MB=$(( CONV_APP / 1024 / 1024 ))
@@ -472,17 +472,17 @@ CONV_WAF=$(awk <span class="str">"BEGIN{printf \"%.2f\", ${CONV_BLK}/${CONV_APP}
 ZNS_WAF=$(awk  <span class="str">"BEGIN{printf \"%.2f\", ${ZNS_BLK}/${ZNS_APP}}"</span>)
 
 sep
-printf <span class="str">'  📊  F2FS 파일시스템 레벨 WAF 비교\n'</span>
+printf <span class="str">'  F2FS filesystem-level WAF comparison\n'</span>
 sep
 printf <span class="str">'  %-24s  %-10s  %-10s  %-6s\n'</span> <span class="str">"Device"</span> <span class="str">"App Write"</span> <span class="str">"Blk Write"</span> <span class="str">"WAF"</span>
 sep
 printf <span class="str">'  %-24s  %-10s  %-10s  %-6s\n'</span> \
-    <span class="str">"NVMe F2FS (nullb0)"</span> <span class="str">"${CONV_APP_MB} MB"</span> <span class="str">"${CONV_BLK_MB} MB"</span> <span class="str">"${CONV_WAF}"</span>
+    <span class="str">"Conv F2FS (nullb0)"</span> <span class="str">"${CONV_APP_MB} MB"</span> <span class="str">"${CONV_BLK_MB} MB"</span> <span class="str">"${CONV_WAF}"</span>
 printf <span class="str">'  %-24s  %-10s  %-10s  %-6s\n'</span> \
     <span class="str">"ZNS  F2FS (nullb1)"</span> <span class="str">"${ZNS_APP_MB} MB"</span>  <span class="str">"${ZNS_BLK_MB} MB"</span>  <span class="str">"${ZNS_WAF}"</span>
 sep
-printf <span class="str">'\n  NVMe WAF &gt; 1.0: F2FS 세그먼트 GC Copy-back으로 추가 블록 기록\n'</span>
-printf <span class="str">'  ZNS  WAF ≈ 1.0: Zone 단위 GC로 Copy-back 최소화\n\n'</span></code></pre>
+printf <span class="str">'\n  Conv WAF &gt; 1.0: extra block writes due to F2FS segment GC copy-back\n'</span>
+printf <span class="str">'  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC\n\n'</span></code></pre>
                 </div>
 
                 <div class="code-block">
@@ -501,22 +501,22 @@ printf <span class="str">'  ZNS  WAF ≈ 1.0: Zone 단위 GC로 Copy-back 최소
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상 출력 — calc_waf.sh (값은 실행마다 다름)</div>
+                    <div class="output-label">Expected output — calc_waf.sh (values vary per run)</div>
                     <pre><span class="sep">──────────────────────────────────────────────────────────</span>
-  📊  F2FS 파일시스템 레벨 WAF 비교
+  F2FS filesystem-level WAF comparison
 <span class="sep">──────────────────────────────────────────────────────────</span>
   Device                    App Write   Blk Write   WAF
 <span class="sep">──────────────────────────────────────────────────────────</span>
-  <span class="ylw">NVMe F2FS (nullb0)        2435 MB     3408 MB     1.40</span>
+  <span class="ylw">Conv F2FS (nullb0)        2435 MB     3408 MB     1.40</span>
   <span class="grn">ZNS  F2FS (nullb1)        2441 MB     2563 MB     1.05</span>
 <span class="sep">──────────────────────────────────────────────────────────</span>
 
-  NVMe WAF &gt; 1.0: F2FS 세그먼트 GC Copy-back으로 추가 블록 기록
-  ZNS  WAF ≈ 1.0: Zone 단위 GC로 Copy-back 최소화</pre>
+  Conv WAF &gt; 1.0: extra block writes due to F2FS segment GC copy-back
+  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC</pre>
                 </div>
                 <div class="callout warn">
                     <span class="callout-icon">📌</span>
-                    <span>null_blk은 메모리 기반 장치이므로 I/O 속도가 매우 빠릅니다. GC가 백그라운드에서 충분히 돌지 못하면 NVMe WAF가 예상보다 낮게 나올 수 있습니다. 이 경우 <code>workload.sh</code>의 <code>RUNTIME</code> 값을 120 이상으로 늘려 재측정하세요.</span>
+                    <span>null_blk은 메모리 기반 장치이므로 I/O 속도가 매우 빠릅니다. GC가 백그라운드에서 충분히 돌지 못하면 Conv WAF가 예상보다 낮게 나올 수 있습니다. 이 경우 <code>workload.sh</code>의 <code>RUNTIME</code> 값을 120 이상으로 늘려 재측정하세요.</span>
                 </div>
             </div>
         </div>
@@ -525,28 +525,28 @@ printf <span class="str">'  ZNS  WAF ≈ 1.0: Zone 단위 GC로 Copy-back 최소
             <div class="step-dot accent">2</div>
             <div class="step-body">
                 <h3>F2FS GC 동작 구조 비교</h3>
-                <p>같은 랜덤 쓰기 워크로드를 받아도 NVMe F2FS와 ZNS F2FS의 GC 전략이 달라 WAF 차이가 발생합니다.</p>
+                <p>같은 랜덤 쓰기 워크로드를 받아도 Conv F2FS와 ZNS F2FS의 GC 전략이 달라 WAF 차이가 발생합니다.</p>
                 <div class="output-block">
-                    <div class="output-label">NVMe F2FS vs ZNS F2FS — GC Copy-back 구조 비교</div>
-                    <pre><span class="hdr">NVMe F2FS (세그먼트 기반 GC)</span>
+                    <div class="output-label">Conv F2FS vs ZNS F2FS — GC copy-back structure</div>
+                    <pre><span class="hdr">Conv F2FS (segment-based GC)</span>
 <span class="sep">──────────────────────────────────────────────────────────</span>
-  랜덤 4KB write  → F2FS: 새 세그먼트 끝에 append 기록
-  이전 버전 페이지 → 해당 세그먼트에서 invalid 처리
-  세그먼트 내 valid/invalid 혼재 시 GC 발생:
-    [세그먼트 A: valid 10 + invalid 54 pages]
-    → valid 10 pages를 새 세그먼트 B로 Copy-back   <span class="red">← 추가 쓰기</span>
-    → 세그먼트 A Erase → 재사용
-  블록 실제 기록량 &gt; 앱 요청량  →  <span class="red">WAF &gt; 1.0</span>
+  random 4KB write  -> F2FS: appended to new segment tail
+  stale pages        -> marked invalid in that segment
+  GC triggered when segment has mixed valid/invalid pages:
+    [segment A: valid 10 + invalid 54 pages]
+    -> copy 10 valid pages to new segment B (copy-back)   <span class="red">← extra write</span>
+    -> erase segment A  -> reuse
+  actual block writes &gt; app writes  ->  <span class="red">WAF &gt; 1.0</span>
 
-<span class="hdr">ZNS F2FS (Zone 기반 GC)</span>
+<span class="hdr">ZNS F2FS (zone-based GC)</span>
 <span class="sep">──────────────────────────────────────────────────────────</span>
-  F2FS 세그먼트 경계 = Zone 경계 (64MB 정렬)
-  랜덤 write → F2FS가 내부에서 순차 쓰기로 변환 후 Zone에 기록
-  Zone 가득 참 → valid 비율 낮은 Zone 선정 (GC victim)
-    → valid 페이지 수 적으면 Zone Reset만으로 재사용 가능   <span class="grn">← Copy-back 최소</span>
-  블록 실제 기록량 ≈ 앱 요청량  →  <span class="grn">WAF ≈ 1.0</span>
+  F2FS segment boundary = zone boundary (64MB aligned)
+  random write -> F2FS converts to sequential internally, writes to zone
+  zone full -> select victim zone with low valid-page ratio (GC victim)
+    -> if few valid pages, zone reset alone suffices for reuse   <span class="grn">← minimal copy-back</span>
+  actual block writes ~= app writes  ->  <span class="grn">WAF ~= 1.0</span>
 <span class="sep">──────────────────────────────────────────────────────────</span>
-  핵심: Zone 크기(64MB) = F2FS GC 단위 → 부분 Copy-back 발생 구간 감소</pre>
+  key: zone size (64MB) = F2FS GC unit -> fewer partial copy-back intervals</pre>
                 </div>
                 <div class="callout ok">
                     <span class="callout-icon">✅</span>
@@ -572,7 +572,7 @@ printf <span class="str">'  ZNS  WAF ≈ 1.0: Zone 단위 GC로 Copy-back 최소
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="tag-col">NVMe F2FS (/dev/nullb0)</td>
+                        <td class="tag-col">Conv F2FS (/dev/nullb0)</td>
                         <td class="fill">기록하세요</td>
                         <td class="fill">기록하세요</td>
                         <td class="fill">기록하세요</td>

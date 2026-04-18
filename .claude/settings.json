@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | { read -r f; [ -z \"$f\" ] && exit 0; printf '{\"systemMessage\": \"커밋 메시지 제안: update %s\"}' \"$(basename \"$f\")\"; } 2>/dev/null || true",
+            "statusMessage": "커밋 메시지 생성 중..."
+          }
+        ]
+      }
+    ]
+  }
+}

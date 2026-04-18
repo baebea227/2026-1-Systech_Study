@@ -116,11 +116,11 @@
             직접 측정하고 Conventional SSD와 비교·분석합니다.
         </p>
         <p>
-            QEMU + Linux 커널 환경에서 <code>null_blk</code> 모듈로 NVMe SSD 역할의 <code>/dev/nullb0</code>와
+            QEMU + Linux 커널 환경에서 <code>null_blk</code> 모듈로 Conventional SSD 역할의 <code>/dev/nullb0</code>와
             ZNS SSD 역할의 <code>/dev/nullb1</code> 두 가상 장치를 구성합니다.
             <code>fio</code>·<code>blkzone</code> 명령으로 순차 쓰기 처리량 비교(Lab 1), Zone 상태 머신 조작(Lab 2),
             F2FS 파일시스템 레벨 WAF 측정(Lab 3)을 단계별로 실험합니다.
-            이어지는 <strong>Lab 4 (Case Study)</strong>에서는 동일한 Zone 개념이
+            이어지는 Lab 4 (Case Study)에서는 동일한 Zone 개념이
             모바일 스마트폰(Zoned UFS)에 이식될 때 발생하는 시스템 과제와 해결 전략을 FAST '26 논문을 통해 탐구합니다.
         </p>
     </div>
@@ -154,13 +154,13 @@
             <a href="setup.html" class="step-card">
                 <h3>실습 환경 준비: null_blk 기반 가상 장치 2대 구성</h3>
                 <p><code>null_blk</code> 커널 모듈을 소스에서 빌드·적재하고, <code>configfs</code>를 이용해
-                   NVMe SSD 역할의 <code>/dev/nullb0</code>(2 GB, 비-zone)과
+                   Conventional SSD 역할의 <code>/dev/nullb0</code>(2 GB, 비-zone)과
                    ZNS SSD 역할의 <code>/dev/nullb1</code>(2 GB, Zone 크기 64 MB, 32 Zone)을 생성합니다.
                    각 장치의 Zone 인식과 EMPTY 상태를 확인하고, <code>fio</code> 버전을 검증합니다.</p>
                 <div class="tools">
                     <span class="tool-badge warn">QEMU</span>
                     <span class="tool-badge warn">null_blk × 2</span>
-                    <span class="tool-badge warn">nullb0 NVMe / nullb1 ZNS</span>
+                    <span class="tool-badge warn">nullb0 Conv / nullb1 ZNS</span>
                     <span class="tool-badge warn">fio 3.19+</span>
                 </div>
             </a>
@@ -171,7 +171,7 @@
             <div class="step-num lab">3</div>
             <a href="lab1.html" class="step-card">
                 <h3>Lab 1: 쓰기 제약 및 기본 성능 비교</h3>
-                <p>NVMe SSD(<code>/dev/nullb0</code>)와 ZNS SSD(<code>/dev/nullb1</code>)에 동일한 순차 쓰기를 수행해
+                <p>Conventional SSD(<code>/dev/nullb0</code>)와 ZNS SSD(<code>/dev/nullb1</code>)에 동일한 순차 쓰기를 수행해
                    처리량(Bandwidth)과 지연 시간을 비교합니다.
                    이어서 ZNS에 Random Write를 시도하여 Write Pointer 위반 에러(<code>-EINVAL</code>)를 직접 확인합니다.</p>
                 <div class="tools">
@@ -207,7 +207,7 @@
                 <p>nullb1을 <code>zone_nr_conv=1</code>로 재구성하고 두 장치에 F2FS를 포맷·마운트합니다.
                    GC 유발 워크로드(80% 채우기 + 랜덤 쓰기 60 s)를 수행한 뒤
                    <code>/sys/block/nullb*/stat</code> 기반으로 WAF를 계산합니다.
-                   NVMe F2FS의 GC Copy-back(WAF 1.2~2.0×)과 ZNS F2FS의 Zone-Reset 기반 GC(WAF ≈ 1.0×)를 비교 분석합니다.</p>
+                   Conv F2FS의 GC Copy-back(WAF 1.2~2.0×)과 ZNS F2FS의 Zone-Reset 기반 GC(WAF ≈ 1.0×)를 비교 분석합니다.</p>
                 <div class="tools">
                     <span class="tool-badge ok">F2FS (mkfs.f2fs -m)</span>
                     <span class="tool-badge ok">zone_nr_conv=1</span>

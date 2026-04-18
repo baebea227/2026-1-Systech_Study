@@ -392,7 +392,7 @@
                 <div class="cmd-name">순차 쓰기 성능 비교</div>
                 <div class="cmd-desc">
                     ZNS vs Conventional SSD의 <strong>처리량(BW)</strong>과 <strong>평균 지연 시간</strong> 비교<br><br>
-                    <span style="font-size:.78rem; color:#64748b;">→ 배경 지식 §1 성능 이점 (하우스키핑·테일 레이턴시 감소)</span>
+                    <span style="font-size:.78rem; color:#64748b;">→ 배경 지식 > 1. 성능 이점 (하우스키핑·테일 레이턴시 감소)</span>
                 </div>
             </div>
             <div class="cmd-card reset">
@@ -400,7 +400,7 @@
                 <div class="cmd-desc">
                     ZNS에서 랜덤 쓰기 시 Write Pointer 위반 → <strong>EINVAL 에러</strong> 발생 확인<br>
                     Conventional SSD는 랜덤 쓰기 정상 처리<br><br>
-                    <span style="font-size:.78rem; color:#64748b;">→ 배경 지식 §2 Write Pointer 동작 원리</span>
+                    <span style="font-size:.78rem; color:#64748b;">→ 배경 지식 > 2. Write Pointer 동작 원리</span>
                 </div>
             </div>
         </div>
@@ -416,7 +416,7 @@
                         <code>blkzone report</code>로 상태 및 Write Pointer 확인<br>
                         쓰기 시 <strong>Implicit Open</strong>으로 자동 전이 확인
                     </td>
-                    <td>§2 Write Pointer · §3 Open zone</td>
+                    <td>2. Write Pointer · 3. Open zone</td>
                 </tr>
                 <tr>
                     <td class="row-label">명시적 수명주기 제어</td>
@@ -424,7 +424,7 @@
                         Explicit Open → Write → Close → Finish 과정 수행<br>
                         단계별 Write Pointer 변화 관찰
                     </td>
-                    <td>§3 Zone 관리 명령 4종</td>
+                    <td>3. Zone 관리 명령 4종</td>
                 </tr>
                 <tr>
                     <td class="row-label">Zone 초기화</td>
@@ -432,7 +432,7 @@
                         Reset 수행 시 <strong>FULL → EMPTY</strong> 상태 복구 확인<br>
                         Write Pointer 초기화 검증
                     </td>
-                    <td>§3 Reset zone write pointer</td>
+                    <td>3. Reset zone write pointer</td>
                 </tr>
             </tbody>
         </table>
@@ -464,7 +464,7 @@
 
         <div class="callout ok">
             <span class="callout-icon">✅</span>
-            <span>WAF(Write Amplification Factor) = Device Write / Host Write. ZNS는 순차 쓰기만 허용하므로 GC Copy-back이 발생하지 않아 WAF ≈ 1.0에 근접합니다. §1의 성능 이점을 수치로 직접 검증하는 실습입니다.</span>
+            <span>WAF(Write Amplification Factor) = Device Write / Host Write. ZNS는 순차 쓰기만 허용하므로 GC Copy-back이 발생하지 않아 WAF ≈ 1.0에 근접합니다. 1절의 성능 이점을 수치로 직접 검증하는 실습입니다.</span>
         </div>
     </div>
 
