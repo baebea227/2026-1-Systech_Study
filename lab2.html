@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --success:#16a34a; --warn:#d97706; --danger:#dc2626; }
+        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --code-bg:#1e293b; --code-fg:#e2e8f0; --success:#16a34a; --warn:#d97706; --info:#2563eb; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.7; }
         .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
@@ -17,20 +17,16 @@
         .back-link:hover { color:white; }
         header h1 { font-size:1.6rem; font-weight:700; margin-bottom:.3rem; }
         header p  { font-size:.9rem; opacity:.82; }
-        .step-flow { position:relative; margin-bottom:2rem; }
-        .step-flow::before { content:''; position:absolute; left:20px; top:28px; bottom:28px; width:2px; background:var(--border); }
+        .step-flow { margin-bottom:2rem; }
         .step-entry { display:flex; gap:1.1rem; align-items:flex-start; margin-bottom:1.6rem; }
         .step-entry:last-child { margin-bottom:0; }
-        .step-dot { flex-shrink:0; width:40px; height:40px; border-radius:50%; background:var(--navy); color:white; font-size:.95rem; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:1; position:relative; }
-        .step-dot.exp  { background:var(--success); }
-        .step-dot.warn { background:var(--warn); }
         .step-body { flex:1; }
         .step-body h3 { font-size:1rem; font-weight:600; color:var(--navy); margin-bottom:.4rem; }
         .step-body p  { font-size:.88rem; color:#374151; margin-bottom:.6rem; }
         .card { background:white; border:1px solid var(--border); border-radius:8px; padding:1.5rem 2rem; margin-bottom:1.5rem; }
         .card h2 { font-size:1.1rem; color:var(--navy); margin-bottom:1rem; }
         .card p  { font-size:.88rem; color:#374151; margin-bottom:.5rem; }
-        code { font-family:'JetBrains Mono',monospace; font-size:.83em; background:#eff6ff; padding:.1em .35em; border-radius:3px; color:var(--blue); }
+        code { font-family:'JetBrains Mono',monospace; font-size:.83em; background:#f1f5f9; padding:.1em .35em; border-radius:3px; }
         .code-block { position:relative; background:#1e2533; border-radius:6px; margin:.5rem 0 1rem; overflow:hidden; }
         .code-block-label { background:#2d3748; color:#a0aec0; font-family:'JetBrains Mono',monospace; font-size:.7rem; padding:.35rem .9rem; letter-spacing:.06em; display:flex; align-items:center; justify-content:space-between; }
         .code-block-label span { display:flex; align-items:center; gap:.5rem; }
@@ -44,11 +40,11 @@
         .copy-btn:hover { background:#4a5568; color:white; }
         .file-badge { display:inline-flex; align-items:center; gap:.4rem; background:#1a3a5c; color:#7dd3fc; font-family:'JetBrains Mono',monospace; font-size:.72rem; padding:.25em .7em; border-radius:3px; border:1px solid #2d5a8a; }
         .file-badge::before { content:'📄'; font-size:.85em; }
-        .callout { border-radius:6px; padding:.85rem 1.1rem; font-size:.86rem; margin:.5rem 0 1rem; display:flex; gap:.7rem; align-items:flex-start; }
-        .callout.info { background:#eff6ff; border-left:3px solid var(--blue);    color:#1e40af; }
-        .callout.warn { background:#fffbeb; border-left:3px solid var(--warn);    color:#92400e; }
-        .callout.ok   { background:#f0fdf4; border-left:3px solid var(--success); color:#14532d; }
-        .callout-icon { font-size:1rem; flex-shrink:0; }
+        .callout { border-left:4px solid; padding:.8rem 1rem; margin:.8rem 0; border-radius:0 6px 6px 0; font-size:.88rem; }
+        .callout-info    { border-color:var(--info);    background:#eff6ff; }
+        .callout-warn    { border-color:var(--warn);    background:#fffbeb; }
+        .callout-success { border-color:var(--success); background:#f0fdf4; }
+        .callout-title { display:block; margin-bottom:.2rem; font-weight:600; }
         .output-block { background:#0f1724; border:1px solid #2d3748; border-radius:6px; margin:.4rem 0 1rem; overflow:hidden; }
         .output-label { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:#64748b; letter-spacing:.06em; padding:.5rem .9rem; background:#1a2233; border-bottom:1px solid #2d3748; display:flex; align-items:center; gap:.5rem; }
         .output-label::before { content:'▶'; color:#4ade80; font-size:.65rem; }
@@ -134,7 +130,7 @@
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot">1</div>
+
             <div class="step-body">
                 <h3>초기 Zone 상태 확인</h3>
                 <p><code>blkzone report</code>로 모든 Zone의 현재 상태, 시작 LBA, 크기, Write Pointer 위치를 확인합니다.</p>
@@ -166,7 +162,7 @@ cat /sys/block/nullb1/queue/nr_zones</code></pre>
         </div>
 
         <div class="step-entry">
-            <div class="step-dot">2</div>
+
             <div class="step-body">
                 <h3>Implicit Open 상태 유발 및 확인</h3>
                 <p>명시적 Open 명령 없이 쓰기를 수행하면 Zone이 자동으로 <strong>Implicit Open</strong> 상태로 전이됩니다.</p>
@@ -202,9 +198,9 @@ sudo blkzone report /dev/nullb1 \
        1 <span class="ylw">oi</span>    <span class="sep">← Implicit Open: 1</span>
       15 <span class="grn">em</span>    <span class="sep">← EMPTY: 15</span></pre>
                 </div>
-                <div class="callout info">
-                    <span class="callout-icon">ℹ️</span>
-                    <span>Implicit Open은 애플리케이션이 <code>OPEN ZONE</code> 명령 없이 바로 쓰기를 시작할 때 장치가 자동으로 부여하는 상태입니다.</span>
+                <div class="callout callout-info">
+                    <span class="callout-title">참고</span>
+                    Implicit Open은 애플리케이션이 <code>OPEN ZONE</code> 명령 없이 바로 쓰기를 시작할 때 장치가 자동으로 부여하는 상태입니다.
                 </div>
             </div>
         </div>
@@ -215,7 +211,7 @@ sudo blkzone report /dev/nullb1 \
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot exp">1</div>
+
             <div class="step-body">
                 <h3>Explicit Open → 쓰기 → Close → Finish 통합 실행 <code style="font-size:.75em; margin-left:.4rem;">zone_lifecycle.sh</code></h3>
                 <p>Zone을 명시적으로 열고 데이터를 기록하면서 Write Pointer 이동을 관찰한 뒤, Close와 Finish까지 전체 상태 전이 시퀀스를 한 번에 확인합니다.</p>
@@ -316,9 +312,9 @@ Zone 1 state: wptr=<span class="ylw">0x020000</span>       state=<span class="yl
 done</pre>
                 </div>
 
-                <div class="callout warn">
-                    <span class="callout-icon">⚠️</span>
-                    <span>Close 상태에서는 쓰기가 불가능합니다. Finish 상태는 Reset 전까지 영구 봉인됩니다. Close와 Finish의 차이에 주목하세요.</span>
+                <div class="callout callout-warn">
+                    <span class="callout-title">주의</span>
+                    Close 상태에서는 쓰기가 불가능합니다. Finish 상태는 Reset 전까지 영구 봉인됩니다. Close와 Finish의 차이에 주목하세요.
                 </div>
             </div>
         </div>
@@ -329,7 +325,7 @@ done</pre>
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot">1</div>
+
             <div class="step-body">
                 <h3>Zone Reset 통합 실행 <code style="font-size:.75em; margin-left:.4rem;">zone_reset.sh</code></h3>
                 <p>단일 Zone Reset과 전체 Zone 일괄 Reset을 순서대로 실행하고, Write Pointer가 Zone 시작으로 복귀하여 EMPTY 상태로 전환됨을 확인합니다.</p>
@@ -404,9 +400,9 @@ First 3 zones WP check:
 All zones restored to EMPTY</pre>
                 </div>
 
-                <div class="callout info">
-                    <span class="callout-icon">ℹ️</span>
-                    <span>Zone Reset은 데이터를 일괄 삭제하고 Write Pointer를 Zone 시작으로 되돌립니다. Conventional SSD의 Trim 명령과 유사하지만 <strong>Zone 단위</strong>로만 동작합니다.</span>
+                <div class="callout callout-info">
+                    <span class="callout-title">참고</span>
+                    Zone Reset은 데이터를 일괄 삭제하고 Write Pointer를 Zone 시작으로 되돌립니다. Conventional SSD의 Trim 명령과 유사하지만 <strong>Zone 단위</strong>로만 동작합니다.
                 </div>
             </div>
         </div>

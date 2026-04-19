@@ -7,87 +7,244 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --success:#16a34a; --warn:#d97706; --danger:#dc2626; }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.7; }
-        .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
-        header { background:linear-gradient(135deg, var(--navy), var(--blue)); color:white; padding:2.5rem 0; margin-bottom:2rem; }
-        header .container { padding-top:0; padding-bottom:0; }
-        .back-link { color:rgba(255,255,255,.75); font-size:.85rem; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-bottom:.8rem; }
-        .back-link:hover { color:white; }
-        header h1 { font-size:1.6rem; font-weight:700; margin-bottom:.3rem; }
-        header p  { font-size:.9rem; opacity:.82; }
-        .step-flow { position:relative; margin-bottom:2rem; }
-        .step-flow::before { content:''; position:absolute; left:20px; top:28px; bottom:28px; width:2px; background:var(--border); }
-        .step-entry { display:flex; gap:1.1rem; align-items:flex-start; margin-bottom:1.6rem; }
-        .step-entry:last-child { margin-bottom:0; }
-        .step-dot { flex-shrink:0; width:40px; height:40px; border-radius:50%; background:var(--navy); color:white; font-size:.95rem; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:1; position:relative; }
-        .step-dot.exp { background:var(--success); }
-        .step-dot.danger { background:var(--danger); }
-        .step-body { flex:1; }
-        .step-body h3 { font-size:1rem; font-weight:600; color:var(--navy); margin-bottom:.4rem; }
-        .step-body p  { font-size:.88rem; color:#374151; margin-bottom:.6rem; }
-        .card { background:white; border:1px solid var(--border); border-radius:8px; padding:1.5rem 2rem; margin-bottom:1.5rem; }
-        .card h2 { font-size:1.1rem; color:var(--navy); margin-bottom:1rem; }
-        .card p  { font-size:.88rem; color:#374151; margin-bottom:.5rem; }
-        code { font-family:'JetBrains Mono',monospace; font-size:.83em; background:#eff6ff; padding:.1em .35em; border-radius:3px; color:var(--blue); }
-        .code-block { position:relative; background:#1e2533; border-radius:6px; margin:.5rem 0 1rem; overflow:hidden; }
-        .code-block-label { background:#2d3748; color:#a0aec0; font-family:'JetBrains Mono',monospace; font-size:.7rem; padding:.35rem .9rem; letter-spacing:.06em; display:flex; align-items:center; justify-content:space-between; }
-        .code-block-label span { display:flex; align-items:center; gap:.5rem; }
-        .code-block pre { padding:1rem 1.2rem; overflow-x:auto; }
-        .code-block pre code { font-family:'JetBrains Mono',monospace; font-size:.82rem; background:none; padding:0; color:#e2e8f0; line-height:1.65; }
-        .code-block pre code .comment { color:#6b7a99; }
-        .code-block pre code .kw { color:#79c0ff; }
-        .code-block pre code .str { color:#a5d6a7; }
-        .code-block pre code .fn { color:#d2a8ff; }
-        .copy-btn { background:#2d3748; border:1px solid #4a5568; color:#a0aec0; font-size:.7rem; padding:.25em .6em; border-radius:3px; cursor:pointer; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
-        .copy-btn:hover { background:#4a5568; color:white; }
-        .file-badge { display:inline-flex; align-items:center; gap:.4rem; background:#1a3a5c; color:#7dd3fc; font-family:'JetBrains Mono',monospace; font-size:.72rem; padding:.25em .7em; border-radius:3px; border:1px solid #2d5a8a; }
-        .file-badge::before { content:'📄'; font-size:.85em; }
-        .callout { border-radius:6px; padding:.85rem 1.1rem; font-size:.86rem; margin:.5rem 0 1rem; display:flex; gap:.7rem; align-items:flex-start; }
-        .callout.info   { background:#eff6ff; border-left:3px solid var(--blue);    color:#1e40af; }
-        .callout.warn   { background:#fffbeb; border-left:3px solid var(--warn);    color:#92400e; }
-        .callout.ok     { background:#f0fdf4; border-left:3px solid var(--success); color:#14532d; }
-        .callout.danger { background:#fef2f2; border-left:3px solid var(--danger);  color:#7f1d1d; }
-        .callout-icon { font-size:1rem; flex-shrink:0; }
-        .output-block { background:#0f1724; border:1px solid #2d3748; border-radius:6px; margin:.4rem 0 1rem; overflow:hidden; }
-        .output-label { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:#64748b; letter-spacing:.06em; padding:.5rem .9rem; background:#1a2233; border-bottom:1px solid #2d3748; display:flex; align-items:center; gap:.5rem; }
-        .output-label::before { content:'▶'; color:#4ade80; font-size:.65rem; }
-        .output-block pre { font-family:'JetBrains Mono',monospace; font-size:.8rem; color:#94a3b8; line-height:1.7; overflow-x:auto; padding:.9rem 1.1rem; }
-        .output-block pre .grn { color:#4ade80; font-weight:600; }
-        .output-block pre .ylw { color:#fde68a; }
-        .output-block pre .blu { color:#7dd3fc; }
-        .output-block pre .red { color:#f87171; font-weight:600; }
-        .output-block pre .sep { color:#334155; }
-        .output-block pre .hdr { color:#c084fc; font-weight:600; }
-        .result-table-wrap { overflow-x:auto; margin:.6rem 0 1rem; }
-        .result-table { width:100%; border-collapse:collapse; font-size:.85rem; }
-        .result-table th { background:var(--navy); color:white; padding:.55rem .9rem; text-align:center; font-weight:600; }
-        .result-table td { padding:.5rem .9rem; text-align:center; border-bottom:1px solid var(--border); color:#374151; }
-        .result-table tr:nth-child(even) td { background:#f8fafc; }
-        .result-table .fill { color:#94a3b8; font-style:italic; font-size:.8rem; }
-        .result-table .tag-col { font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--navy); }
-        .metric-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:.7rem 0; }
-        .metric-box { background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:.9rem 1rem; text-align:center; }
-        .metric-label { font-size:.72rem; color:#64748b; margin-bottom:.3rem; letter-spacing:.04em; }
-        .metric-val { font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:500; color:var(--navy); }
-        .script-overview { background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.1rem; margin:.5rem 0 1rem; display:flex; gap:1rem; align-items:flex-start; }
-        .script-overview-icon { font-size:1.4rem; flex-shrink:0; }
-        .script-overview-body { flex:1; }
-        .script-overview-body strong { font-size:.88rem; color:var(--navy); display:block; margin-bottom:.3rem; }
-        .script-steps { list-style:none; margin:.5rem 0 0; }
-        .script-steps li { font-size:.82rem; color:#374151; padding:.15rem 0; display:flex; gap:.5rem; align-items:center; }
-        .script-steps li::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--blue); flex-shrink:0; }
-        .question-list { display:flex; flex-direction:column; gap:.7rem; }
-        .question-item { background:white; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.2rem; }
-        .question-item .q { font-size:.88rem; font-weight:600; color:var(--navy); margin-bottom:.35rem; }
-        .question-item .hint { font-size:.8rem; color:#64748b; }
-        .nav-between { display:flex; justify-content:space-between; margin-top:2rem; }
-        .nav-btn { font-size:.82rem; color:var(--blue); text-decoration:none; padding:.45em 1em; border:1px solid var(--border); border-radius:5px; background:white; transition:background .15s,border-color .15s; }
-        .nav-btn:hover { background:#eff6ff; border-color:var(--blue); }
-        .section-label { font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#94a3b8; margin:1.8rem 0 .8rem; padding-bottom:.4rem; border-bottom:1px solid var(--border); }
-        footer { text-align:center; color:#94a3b8; font-size:.8rem; padding:2rem 0; }
-        @media(max-width:640px){ .container{padding:1rem;} header h1{font-size:1.3rem;} .metric-row{grid-template-columns:1fr 1fr;} }
+        :root {
+            --navy:    #003366;
+            --blue:    #004a99;
+            --accent:  #c9a227;
+            --light:   #f7f9fc;
+            --border:  #e2e8f0;
+            --code-bg: #1e293b;
+            --code-fg: #e2e8f0;
+            --success: #16a34a;
+            --warn:    #d97706;
+            --danger:  #dc2626;
+            --info:    #2563eb;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            color: #1a202c;
+            background: var(--light);
+            line-height: 1.7;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--navy), var(--blue));
+            color: white;
+            padding: 2.5rem 0;
+            margin-bottom: 2rem;
+        }
+        header .container { padding-top: 0; padding-bottom: 0; }
+        .back-link {
+            color: rgba(255,255,255,.75);
+            font-size: .85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            margin-bottom: .8rem;
+        }
+        .back-link:hover { color: white; }
+        header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: .3rem; }
+        header p  { font-size: .9rem; opacity: .82; }
+
+        /* Step flow */
+        .step-flow { margin-bottom: 2rem; }
+        .step-entry { display: flex; gap: 1.1rem; align-items: flex-start; margin-bottom: 1.6rem; }
+        .step-entry:last-child { margin-bottom: 0; }
+        .step-body { flex: 1; }
+        .step-body h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: .4rem; }
+        .step-body p  { font-size: .88rem; color: #374151; margin-bottom: .6rem; }
+
+        /* Cards */
+        .card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; }
+        .card h2 { font-size: 1.1rem; color: var(--navy); margin-bottom: 1rem; }
+        .card p  { font-size: .88rem; color: #374151; margin-bottom: .5rem; }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85em;
+            background: #f1f5f9;
+            padding: .15em .4em;
+            border-radius: 3px;
+        }
+
+        /* Code blocks */
+        .code-block { position: relative; background: var(--code-bg); border-radius: 6px; margin: .5rem 0 1rem; overflow: hidden; }
+        .code-block-label {
+            background: #2d3748;
+            color: #a0aec0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            padding: .35rem .9rem;
+            letter-spacing: .06em;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .code-block-label span { display: flex; align-items: center; gap: .5rem; }
+        .code-block pre { padding: 1rem 1.2rem; overflow-x: auto; }
+        .code-block pre code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .82rem;
+            background: none; padding: 0;
+            color: var(--code-fg);
+            line-height: 1.65;
+        }
+        .code-block pre code .comment { color: #6b7a99; }
+        .code-block pre code .kw  { color: #79c0ff; }
+        .code-block pre code .str { color: #a5d6a7; }
+        .code-block pre code .fn  { color: #d2a8ff; }
+        .copy-btn {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            color: #a0aec0;
+            font-size: .7rem;
+            padding: .25em .6em;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
+        }
+        .copy-btn:hover { background: #4a5568; color: white; }
+        .file-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: #1a3a5c;
+            color: #7dd3fc;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .72rem;
+            padding: .25em .7em;
+            border-radius: 3px;
+            border: 1px solid #2d5a8a;
+        }
+        .file-badge::before { content: '📄'; font-size: .85em; }
+
+        /* Callouts */
+        .callout {
+            border-left: 4px solid;
+            padding: .8rem 1rem;
+            margin: .8rem 0;
+            border-radius: 0 6px 6px 0;
+            font-size: .88rem;
+        }
+        .callout-info    { border-color: var(--info);    background: #eff6ff; color: #1e40af; }
+        .callout-warn    { border-color: var(--warn);    background: #fffbeb; color: #92400e; }
+        .callout-success { border-color: var(--success); background: #f0fdf4; color: #14532d; }
+        .callout-danger  { border-color: var(--danger);  background: #fef2f2; color: #7f1d1d; }
+        .callout-title   { display: block; margin-bottom: .2rem; font-weight: 600; }
+
+        /* Output blocks */
+        .output-block { background: #0f1724; border: 1px solid #2d3748; border-radius: 6px; margin: .4rem 0 1rem; overflow: hidden; }
+        .output-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .68rem;
+            color: #64748b;
+            letter-spacing: .06em;
+            padding: .5rem .9rem;
+            background: #1a2233;
+            border-bottom: 1px solid #2d3748;
+            display: flex; align-items: center; gap: .5rem;
+        }
+        .output-label::before { content: '▶'; color: #4ade80; font-size: .65rem; }
+        .output-block pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .8rem;
+            color: #94a3b8;
+            line-height: 1.7;
+            overflow-x: auto;
+            padding: .9rem 1.1rem;
+        }
+        .output-block pre .grn { color: #4ade80; font-weight: 600; }
+        .output-block pre .ylw { color: #fde68a; }
+        .output-block pre .blu { color: #7dd3fc; }
+        .output-block pre .red { color: #f87171; font-weight: 600; }
+        .output-block pre .sep { color: #334155; }
+        .output-block pre .hdr { color: #c084fc; font-weight: 600; }
+
+        /* Result tables */
+        .result-table-wrap { overflow-x: auto; margin: .6rem 0 1rem; }
+        .result-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+        .result-table th { background: var(--navy); color: white; padding: .55rem .9rem; text-align: center; font-weight: 600; }
+        .result-table td { padding: .5rem .9rem; text-align: center; border-bottom: 1px solid var(--border); color: #374151; }
+        .result-table tr:nth-child(even) td { background: #f8fafc; }
+        .result-table .fill    { color: #94a3b8; font-style: italic; font-size: .8rem; }
+        .result-table .tag-col { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--navy); }
+
+        /* Metric boxes */
+        .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: .7rem 0; }
+        .metric-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: .9rem 1rem; text-align: center; }
+        .metric-label { font-size: .72rem; color: #64748b; margin-bottom: .3rem; letter-spacing: .04em; }
+        .metric-val   { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 500; color: var(--navy); }
+
+        /* Script overview */
+        .script-overview {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: .9rem 1.1rem;
+            margin: .5rem 0 1rem;
+            display: flex; gap: 1rem; align-items: flex-start;
+        }
+        .script-overview-icon { font-size: 1.4rem; flex-shrink: 0; }
+        .script-overview-body { flex: 1; }
+        .script-overview-body strong { font-size: .88rem; color: var(--navy); display: block; margin-bottom: .3rem; }
+        .script-steps { list-style: none; margin: .5rem 0 0; }
+        .script-steps li {
+            font-size: .82rem; color: #374151;
+            padding: .15rem 0;
+            display: flex; gap: .5rem; align-items: center;
+        }
+        .script-steps li::before {
+            content: '';
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--blue);
+            flex-shrink: 0;
+        }
+
+        /* Questions */
+        .question-list { display: flex; flex-direction: column; gap: .7rem; }
+        .question-item { background: white; border: 1px solid var(--border); border-radius: 6px; padding: .9rem 1.2rem; }
+        .question-item .q    { font-size: .88rem; font-weight: 600; color: var(--navy); margin-bottom: .35rem; }
+        .question-item .hint { font-size: .8rem; color: #64748b; }
+
+        /* Navigation */
+        .nav-between { display: flex; justify-content: space-between; margin-top: 2rem; }
+        .nav-btn {
+            font-size: .82rem;
+            color: var(--blue);
+            text-decoration: none;
+            padding: .45em 1em;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: white;
+            transition: background .15s, border-color .15s;
+        }
+        .nav-btn:hover { background: #eff6ff; border-color: var(--blue); }
+
+        /* Section label */
+        .section-label {
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin: 1.8rem 0 .8rem;
+            padding-bottom: .4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        footer { text-align: center; color: #94a3b8; font-size: .8rem; padding: 2rem 0; }
+
+        @media (max-width: 640px) {
+            .container { padding: 1rem; }
+            header h1  { font-size: 1.3rem; }
+            .metric-row { grid-template-columns: 1fr 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -118,7 +275,7 @@
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot exp">1</div>
+
             <div class="step-body">
                 <h3>통합 벤치마크 실행 <code style="font-size:.75em; margin-left:.4rem;">bench_seqwrite.sh</code></h3>
                 <p>ZNS Zone 초기화 후 두 장치에 순차 쓰기를 수행하고 Bandwidth · Latency를 비교 출력합니다. <code>/dev/nullb1</code>은 <code>zonemode=zbd</code>로, <code>/dev/nullb0</code>은 일반 write로 실행됩니다.</p>
@@ -244,9 +401,8 @@ printf <span class="str">'\nDone. Record the values in the result table.\n'</spa
 <span class="sep">────────────────────────────────────────────────────</span>
                 </div>
 
-                <div class="callout info">
-                    <span class="callout-icon">ℹ️</span>
-                    <span>순차 쓰기에서는 ZNS와 Conventional의 처리량이 유사합니다. ZNS의 이점은 내부 GC 부재로 인한 <strong>일관된 성능(꼬리 지연 없음)</strong>에서 드러납니다.</span>
+                <div class="callout callout-info">
+                    순차 쓰기에서는 ZNS와 Conventional의 처리량이 유사합니다. ZNS의 이점은 내부 GC 부재로 인한 <strong>일관된 성능(꼬리 지연 없음)</strong>에서 드러납니다.
                 </div>
             </div>
         </div>
@@ -270,14 +426,13 @@ printf <span class="str">'\nDone. Record the values in the result table.\n'</spa
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot danger">1</div>
+
             <div class="step-body">
                 <h3>통합 벤치마크 실행 <code style="font-size:.75em; margin-left:.4rem;">bench_randwrite.sh</code></h3>
                 <p>ZNS 장치에 <code>zonemode=none</code>으로 Random Write를 시도하여 Write Pointer 위반 에러를 유발하고, Conventional 장치에서 동일 Random Write가 정상 동작함을 한 번에 비교합니다.</p>
 
-                <div class="callout danger">
-                    <span class="callout-icon">🚫</span>
-                    <span>이 실험은 <strong>의도적으로 에러를 유발</strong>합니다. 에러 발생이 정상적인 결과입니다. 장치 손상은 없습니다.</span>
+                <div class="callout callout-danger">
+                    이 실험은 <strong>의도적으로 에러를 유발</strong>합니다. 에러 발생이 정상적인 결과입니다. 장치 손상은 없습니다.
                 </div>
 
                 <div class="script-overview">
@@ -400,9 +555,8 @@ sep</code></pre>
 <span class="sep">────────────────────────────────────────────────────</span></pre>
                 </div>
 
-                <div class="callout warn">
-                    <span class="callout-icon">⚠️</span>
-                    <span><code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 <strong>-EIO</strong>(err=5) 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.</span>
+                <div class="callout callout-warn">
+                    <code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 <strong>-EIO</strong>(err=5) 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.
                 </div>
             </div>
         </div>

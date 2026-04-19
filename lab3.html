@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --success:#16a34a; --warn:#d97706; --danger:#dc2626; }
+        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --code-bg:#1e293b; --code-fg:#e2e8f0; --success:#16a34a; --warn:#d97706; --info:#2563eb; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.7; }
         .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
@@ -17,13 +17,9 @@
         .back-link:hover { color:white; }
         header h1 { font-size:1.6rem; font-weight:700; margin-bottom:.3rem; }
         header p  { font-size:.9rem; opacity:.82; }
-        .step-flow { position:relative; margin-bottom:2rem; }
-        .step-flow::before { content:''; position:absolute; left:20px; top:28px; bottom:28px; width:2px; background:var(--border); }
+        .step-flow { margin-bottom:2rem; }
         .step-entry { display:flex; gap:1.1rem; align-items:flex-start; margin-bottom:1.6rem; }
         .step-entry:last-child { margin-bottom:0; }
-        .step-dot { flex-shrink:0; width:40px; height:40px; border-radius:50%; background:var(--navy); color:white; font-size:.95rem; font-weight:700; display:flex; align-items:center; justify-content:center; z-index:1; position:relative; }
-        .step-dot.exp    { background:var(--success); }
-        .step-dot.accent { background:var(--accent); color:#1a202c; }
         .step-body { flex:1; }
         .step-body h3 { font-size:1rem; font-weight:600; color:var(--navy); margin-bottom:.4rem; }
         .step-body p  { font-size:.88rem; color:#374151; margin-bottom:.6rem; }
@@ -47,11 +43,11 @@
         .copy-btn:hover { background:#4a5568; color:white; }
         .file-badge { display:inline-flex; align-items:center; gap:.4rem; background:#1a3a5c; color:#7dd3fc; font-family:'JetBrains Mono',monospace; font-size:.72rem; padding:.25em .7em; border-radius:3px; border:1px solid #2d5a8a; }
         .file-badge::before { content:'📄'; font-size:.85em; }
-        .callout { border-radius:6px; padding:.85rem 1.1rem; font-size:.86rem; margin:.5rem 0 1rem; display:flex; gap:.7rem; align-items:flex-start; }
-        .callout.info { background:#eff6ff; border-left:3px solid var(--blue);    color:#1e40af; }
-        .callout.warn { background:#fffbeb; border-left:3px solid var(--warn);    color:#92400e; }
-        .callout.ok   { background:#f0fdf4; border-left:3px solid var(--success); color:#14532d; }
-        .callout-icon { font-size:1rem; flex-shrink:0; }
+        .callout { border-left:4px solid; padding:.8rem 1rem; margin:.8rem 0; border-radius:0 6px 6px 0; font-size:.88rem; }
+        .callout-info    { border-color:var(--info);    background:#eff6ff; }
+        .callout-warn    { border-color:var(--warn);    background:#fffbeb; }
+        .callout-success { border-color:var(--success); background:#f0fdf4; }
+        .callout-title { display:block; margin-bottom:.2rem; font-weight:600; }
         .output-block { background:#0f1724; border:1px solid #2d3748; border-radius:6px; margin:.4rem 0 1rem; overflow:hidden; }
         .output-label { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:#64748b; letter-spacing:.06em; padding:.5rem .9rem; background:#1a2233; border-bottom:1px solid #2d3748; display:flex; align-items:center; gap:.5rem; }
         .output-label::before { content:'▶'; color:#4ade80; font-size:.65rem; }
@@ -144,9 +140,9 @@
                 <div class="waf-sub">Zone 단위 GC — Zone Reset으로 Copy-back 최소화</div>
             </div>
         </div>
-        <div class="callout info">
-            <span class="callout-icon">ℹ️</span>
-            <span>실습 1·2에서 사용한 장치는 1GB입니다. lab3에서는 GC를 충분히 유발하기 위해 <strong>두 장치를 모두 2GB로 재구성</strong>합니다. 또한 QEMU 메모리가 4GB이므로 Conv 측정 완료 후 <code>umount</code>로 page cache를 해제한 뒤 ZNS 측정을 시작합니다.</span>
+        <div class="callout callout-info">
+            <span class="callout-title">장치 재구성 안내</span>
+            실습 1·2에서 사용한 장치는 1GB입니다. lab3에서는 GC를 충분히 유발하기 위해 <strong>두 장치를 모두 2GB로 재구성</strong>합니다. 또한 QEMU 메모리가 4GB이므로 Conv 측정 완료 후 <code>umount</code>로 page cache를 해제한 뒤 ZNS 측정을 시작합니다.
         </div>
     </div>
 
@@ -155,7 +151,7 @@
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot">1</div>
+
             <div class="step-body">
                 <h3>nullb0 재구성 및 F2FS 포맷/마운트 <code style="font-size:.75em; margin-left:.4rem;">setup_conv.sh</code></h3>
                 <p>lab1·2에서 사용한 nullb0은 1GB입니다. GC를 충분히 유발할 쓰기량(1,600MB)을 확보하기 위해 <strong>2GB로 재구성</strong>합니다. nullb1은 이 단계에서 건드리지 않습니다.</p>
@@ -241,7 +237,7 @@ printf <span class="str">'\ndone  →  next: sudo bash workload_conv.sh\n'</span
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot exp">1</div>
+
             <div class="step-body">
                 <h3>GC 유발 워크로드 실행 및 언마운트 <code style="font-size:.75em; margin-left:.4rem;">workload_conv.sh</code></h3>
                 <p>F2FS GC가 동작하려면 파일시스템이 충분히 채워진 상태에서 <strong>덮어쓰기(overwrite)</strong>가 일어나야 합니다. 먼저 1,600MB 파일을 순차 write로 채운 뒤, 같은 파일에 랜덤 4KB write를 60초 인가합니다. 덮어쓰인 페이지는 F2FS 세그먼트 내에서 무효(invalid) 상태로 남아 GC Copy-back을 유발합니다.</p>
@@ -333,9 +329,9 @@ printf <span class="str">'\ndone  →  next: sudo bash setup_zns.sh\n'</span></c
                     </div>
                     <pre><code>chmod +x workload_conv.sh &amp;&amp; sudo bash workload_conv.sh</code></pre>
                 </div>
-                <div class="callout warn">
-                    <span class="callout-icon">⚠️</span>
-                    <span><code>--direct=1</code>은 페이지 캐시를 우회해 블록 장치에 직접 쓰며, 이후 <code>sync</code>로 남은 writeback을 플러시합니다. 이 두 가지를 함께 사용해야 <code>write_sectors</code> 스냅샷이 실제 기록량과 일치합니다.</span>
+                <div class="callout callout-warn">
+                    <span class="callout-title">direct=1 + sync 병용 이유</span>
+                    <code>--direct=1</code>은 페이지 캐시를 우회해 블록 장치에 직접 쓰며, 이후 <code>sync</code>로 남은 writeback을 플러시합니다. 이 두 가지를 함께 사용해야 <code>write_sectors</code> 스냅샷이 실제 기록량과 일치합니다.
                 </div>
             </div>
         </div>
@@ -346,7 +342,7 @@ printf <span class="str">'\ndone  →  next: sudo bash setup_zns.sh\n'</span></c
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot">1</div>
+
             <div class="step-body">
                 <h3>nullb1 재구성 및 ZNS F2FS 포맷/마운트 <code style="font-size:.75em; margin-left:.4rem;">setup_zns.sh</code></h3>
                 <p>F2FS는 ZNS 장치에서 슈퍼블록, 체크포인트 등 메타데이터를 저장하기 위해 <strong>최소 1개의 Conventional Zone</strong>을 요구합니다. 실습 1·2에서 사용한 nullb1은 Sequential Zone만 32개였으므로, <code>zone_nr_conv=1</code>을 추가하여 재구성해야 합니다.</p>
@@ -426,7 +422,7 @@ printf <span class="str">'\ndone  →  next: sudo bash workload_zns.sh\n'</span>
         </div>
 
         <div class="step-entry">
-            <div class="step-dot">2</div>
+
             <div class="step-body">
                 <h3>Zone 구성 확인</h3>
                 <p>재구성된 nullb1의 Conventional Zone 추가 여부와 F2FS 마운트 상태를 확인합니다.</p>
@@ -465,7 +461,7 @@ df -Th /mnt/zns</code></pre>
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot exp">1</div>
+
             <div class="step-body">
                 <h3>GC 유발 워크로드 실행 <code style="font-size:.75em; margin-left:.4rem;">workload_zns.sh</code></h3>
                 <p>Conv와 동일한 워크로드(1,600MB fill + randwrite 60초)를 nullb1에 적용하여 WAF 비교의 공정성을 유지합니다.</p>
@@ -552,9 +548,9 @@ printf <span class="str">'\ndone  →  next: sudo bash calc_waf.sh\n'</span></co
                     </div>
                     <pre><code>chmod +x workload_zns.sh &amp;&amp; sudo bash workload_zns.sh</code></pre>
                 </div>
-                <div class="callout warn">
-                    <span class="callout-icon">📌</span>
-                    <span>null_blk은 메모리 기반 장치이므로 I/O 속도가 매우 빠릅니다. GC가 백그라운드에서 충분히 돌지 못하면 Conv WAF가 예상보다 낮게 나올 수 있습니다. 이 경우 두 <code>workload_*.sh</code>의 <code>RUNTIME</code> 값을 120 이상으로 늘려 재측정하세요.</span>
+                <div class="callout callout-warn">
+                    <span class="callout-title">WAF가 낮게 나오는 경우</span>
+                    null_blk은 메모리 기반 장치이므로 I/O 속도가 매우 빠릅니다. GC가 백그라운드에서 충분히 돌지 못하면 Conv WAF가 예상보다 낮게 나올 수 있습니다. 이 경우 두 <code>workload_*.sh</code>의 <code>RUNTIME</code> 값을 120 이상으로 늘려 재측정하세요.
                 </div>
             </div>
         </div>
@@ -565,7 +561,7 @@ printf <span class="str">'\ndone  →  next: sudo bash calc_waf.sh\n'</span></co
 
     <div class="step-flow">
         <div class="step-entry">
-            <div class="step-dot accent">1</div>
+
             <div class="step-body">
                 <h3>WAF 계산 및 비교 출력 <code style="font-size:.75em; margin-left:.4rem;">calc_waf.sh</code></h3>
                 <p>저장된 스냅샷에서 앱 기록량(fio io_bytes)과 블록 장치 기록량(stat write_sectors)을 읽어 WAF를 계산하고 두 장치를 비교합니다.</p>
@@ -649,7 +645,7 @@ printf <span class="str">'  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC
         </div>
 
         <div class="step-entry">
-            <div class="step-dot accent">2</div>
+
             <div class="step-body">
                 <h3>F2FS GC 동작 구조 비교</h3>
                 <p>같은 랜덤 쓰기 워크로드를 받아도 Conv F2FS와 ZNS F2FS의 GC 전략이 달라 WAF 차이가 발생합니다.</p>
@@ -675,9 +671,9 @@ printf <span class="str">'  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC
 <span class="sep">──────────────────────────────────────────────────────────</span>
   key: zone size (64MB) = F2FS GC unit -> fewer partial copy-back intervals</pre>
                 </div>
-                <div class="callout ok">
-                    <span class="callout-icon">✅</span>
-                    <span>ZNS F2FS의 WAF 개선 핵심은 <strong>Zone Reset이 Erase 단위와 정확히 일치</strong>한다는 점입니다. Zone 전체가 invalid이면 복사 없이 Reset 하나로 재사용 가능하므로 GC Copy-back 비용이 대폭 줄어듭니다.</span>
+                <div class="callout callout-success">
+                    <span class="callout-title">ZNS WAF 개선 핵심</span>
+                    ZNS F2FS의 WAF 개선 핵심은 <strong>Zone Reset이 Erase 단위와 정확히 일치</strong>한다는 점입니다. Zone 전체가 invalid이면 복사 없이 Reset 하나로 재사용 가능하므로 GC Copy-back 비용이 대폭 줄어듭니다.
                 </div>
             </div>
         </div>
@@ -715,9 +711,9 @@ printf <span class="str">'  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC
                 </tbody>
             </table>
         </div>
-        <div class="callout warn" style="margin-top:.8rem;">
-            <span class="callout-icon">📌</span>
-            <span>이 실습의 WAF는 <strong>파일시스템 레벨</strong> 측정값입니다. 실제 NAND 기반 SSD에서는 여기에 더해 펌웨어 레벨 GC WAF가 추가로 곱해져 최종 WAF는 더 높아집니다.</span>
+        <div class="callout callout-warn" style="margin-top:.8rem;">
+            <span class="callout-title">파일시스템 레벨 WAF</span>
+            이 실습의 WAF는 <strong>파일시스템 레벨</strong> 측정값입니다. 실제 NAND 기반 SSD에서는 여기에 더해 펌웨어 레벨 GC WAF가 추가로 곱해져 최종 WAF는 더 높아집니다.
         </div>
     </div>
 
