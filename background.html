@@ -8,470 +8,521 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --navy:#003366; --blue:#004a99; --accent:#c9a227;
-            --light:#f7f9fc; --border:#e2e8f0;
-            --success:#16a34a; --warn:#d97706;
+            --navy: #003366;
+            --blue: #004a99;
+            --accent: #c9a227;
+            --light: #f7f9fc;
+            --border: #e2e8f0;
+            --code-bg: #1e293b;
+            --code-fg: #e2e8f0;
+            --success: #16a34a;
+            --warn: #d97706;
+            --info: #2563eb;
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.75; }
-        .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            color: #1a202c;
+            background: var(--light);
+            line-height: 1.7;
+        }
+        .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 
-        /* ── HEADER ── */
-        header { background:linear-gradient(135deg,var(--navy),var(--blue)); color:white; padding:2.5rem 0; margin-bottom:2rem; }
-        header .container { padding-top:0; padding-bottom:0; }
-        .back-link { color:rgba(255,255,255,.75); font-size:.85rem; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-bottom:.8rem; }
-        .back-link:hover { color:white; }
-        header h1 { font-size:1.6rem; font-weight:700; margin-bottom:.3rem; }
-        header p  { font-size:.9rem; opacity:.82; }
-        .badge { display:inline-block; background:var(--accent); color:var(--navy); font-size:.72rem; font-weight:600; padding:.2em .7em; border-radius:4px; margin-top:.7rem; }
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--navy), var(--blue));
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+        header .container { padding-top: 0; padding-bottom: 0; }
+        header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+        header p { font-size: 0.95rem; opacity: 0.85; }
+        header .badge {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--navy);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2em 0.7em;
+            border-radius: 4px;
+            margin-top: 0.8rem;
+        }
 
-        /* ── TOC ── */
-        .toc { background:white; border:1px solid var(--border); border-radius:8px; padding:1.2rem 1.8rem; margin-bottom:2rem; }
-        .toc-title { font-size:.8rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#64748b; margin-bottom:.7rem; }
-        .toc ol { margin-left:1.2rem; display:flex; flex-direction:column; gap:.3rem; }
-        .toc li { font-size:.88rem; }
-        .toc a { color:var(--blue); text-decoration:none; }
-        .toc a:hover { text-decoration:underline; }
+        /* TOC */
+        nav.toc {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        nav.toc h2 { font-size: 1rem; color: var(--navy); margin-bottom: 0.6rem; border: none; padding: 0; }
+        nav.toc ol { padding-left: 1.2rem; }
+        nav.toc li { margin: 0.3rem 0; font-size: 0.9rem; }
+        nav.toc a { color: var(--blue); text-decoration: none; }
+        nav.toc a:hover { text-decoration: underline; }
 
-        /* ── SECTION CARD ── */
-        .section { background:white; border:1px solid var(--border); border-radius:8px; padding:1.8rem 2rem; margin-bottom:1.5rem; scroll-margin-top:1.5rem; }
-        .section-num { font-family:'JetBrains Mono',monospace; font-size:.72rem; color:#94a3b8; letter-spacing:.06em; margin-bottom:.3rem; }
-        .section h2 { font-size:1.2rem; font-weight:700; color:var(--navy); margin-bottom:1rem; padding-bottom:.6rem; border-bottom:2px solid var(--border); }
-        .section h3 { font-size:.98rem; font-weight:600; color:#1e3a5f; margin:1.3rem 0 .5rem; }
-        .section p  { font-size:.9rem; color:#374151; margin-bottom:.7rem; line-height:1.8; }
+        /* Sections */
+        section { background: white; border-radius: 8px; border: 1px solid var(--border); padding: 1.5rem 2rem; margin-bottom: 1.5rem; scroll-margin-top: 1.5rem; }
+        h2 { font-size: 1.3rem; color: var(--navy); margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+        h3 { font-size: 1.05rem; color: var(--blue); margin: 1.2rem 0 0.5rem; }
+        h4 { font-size: 0.95rem; color: #475569; margin: 1rem 0 0.4rem; }
+        p { margin: 0.5rem 0; font-size: 0.92rem; }
+        ul, ol { margin: 0.5rem 0 0.5rem 1.5rem; font-size: 0.92rem; }
+        li { margin: 0.25rem 0; }
 
-        /* ── CODE ── */
-        code { font-family:'JetBrains Mono',monospace; font-size:.82em; background:#eff6ff; padding:.1em .38em; border-radius:3px; color:var(--blue); }
-        .code-block { background:#1e2533; border-radius:6px; margin:.5rem 0 1rem; overflow:hidden; }
-        .code-block-label { background:#2d3748; color:#a0aec0; font-family:'JetBrains Mono',monospace; font-size:.68rem; padding:.3rem .9rem; letter-spacing:.06em; }
-        .code-block pre { padding:.9rem 1.2rem; overflow-x:auto; }
-        .code-block pre code { font-family:'JetBrains Mono',monospace; font-size:.8rem; background:none; padding:0; color:#e2e8f0; line-height:1.7; }
-        .code-block pre code .c { color:#6b7a99; }
-        .code-block pre code .h { color:#fbd38d; }
-        .code-block pre code .g { color:#86efac; }
-        .code-block pre code .r { color:#f87171; }
+        /* Code */
+        pre {
+            background: var(--code-bg);
+            color: var(--code-fg);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 0.8rem 0;
+            font-size: 0.82rem;
+            line-height: 1.6;
+        }
+        pre code { font-family: 'JetBrains Mono', monospace; }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            background: #f1f5f9;
+            padding: 0.15em 0.4em;
+            border-radius: 3px;
+        }
+        pre code { background: none; padding: 0; font-size: inherit; }
 
-        /* ── CALLOUTS ── */
-        .callout { border-radius:6px; padding:.85rem 1.1rem; font-size:.86rem; margin:.6rem 0 1rem; display:flex; gap:.75rem; align-items:flex-start; }
-        .callout.info  { background:#eff6ff; border-left:3px solid var(--blue); color:#1e40af; }
-        .callout.warn  { background:#fffbeb; border-left:3px solid var(--warn); color:#92400e; }
-        .callout.ok    { background:#f0fdf4; border-left:3px solid var(--success); color:#14532d; }
-        .callout.lab   { background:#faf5ff; border-left:3px solid #7c3aed; color:#4c1d95; }
-        .callout-icon  { font-size:1rem; flex-shrink:0; margin-top:.05rem; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
+        th { background: var(--navy); color: white; padding: 0.5rem 0.8rem; text-align: left; font-weight: 500; }
+        th code { color: #1e293b; }
+        td { padding: 0.45rem 0.8rem; border-bottom: 1px solid var(--border); }
+        tr:nth-child(even) td { background: #f8fafc; }
 
-        /* ── FIGURE / DIAGRAM ── */
-        .figure { background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:1.2rem; margin:1rem 0; }
-        .figure-caption { font-size:.78rem; color:#64748b; text-align:center; margin-top:.7rem; }
+        /* Callouts */
+        .callout {
+            border-left: 4px solid;
+            padding: 0.8rem 1rem;
+            margin: 0.8rem 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.88rem;
+        }
+        .callout-info { border-color: var(--info); background: #eff6ff; }
+        .callout-warn { border-color: var(--warn); background: #fffbeb; }
+        .callout-success { border-color: var(--success); background: #f0fdf4; }
+        .callout-title { display: block; margin-bottom: 0.2rem; font-weight: 600; }
+
+        /* Footer */
+        footer { text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 2rem 0; }
+
+        @media (max-width: 640px) {
+            .container { padding: 1rem; }
+            section { padding: 1rem 1.2rem; }
+            pre { font-size: 0.75rem; padding: 0.8rem; }
+        }
+
+        /* Figure / Diagram */
+        .figure { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
+        .figure-caption { font-size: 0.78rem; color: #64748b; text-align: center; margin-top: 0.7rem; }
 
         /* WP diagram */
-        .wp-diagram { display:flex; flex-direction:column; gap:.5rem; }
-        .zone-row { display:flex; align-items:center; gap:.5rem; font-size:.8rem; }
-        .zone-label { font-family:'JetBrains Mono',monospace; color:#64748b; min-width:4.5rem; font-size:.75rem; }
-        .zone-blocks { display:flex; gap:2px; flex:1; }
-        .blk { height:26px; border-radius:2px; flex:1; }
-        .blk.written { background:#3b82f6; }
-        .blk.empty-blk { background:#e2e8f0; border:1px dashed #cbd5e1; }
-        .blk.wp { background:#ef4444; position:relative; }
-        .blk.wp::after { content:'WP'; position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-family:'JetBrains Mono',monospace; font-size:.6rem; color:#ef4444; white-space:nowrap; }
-        .zone-state-tag { font-family:'JetBrains Mono',monospace; font-size:.68rem; padding:.15em .5em; border-radius:3px; white-space:nowrap; }
-        .tag-empty  { background:#f1f5f9; color:#64748b; }
-        .tag-open   { background:#eff6ff; color:#2563eb; }
-        .tag-full   { background:#f0fdf4; color:var(--success); }
-        .tag-closed { background:#fffbeb; color:#92400e; }
+        .wp-diagram { display: flex; flex-direction: column; gap: 0.5rem; }
+        .zone-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
+        .zone-label { font-family: 'JetBrains Mono', monospace; color: #64748b; min-width: 4.5rem; font-size: 0.75rem; }
+        .zone-blocks { display: flex; gap: 2px; flex: 1; }
+        .blk { height: 26px; border-radius: 2px; flex: 1; }
+        .blk.written { background: #3b82f6; }
+        .blk.empty-blk { background: #e2e8f0; border: 1px dashed #cbd5e1; }
+        .blk.wp { background: #ef4444; position: relative; }
+        .blk.wp::after { content: 'WP'; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: #ef4444; white-space: nowrap; }
+        .zone-state-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; padding: 0.15em 0.5em; border-radius: 3px; white-space: nowrap; }
+        .tag-empty  { background: #f1f5f9; color: #64748b; }
+        .tag-open   { background: #eff6ff; color: #2563eb; }
+        .tag-full   { background: #f0fdf4; color: var(--success); }
+        .tag-closed { background: #fffbeb; color: #92400e; }
 
-        /* ── COMPARISON TABLE ── */
-        .cmp-table { width:100%; border-collapse:collapse; font-size:.86rem; margin:.8rem 0; }
-        .cmp-table th { background:var(--navy); color:white; padding:.6rem 1rem; text-align:left; font-weight:600; }
-        .cmp-table th:not(:first-child) { text-align:center; }
-        .cmp-table td { padding:.55rem 1rem; border-bottom:1px solid var(--border); color:#374151; }
-        .cmp-table td:not(:first-child) { text-align:center; }
-        .cmp-table tr:nth-child(even) td { background:#f8fafc; }
-        .cmp-table .row-label { font-weight:600; color:var(--navy); }
-        .good { color:var(--success); font-weight:600; }
-        .bad  { color:#dc2626; font-weight:600; }
-        .mid  { color:var(--warn); font-weight:500; }
+        /* Comparison table */
+        .cmp-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; margin: 0.8rem 0; }
+        .cmp-table th { background: var(--navy); color: white; padding: 0.6rem 1rem; text-align: left; font-weight: 600; }
+        .cmp-table th:not(:first-child) { text-align: center; }
+        .cmp-table td { padding: 0.55rem 1rem; border-bottom: 1px solid var(--border); color: #374151; }
+        .cmp-table td:not(:first-child) { text-align: center; }
+        .cmp-table tr:nth-child(even) td { background: #f8fafc; }
+        .cmp-table .row-label { font-weight: 600; color: var(--navy); }
+        .good { color: var(--success); font-weight: 600; }
+        .bad  { color: #dc2626; font-weight: 600; }
+        .mid  { color: var(--warn); font-weight: 500; }
 
-        /* ── ZONE MANAGEMENT COMMANDS ── */
-        .cmd-grid { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin:.8rem 0; }
-        .cmd-card { background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:1rem 1.2rem; }
-        .cmd-card.reset  { border-left:3px solid #dc2626; }
-        .cmd-card.open   { border-left:3px solid #2563eb; }
-        .cmd-card.close  { border-left:3px solid var(--warn); }
-        .cmd-card.finish { border-left:3px solid var(--success); }
-        .cmd-name { font-family:'JetBrains Mono',monospace; font-size:.85rem; font-weight:600; margin-bottom:.35rem; }
-        .cmd-card.reset  .cmd-name { color:#dc2626; }
-        .cmd-card.open   .cmd-name { color:#2563eb; }
-        .cmd-card.close  .cmd-name { color:#92400e; }
-        .cmd-card.finish .cmd-name { color:var(--success); }
-        .cmd-desc { font-size:.82rem; color:#374151; line-height:1.6; }
+        /* Zone management commands */
+        .cmd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0.8rem 0; }
+        .cmd-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.2rem; }
+        .cmd-card.reset  { border-left: 3px solid #dc2626; }
+        .cmd-card.open   { border-left: 3px solid #2563eb; }
+        .cmd-card.close  { border-left: 3px solid var(--warn); }
+        .cmd-card.finish { border-left: 3px solid var(--success); }
+        .cmd-name { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; }
+        .cmd-card.reset  .cmd-name { color: #dc2626; }
+        .cmd-card.open   .cmd-name { color: #2563eb; }
+        .cmd-card.close  .cmd-name { color: #92400e; }
+        .cmd-card.finish .cmd-name { color: var(--success); }
+        .cmd-desc { font-size: 0.82rem; color: #374151; line-height: 1.6; }
 
-        /* ── ZONE APPEND COMPARISON ── */
-        .append-compare { display:flex; flex-direction:column; gap:.8rem; margin:1rem 0; }
-        .append-row { display:flex; align-items:center; gap:.8rem; }
-        .append-label { font-family:'JetBrains Mono',monospace; font-size:.72rem; min-width:9rem; color:#475569; text-align:right; }
-        .append-blocks { display:flex; gap:2px; flex:1; }
-        .ablk { height:24px; border-radius:2px; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:.62rem; font-weight:700; color:white; }
-        .ablk.a { background:#3b82f6; flex:1; }
-        .ablk.b { background:#10b981; flex:2; }
-        .ablk.c { background:#f59e0b; flex:4; }
-        .ablk.e { background:#e2e8f0; flex:2; border:1px dashed #cbd5e1; }
-        .ablk.wp-end { background:#ef4444; flex:0.5; }
-        .append-qd { font-family:'JetBrains Mono',monospace; font-size:.72rem; color:#64748b; white-space:nowrap; }
+        /* Zone Append comparison */
+        .append-compare { display: flex; flex-direction: column; gap: 0.8rem; margin: 1rem 0; }
+        .append-row { display: flex; align-items: center; gap: 0.8rem; }
+        .append-label { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; min-width: 9rem; color: #475569; text-align: right; }
+        .append-blocks { display: flex; gap: 2px; flex: 1; }
+        .ablk { height: 24px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; font-weight: 700; color: white; }
+        .ablk.a { background: #3b82f6; flex: 1; }
+        .ablk.b { background: #10b981; flex: 2; }
+        .ablk.c { background: #f59e0b; flex: 4; }
+        .ablk.e { background: #e2e8f0; flex: 2; border: 1px dashed #cbd5e1; }
+        .ablk.wp-end { background: #ef4444; flex: 0.5; }
+        .append-qd { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #64748b; white-space: nowrap; }
 
-        /* ── NAV ── */
-        .nav-between { display:flex; justify-content:space-between; margin-top:2rem; }
-        .nav-btn { font-size:.82rem; color:var(--blue); text-decoration:none; padding:.45em 1em; border:1px solid var(--border); border-radius:5px; background:white; transition:background .15s,border-color .15s; }
-        .nav-btn:hover { background:#eff6ff; border-color:var(--blue); }
+        /* Navigation */
+        .nav-between { display: flex; justify-content: space-between; margin-top: 2rem; }
+        .nav-btn { font-size: 0.82rem; color: var(--blue); text-decoration: none; padding: 0.45em 1em; border: 1px solid var(--border); border-radius: 5px; background: white; transition: background 0.15s, border-color 0.15s; }
+        .nav-btn:hover { background: #eff6ff; border-color: var(--blue); }
 
-        /* ── BULLET LIST ── */
-        .bullet-list { list-style:none; padding:0; margin:.5rem 0 1rem; }
-        .bullet-list li { font-size:.9rem; color:#374151; padding:.25rem 0 .25rem 1.4rem; position:relative; line-height:1.7; }
-        .bullet-list li::before { content:'•'; position:absolute; left:0; color:var(--blue); font-weight:700; }
-        .bullet-list .sub { padding-left:1.4rem; }
-        .bullet-list .sub li::before { content:'–'; color:#64748b; font-weight:400; }
-
-        footer { text-align:center; color:#94a3b8; font-size:.8rem; padding:2rem 0; }
-        @media(max-width:640px){
-            .container{padding:1rem;} header h1{font-size:1.3rem;}
-            .cmd-grid{grid-template-columns:1fr;}
-            .append-label{min-width:6rem; font-size:.65rem;}
-        }
+        /* Bullet list */
+        .bullet-list { list-style: none; padding: 0; margin: 0.5rem 0 1rem; }
+        .bullet-list li { font-size: 0.9rem; color: #374151; padding: 0.25rem 0 0.25rem 1.4rem; position: relative; line-height: 1.7; }
+        .bullet-list li::before { content: '•'; position: absolute; left: 0; color: var(--blue); font-weight: 700; }
+        .bullet-list .sub { padding-left: 1.4rem; }
+        .bullet-list .sub li::before { content: '–'; color: #64748b; font-weight: 400; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="container">
-        <a class="back-link" href="index.html">← 목록으로</a>
         <h1>배경 지식</h1>
         <p>Zoned Storage Devices · Zone 동작 원리 · Zone 관리 명령 · Zone Append</p>
+        <span class="badge">2026-1 시스템최신기술</span>
     </div>
 </header>
 
 <div class="container">
 
-    <!-- TOC -->
-    <div class="toc">
-        <div class="toc-title">목차</div>
-        <ol>
-            <li><a href="#s1">Zoned Storage Devices</a></li>
-            <li><a href="#s2">Zones Storage Devices Principle</a></li>
-            <li><a href="#s3">Zone Management Commands</a></li>
-            <li><a href="#s4">Zone Append</a></li>
-            <li><a href="#s5">배경 지식과 실습 연결</a></li>
-        </ol>
+<div style="margin-bottom:0.5rem;">
+    <a href="index.html" style="color:var(--blue);font-size:0.85rem;">&larr; 목록으로</a>
+</div>
+
+<nav class="toc">
+    <h2>목차</h2>
+    <ol>
+        <li><a href="#s1">Zoned Storage Devices</a></li>
+        <li><a href="#s2">Zone 동작 원리 (Write Pointer)</a></li>
+        <li><a href="#s3">Zone 관리 명령</a></li>
+        <li><a href="#s4">Zone Append</a></li>
+        <li><a href="#s5">배경 지식과 실습 연결</a></li>
+    </ol>
+</nav>
+
+<!-- ── 1. Zoned Storage Devices ── -->
+<section id="s1">
+    <h2>Zoned Storage Devices</h2>
+
+    <p>
+        ZNS SSD는 장치의 LBA 공간을 고정 크기의 <strong>Zone</strong>으로 분할합니다.
+        각 Zone에는 쓰기 제약이 부여되며, 반드시 순차적으로만 쓸 수 있습니다.
+    </p>
+
+    <div class="figure" style="padding:1rem 1.5rem;">
+        <div style="font-size:0.82rem; color:#64748b; margin-bottom:0.7rem; text-align:center;">장치 LBA 공간을 Zone으로 분할</div>
+        <div style="display:flex; gap:3px; margin-bottom:1rem;">
+            <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:0.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#1e40af;">Zone 0</div>
+            <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:0.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#1e40af;">Zone 1</div>
+            <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:0.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#1e40af;">Zone 2</div>
+            <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:0.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#1e40af;">Zone 3</div>
+            <div style="flex:0.4; background:#f1f5f9; border:1px dashed #cbd5e1; border-radius:4px; padding:0.4rem; text-align:center; font-size:0.7rem; color:#94a3b8;">…</div>
+            <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:0.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#1e40af;">Zone X</div>
+        </div>
+        <div style="display:flex; gap:1.5rem; font-size:0.8rem; color:#374151; align-items:center; justify-content:center;">
+            <span style="color:#dc2626; font-weight:600;">← ZONE RESET</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#ef4444;">▲ Write Pointer</span>
+            <span style="color:#2563eb; font-weight:600;">WRITE →</span>
+        </div>
     </div>
 
-    <!-- ── 1. Zoned Storage Devices ── -->
-    <div class="section" id="s1">
-        <div class="section-num">01</div>
-        <h2>Zoned Storage Devices</h2>
+    <table class="cmp-table" style="margin-top:0.5rem;">
+        <thead><tr><th>성능 이점</th><th>메커니즘</th></tr></thead>
+        <tbody>
+            <tr>
+                <td class="row-label good">하우스키핑 연산 감소</td>
+                <td>순차 쓰기 제약으로 내부 GC Copy-back 제거 → WAF ≈ 1.0</td>
+            </tr>
+            <tr>
+                <td class="row-label good">오버 프로비저닝 감소</td>
+                <td>GC용 여유 공간 불필요 → 실제 용량 증가, 비용 절감</td>
+            </tr>
+            <tr>
+                <td class="row-label good">테일 레이턴시 감소</td>
+                <td>GC로 인한 갑작스러운 레이턴시 스파이크 제거 → 예측 가능한 I/O 응답 시간</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
 
-        <p>
-            ZNS SSD는 장치의 LBA 공간을 고정 크기의 <strong>Zone</strong>으로 분할합니다.
-            각 Zone에는 쓰기 제약이 부여되며, 반드시 순차적으로만 쓸 수 있습니다.
-        </p>
+<!-- ── 2. Zone 동작 원리 ── -->
+<section id="s2">
+    <h2>Zone 동작 원리 (Write Pointer)</h2>
 
-        <div class="figure" style="padding:1rem 1.5rem;">
-            <div style="font-size:.82rem; color:#64748b; margin-bottom:.7rem; text-align:center;">장치 LBA 공간을 Zone으로 분할</div>
-            <div style="display:flex; gap:3px; margin-bottom:1rem;">
-                <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#1e40af;">Zone 0</div>
-                <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#1e40af;">Zone 1</div>
-                <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#1e40af;">Zone 2</div>
-                <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#1e40af;">Zone 3</div>
-                <div style="flex:.4; background:#f1f5f9; border:1px dashed #cbd5e1; border-radius:4px; padding:.4rem; text-align:center; font-size:.7rem; color:#94a3b8;">…</div>
-                <div style="flex:1; background:#bfdbfe; border:1px solid #93c5fd; border-radius:4px; padding:.4rem; text-align:center; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#1e40af;">Zone X</div>
+    <p>
+        각 Zone은 <strong>Write Pointer (WP)</strong>를 유지합니다. WP는 해당 Zone 내에서 다음에 쓸 수 있는 LBA를 가리키는 커서입니다.
+        모든 쓰기는 반드시 WP가 가리키는 위치에서 시작해야 하며, 다른 오프셋에 쓰기를 시도하면 블록 레이어가 이를 거부합니다.
+        쓰기가 성공하면 WP는 쓴 블록 수만큼 자동으로 전진합니다.
+    </p>
+
+    <div class="figure">
+        <div class="wp-diagram">
+            <div class="zone-row">
+                <span class="zone-label">Zone 0</span>
+                <div class="zone-blocks">
+                    <div class="blk written"></div><div class="blk written"></div><div class="blk written"></div>
+                    <div class="blk written"></div><div class="blk written"></div><div class="blk written"></div>
+                    <div class="blk written"></div><div class="blk written"></div>
+                </div>
+                <span class="zone-state-tag tag-full">FULL</span>
             </div>
-            <div style="display:flex; gap:1.5rem; font-size:.8rem; color:#374151; align-items:center; justify-content:center;">
-                <span style="color:#dc2626; font-weight:600;">← ZONE RESET</span>
-                <span style="font-family:'JetBrains Mono',monospace; font-size:.72rem; color:#ef4444;">▲ Write Pointer</span>
-                <span style="color:#2563eb; font-weight:600;">WRITE →</span>
+            <div class="zone-row">
+                <span class="zone-label">Zone 1</span>
+                <div class="zone-blocks">
+                    <div class="blk written"></div><div class="blk written"></div><div class="blk written"></div>
+                    <div class="blk written"></div><div class="blk wp"></div>
+                    <div class="blk empty-blk"></div><div class="blk empty-blk"></div><div class="blk empty-blk"></div>
+                </div>
+                <span class="zone-state-tag tag-open">OPEN</span>
+            </div>
+            <div class="zone-row">
+                <span class="zone-label">Zone 2</span>
+                <div class="zone-blocks">
+                    <div class="blk empty-blk"></div><div class="blk empty-blk"></div><div class="blk empty-blk"></div>
+                    <div class="blk empty-blk"></div><div class="blk empty-blk"></div><div class="blk empty-blk"></div>
+                    <div class="blk empty-blk"></div><div class="blk empty-blk"></div>
+                </div>
+                <span class="zone-state-tag tag-empty">EMPTY</span>
             </div>
         </div>
-
-        <table class="cmp-table" style="margin-top:.5rem;">
-            <thead><tr><th>성능 이점</th><th>메커니즘</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td class="row-label good">하우스키핑 연산 감소</td>
-                    <td>순차 쓰기 제약으로 내부 GC Copy-back 제거 → WAF ≈ 1.0</td>
-                </tr>
-                <tr>
-                    <td class="row-label good">오버 프로비저닝 감소</td>
-                    <td>GC용 여유 공간 불필요 → 실제 용량 증가, 비용 절감</td>
-                </tr>
-                <tr>
-                    <td class="row-label good">테일 레이턴시 감소</td>
-                    <td>GC로 인한 갑작스러운 레이턴시 스파이크 제거 → 예측 가능한 I/O 응답 시간</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="figure-caption">Zone 0: FULL (WP = Zone 끝) · Zone 1: OPEN (WP가 중간) · Zone 2: EMPTY (WP = Zone 시작)</div>
     </div>
 
-    <!-- ── 2. Zones Storage Devices Principle ── -->
-    <div class="section" id="s2">
-        <div class="section-num">02</div>
-        <h2>Zones Storage Devices Principle</h2>
+    <p>
+        Zone은 <strong>Zone Reset</strong> 명령을 발행한 후에만 재사용할 수 있으며, 이 명령은 WP를 Zone 시작 위치로 되돌리고 모든 데이터를 삭제합니다.
+        이러한 추가 전용(append-only) 모델은 NAND 플래시의 쓰기 전 삭제(erase-before-write) 특성을 그대로 반영하여, 복잡한 FTL 없이도 장치 컨트롤러가 플래시 페이지를 효율적으로 관리할 수 있게 합니다.
+    </p>
 
-        <p>
-            각 Zone은 <strong>Write Pointer (WP)</strong>를 유지합니다. WP는 해당 Zone 내에서 다음에 쓸 수 있는 LBA를 가리키는 커서입니다.
-            모든 쓰기는 반드시 WP가 가리키는 위치에서 시작해야 하며, 다른 오프셋에 쓰기를 시도하면 블록 레이어가 이를 거부합니다.
-            쓰기가 성공하면 WP는 쓴 블록 수만큼 자동으로 전진합니다.
-        </p>
+    <div class="callout callout-info">
+        각 Zone이 순서대로만 쓰이고 원자적으로 초기화되기 때문에, 서로 다른 애플리케이션의 데이터가 같은 플래시 블록에 섞이지 않아 스트림 간 GC 간섭이 제거됩니다.
+    </div>
+</section>
 
-        <div class="figure">
-            <div class="wp-diagram">
-                <div class="zone-row">
-                    <span class="zone-label">Zone 0</span>
-                    <div class="zone-blocks">
-                        <div class="blk written"></div><div class="blk written"></div><div class="blk written"></div>
-                        <div class="blk written"></div><div class="blk written"></div><div class="blk written"></div>
-                        <div class="blk written"></div><div class="blk written"></div>
+<!-- ── 3. Zone 관리 명령 ── -->
+<section id="s3">
+    <h2>Zone 관리 명령</h2>
+
+    <p>
+        호스트는 아래 4가지 Zone 관리 명령으로 Zone의 상태를 명시적으로 제어합니다.
+        Linux에서는 <code>blkzone</code> 유틸리티로 이 명령들을 발행합니다.
+    </p>
+
+    <div class="cmd-grid">
+        <div class="cmd-card reset">
+            <div class="cmd-name">Zone Write Pointer 초기화</div>
+            <div class="cmd-desc">
+                포인터를 <strong>Zone의 시작 위치로 이동</strong>합니다.<br>
+                <strong>데이터가 삭제됩니다.</strong><br>
+                상태: Any → <strong>EMPTY</strong><br>
+                <code style="font-size:0.75em;">blkzone reset DEV</code>
+            </div>
+        </div>
+        <div class="cmd-card open">
+            <div class="cmd-name">Zone 열기</div>
+            <div class="cmd-desc">
+                앱이 지정한 Zone에 쓰기 연산을 수행할 것임을 장치에 <strong>명시적으로 알립니다</strong>.<br>
+                장치는 해당 Zone에 내부 자원을 미리 할당합니다.<br>
+                상태: EMPTY / CLOSED → <strong>EXPLICIT OPEN</strong><br>
+                <code style="font-size:0.75em;">blkzone open --offset --length DEV</code>
+            </div>
+        </div>
+        <div class="cmd-card close">
+            <div class="cmd-name">Zone 닫기</div>
+            <div class="cmd-desc">
+                다음 Open Zone 명령을 발행하기 전까지 앱이 이 Zone에 <strong>쓰기를 수행하지 않겠다</strong>고 선언합니다.<br>
+                WP 위치는 유지되며 내부 자원이 해제됩니다.<br>
+                상태: OPEN → <strong>CLOSED</strong><br>
+                <code style="font-size:0.75em;">blkzone close --offset --length DEV</code>
+            </div>
+        </div>
+        <div class="cmd-card finish">
+            <div class="cmd-name">Zone 완료</div>
+            <div class="cmd-desc">
+                Write Pointer를 <strong>Zone의 끝으로 이동</strong>하여, <strong>해당 Zone을 초기화하기 전까지</strong> 추가 쓰기를 차단합니다.<br>
+                상태: Any → <strong>FULL</strong><br>
+                <code style="font-size:0.75em;">blkzone finish --offset --length DEV</code>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── 4. Zone Append ── -->
+<section id="s4">
+    <h2>Zone Append</h2>
+
+    <p>
+        순차 쓰기의 "Zone당 동시 I/O = 1" 제약을 극복하기 위해 NVMe ZNS Command Set은
+        <strong>Zone Append</strong> 명령을 정의합니다.
+        호스트는 정확한 LBA를 지정하지 않고 <em>"이 Zone의 다음 위치에 데이터를 기록해 달라"</em>는 방식으로 요청합니다.
+        SSD 컨트롤러가 WP를 원자적으로 갱신하고, 실제 기록된 LBA를 <strong>완료 응답으로 반환</strong>합니다.
+    </p>
+
+    <h3>일반 쓰기 (QD=1) vs Zone Append (QD=3)</h3>
+
+    <div class="figure" style="padding:1.2rem 1.5rem;">
+        <div class="append-compare">
+            <div class="append-row">
+                <div class="append-label">Regular Write<br>QD = 1</div>
+                <div class="append-blocks">
+                    <div class="ablk a">A</div>
+                    <div class="ablk b" style="flex:2;">B B</div>
+                    <div class="ablk c" style="flex:4;">C C C C</div>
+                    <div class="ablk e" style="flex:1;"></div>
+                    <div class="ablk wp-end" style="background:#ef4444; flex:0.3; position:relative;">
+                        <span style="position:absolute; top:-16px; font-size:0.6rem; color:#ef4444; font-family:'JetBrains Mono',monospace; white-space:nowrap;">WP₂</span>
                     </div>
-                    <span class="zone-state-tag tag-full">FULL</span>
                 </div>
-                <div class="zone-row">
-                    <span class="zone-label">Zone 1</span>
-                    <div class="zone-blocks">
-                        <div class="blk written"></div><div class="blk written"></div><div class="blk written"></div>
-                        <div class="blk written"></div><div class="blk wp"></div>
-                        <div class="blk empty-blk"></div><div class="blk empty-blk"></div><div class="blk empty-blk"></div>
+                <div class="append-qd" style="font-size:0.7rem; color:#64748b;">순서 보장<br>(직렬)</div>
+            </div>
+            <div class="append-row">
+                <div class="append-label">Zone Append<br>QD = 3</div>
+                <div class="append-blocks">
+                    <div class="ablk a">A</div>
+                    <div class="ablk c" style="flex:4;">C C C C</div>
+                    <div class="ablk b" style="flex:2;">B B</div>
+                    <div class="ablk e" style="flex:1;"></div>
+                    <div class="ablk wp-end" style="background:#ef4444; flex:0.3; position:relative;">
+                        <span style="position:absolute; top:-16px; font-size:0.6rem; color:#ef4444; font-family:'JetBrains Mono',monospace; white-space:nowrap;">WP</span>
                     </div>
-                    <span class="zone-state-tag tag-open">OPEN</span>
                 </div>
-                <div class="zone-row">
-                    <span class="zone-label">Zone 2</span>
-                    <div class="zone-blocks">
-                        <div class="blk empty-blk"></div><div class="blk empty-blk"></div><div class="blk empty-blk"></div>
-                        <div class="blk empty-blk"></div><div class="blk empty-blk"></div><div class="blk empty-blk"></div>
-                        <div class="blk empty-blk"></div><div class="blk empty-blk"></div>
-                    </div>
-                    <span class="zone-state-tag tag-empty">EMPTY</span>
-                </div>
+                <div class="append-qd" style="font-size:0.7rem; color:var(--success);">병렬 발행<br>(순서 무관)</div>
             </div>
-            <div class="figure-caption">Zone 0: FULL (WP = Zone 끝) · Zone 1: OPEN (WP가 중간) · Zone 2: EMPTY (WP = Zone 시작)</div>
         </div>
-
-        <p>
-            Zone은 <strong>Zone Reset</strong> 명령을 발행한 후에만 재사용할 수 있으며, 이 명령은 WP를 Zone 시작 위치로 되돌리고 모든 데이터를 삭제합니다.
-            이러한 추가 전용(append-only) 모델은 NAND 플래시의 쓰기 전 삭제(erase-before-write) 특성을 그대로 반영하여, 복잡한 FTL 없이도 장치 컨트롤러가 플래시 페이지를 효율적으로 관리할 수 있게 합니다.
-        </p>
-
-        <div class="callout info">
-            <span class="callout-icon">ℹ️</span>
-            <span>각 Zone이 순서대로만 쓰이고 원자적으로 초기화되기 때문에, 서로 다른 애플리케이션의 데이터가 같은 플래시 블록에 섞이지 않아 스트림 간 GC 간섭이 제거됩니다.</span>
-        </div>
+        <div class="figure-caption">Zone Append에서 B와 C는 발행 순서와 다르게 기록되었지만 WP는 정확하게 전진합니다. 호스트는 각 I/O의 반환 LBA를 별도로 추적해야 합니다.</div>
     </div>
 
-    <!-- ── 3. Zone Management Commands ── -->
-    <div class="section" id="s3">
-        <div class="section-num">03</div>
-        <h2>Zone 관리 명령</h2>
+    <table class="cmp-table">
+        <thead><tr><th>비교 항목</th><th>순차 쓰기 (Sequential Write)</th><th>Zone Append</th></tr></thead>
+        <tbody>
+            <tr><td class="row-label">LBA 지정</td><td>호스트가 정확한 LBA 지정</td><td>LBA 미지정 (장치가 결정)</td></tr>
+            <tr><td class="row-label">WP 관리</td><td class="bad">호스트</td><td class="good">장치 (원자적)</td></tr>
+            <tr><td class="row-label">Zone당 동시 I/O</td><td class="bad">사실상 1개</td><td class="good">ZASL 내 다수 발행 가능</td></tr>
+            <tr><td class="row-label">멀티 스레드 안전성</td><td class="bad">WP 충돌 위험</td><td class="good">원자성 보장</td></tr>
+            <tr><td class="row-label">기록 위치 추적</td><td class="good">호스트가 이미 알고 있음</td><td class="mid">반환 LBA를 별도 저장 필요</td></tr>
+        </tbody>
+    </table>
 
-        <p>
-            호스트는 아래 4가지 Zone 관리 명령으로 Zone의 상태를 명시적으로 제어합니다.
-            Linux에서는 <code>blkzone</code> 유틸리티로 이 명령들을 발행합니다.
-        </p>
+    <div class="callout callout-info">
+        하나의 Zone Append 명령으로 쓸 수 있는 최대 크기는 <strong>ZASL (Zone Append Size Limit)</strong>로 제한되며, 장치마다 다르고 NVMe Identify Namespace 응답에서 확인할 수 있습니다.
+    </div>
+</section>
 
-        <div class="cmd-grid">
-            <div class="cmd-card reset">
-                <div class="cmd-name">Zone Write Pointer 초기화</div>
-                <div class="cmd-desc">
-                    포인터를 <strong>Zone의 시작 위치로 이동</strong>합니다.<br>
-                    <strong>데이터가 삭제됩니다.</strong><br>
-                    상태: Any → <strong>EMPTY</strong><br>
-                    <code style="font-size:.75em;">blkzone reset DEV</code>
-                </div>
+<!-- ── 5. 배경 지식과 실습 연결 ── -->
+<section id="s5">
+    <h2>배경 지식과 실습 연결</h2>
+
+    <p>
+        앞서 학습한 개념들이 아래 세 가지 실습에서 직접 확인됩니다.
+        각 실습 항목에 연결된 배경 지식 섹션을 참고하여 실험 결과를 해석하세요.
+    </p>
+
+    <!-- Lab 1 -->
+    <h3>Lab 1 — 쓰기 제약 및 기본 성능 비교</h3>
+    <div class="cmd-grid">
+        <div class="cmd-card open">
+            <div class="cmd-name">순차 쓰기 성능 비교</div>
+            <div class="cmd-desc">
+                ZNS vs Conventional SSD의 <strong>처리량(BW)</strong>과 <strong>평균 지연 시간</strong> 비교<br><br>
+                <span style="font-size:0.78rem; color:#64748b;">→ 배경 지식 &gt; 1. 성능 이점 (하우스키핑·테일 레이턴시 감소)</span>
             </div>
-            <div class="cmd-card open">
-                <div class="cmd-name">Zone 열기</div>
-                <div class="cmd-desc">
-                    앱이 지정한 Zone에 쓰기 연산을 수행할 것임을 장치에 <strong>명시적으로 알립니다</strong>.<br>
-                    장치는 해당 Zone에 내부 자원을 미리 할당합니다.<br>
-                    상태: EMPTY / CLOSED → <strong>EXPLICIT OPEN</strong><br>
-                    <code style="font-size:.75em;">blkzone open --offset --length DEV</code>
-                </div>
-            </div>
-            <div class="cmd-card close">
-                <div class="cmd-name">Zone 닫기</div>
-                <div class="cmd-desc">
-                    다음 Open Zone 명령을 발행하기 전까지 앱이 이 Zone에 <strong>쓰기를 수행하지 않겠다</strong>고 선언합니다.<br>
-                    WP 위치는 유지되며 내부 자원이 해제됩니다.<br>
-                    상태: OPEN → <strong>CLOSED</strong><br>
-                    <code style="font-size:.75em;">blkzone close --offset --length DEV</code>
-                </div>
-            </div>
-            <div class="cmd-card finish">
-                <div class="cmd-name">Zone 완료</div>
-                <div class="cmd-desc">
-                    Write Pointer를 <strong>Zone의 끝으로 이동</strong>하여, <strong>해당 Zone을 초기화하기 전까지</strong> 추가 쓰기를 차단합니다.<br>
-                    상태: Any → <strong>FULL</strong><br>
-                    <code style="font-size:.75em;">blkzone finish --offset --length DEV</code>
-                </div>
+        </div>
+        <div class="cmd-card reset">
+            <div class="cmd-name">랜덤 쓰기 예외 처리</div>
+            <div class="cmd-desc">
+                ZNS에서 랜덤 쓰기 시 Write Pointer 위반 → <strong>EINVAL 에러</strong> 발생 확인<br>
+                Conventional SSD는 랜덤 쓰기 정상 처리<br><br>
+                <span style="font-size:0.78rem; color:#64748b;">→ 배경 지식 &gt; 2. Write Pointer 동작 원리</span>
             </div>
         </div>
     </div>
 
-    <!-- ── 4. Zone Append ── -->
-    <div class="section" id="s4">
-        <div class="section-num">04</div>
-        <h2>Zone Append</h2>
+    <!-- Lab 2 -->
+    <h3>Lab 2 — Zone 관리 상태 전이</h3>
+    <table class="cmp-table">
+        <thead><tr><th>실습 항목</th><th>수행 내용</th><th>연결 개념</th></tr></thead>
+        <tbody>
+            <tr>
+                <td class="row-label">Zone 상태 조회 및 자동 전이</td>
+                <td>
+                    <code>blkzone report</code>로 상태 및 Write Pointer 확인<br>
+                    쓰기 시 <strong>Implicit Open</strong>으로 자동 전이 확인
+                </td>
+                <td>2. Write Pointer · 3. Open zone</td>
+            </tr>
+            <tr>
+                <td class="row-label">명시적 수명주기 제어</td>
+                <td>
+                    Explicit Open → Write → Close → Finish 과정 수행<br>
+                    단계별 Write Pointer 변화 관찰
+                </td>
+                <td>3. Zone 관리 명령 4종</td>
+            </tr>
+            <tr>
+                <td class="row-label">Zone 초기화</td>
+                <td>
+                    Reset 수행 시 <strong>FULL → EMPTY</strong> 상태 복구 확인<br>
+                    Write Pointer 초기화 검증
+                </td>
+                <td>3. Reset zone write pointer</td>
+            </tr>
+        </tbody>
+    </table>
 
-        <p>
-            순차 쓰기의 "Zone당 동시 I/O = 1" 제약을 극복하기 위해 NVMe ZNS Command Set은
-            <strong>Zone Append</strong> 명령을 정의합니다.
-            호스트는 정확한 LBA를 지정하지 않고 <em>"이 Zone의 다음 위치에 데이터를 기록해 달라"</em>는 방식으로 요청합니다.
-            SSD 컨트롤러가 WP를 원자적으로 갱신하고, 실제 기록된 LBA를 <strong>완료 응답으로 반환</strong>합니다.
-        </p>
+    <!-- Lab 3 -->
+    <h3>Lab 3 — WAF 비교 측정</h3>
+    <table class="cmp-table">
+        <thead><tr><th>단계</th><th>Conventional SSD</th><th>ZNS SSD</th></tr></thead>
+        <tbody>
+            <tr>
+                <td class="row-label">Steady-State 조성</td>
+                <td>순차 Fill + 랜덤 워크로드</td>
+                <td>순차 Fill</td>
+            </tr>
+            <tr>
+                <td class="row-label">워크로드 인가</td>
+                <td>랜덤 70% + 순차 30%</td>
+                <td>100% 순차</td>
+            </tr>
+            <tr>
+                <td class="row-label">WAF 계산 및 분석</td>
+                <td colspan="2" style="text-align:left;">
+                    <code>write_sectors</code> 변화량 기반 WAF 계산<br>
+                    Host Write vs Device Write 비교 → ZNS vs Conventional WAF 차이 분석
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
-        <h3>일반 쓰기 (QD=1) vs Zone Append (QD=3)</h3>
-
-        <div class="figure" style="padding:1.2rem 1.5rem;">
-            <div class="append-compare">
-                <div class="append-row">
-                    <div class="append-label">Regular Write<br>QD = 1</div>
-                    <div class="append-blocks">
-                        <div class="ablk a">A</div>
-                        <div class="ablk b" style="flex:2;">B B</div>
-                        <div class="ablk c" style="flex:4;">C C C C</div>
-                        <div class="ablk e" style="flex:1;"></div>
-                        <div class="ablk wp-end" style="background:#ef4444; flex:.3; position:relative;">
-                            <span style="position:absolute; top:-16px; font-size:.6rem; color:#ef4444; font-family:'JetBrains Mono',monospace; white-space:nowrap;">WP₂</span>
-                        </div>
-                    </div>
-                    <div class="append-qd" style="font-size:.7rem; color:#64748b;">순서 보장<br>(직렬)</div>
-                </div>
-                <div class="append-row">
-                    <div class="append-label">Zone Append<br>QD = 3</div>
-                    <div class="append-blocks">
-                        <div class="ablk a">A</div>
-                        <div class="ablk c" style="flex:4;">C C C C</div>
-                        <div class="ablk b" style="flex:2;">B B</div>
-                        <div class="ablk e" style="flex:1;"></div>
-                        <div class="ablk wp-end" style="background:#ef4444; flex:.3; position:relative;">
-                            <span style="position:absolute; top:-16px; font-size:.6rem; color:#ef4444; font-family:'JetBrains Mono',monospace; white-space:nowrap;">WP</span>
-                        </div>
-                    </div>
-                    <div class="append-qd" style="font-size:.7rem; color:var(--success);">병렬 발행<br>(순서 무관)</div>
-                </div>
-            </div>
-            <div class="figure-caption">Zone Append에서 B와 C는 발행 순서와 다르게 기록되었지만 WP는 정확하게 전진합니다. 호스트는 각 I/O의 반환 LBA를 별도로 추적해야 합니다.</div>
-        </div>
-
-        <table class="cmp-table">
-            <thead><tr><th>비교 항목</th><th>순차 쓰기 (Sequential Write)</th><th>Zone Append</th></tr></thead>
-            <tbody>
-                <tr><td class="row-label">LBA 지정</td><td>호스트가 정확한 LBA 지정</td><td>LBA 미지정 (장치가 결정)</td></tr>
-                <tr><td class="row-label">WP 관리</td><td class="bad">호스트</td><td class="good">장치 (원자적)</td></tr>
-                <tr><td class="row-label">Zone당 동시 I/O</td><td class="bad">사실상 1개</td><td class="good">ZASL 내 다수 발행 가능</td></tr>
-                <tr><td class="row-label">멀티 스레드 안전성</td><td class="bad">WP 충돌 위험</td><td class="good">원자성 보장</td></tr>
-                <tr><td class="row-label">기록 위치 추적</td><td class="good">호스트가 이미 알고 있음</td><td class="mid">반환 LBA를 별도 저장 필요</td></tr>
-            </tbody>
-        </table>
-
-        <div class="callout info">
-            <span class="callout-icon">ℹ️</span>
-            <span>하나의 Zone Append 명령으로 쓸 수 있는 최대 크기는 <strong>ZASL (Zone Append Size Limit)</strong>로 제한되며, 장치마다 다르고 NVMe Identify Namespace 응답에서 확인할 수 있습니다.</span>
-        </div>
+    <div class="callout callout-success">
+        WAF(Write Amplification Factor) = Device Write / Host Write. ZNS는 순차 쓰기만 허용하므로 GC Copy-back이 발생하지 않아 WAF ≈ 1.0에 근접합니다. 1절의 성능 이점을 수치로 직접 검증하는 실습입니다.
     </div>
+</section>
 
-    <!-- ── 5. 배경 지식과 실습 연결 ── -->
-    <div class="section" id="s5">
-        <div class="section-num">05</div>
-        <h2>배경 지식과 실습 연결</h2>
-
-        <p>
-            앞서 학습한 개념들이 아래 세 가지 실습에서 직접 확인됩니다.
-            각 실습 항목에 연결된 배경 지식 섹션을 참고하여 실험 결과를 해석하세요.
-        </p>
-
-        <!-- Lab 1 -->
-        <h3>Lab 1 — 쓰기 제약 및 기본 성능 비교</h3>
-        <div class="cmd-grid">
-            <div class="cmd-card open">
-                <div class="cmd-name">순차 쓰기 성능 비교</div>
-                <div class="cmd-desc">
-                    ZNS vs Conventional SSD의 <strong>처리량(BW)</strong>과 <strong>평균 지연 시간</strong> 비교<br><br>
-                    <span style="font-size:.78rem; color:#64748b;">→ 배경 지식 > 1. 성능 이점 (하우스키핑·테일 레이턴시 감소)</span>
-                </div>
-            </div>
-            <div class="cmd-card reset">
-                <div class="cmd-name">랜덤 쓰기 예외 처리</div>
-                <div class="cmd-desc">
-                    ZNS에서 랜덤 쓰기 시 Write Pointer 위반 → <strong>EINVAL 에러</strong> 발생 확인<br>
-                    Conventional SSD는 랜덤 쓰기 정상 처리<br><br>
-                    <span style="font-size:.78rem; color:#64748b;">→ 배경 지식 > 2. Write Pointer 동작 원리</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lab 2 -->
-        <h3>Lab 2 — Zone 관리 상태 전이</h3>
-        <table class="cmp-table">
-            <thead><tr><th>실습 항목</th><th>수행 내용</th><th>연결 개념</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td class="row-label">Zone 상태 조회 및 자동 전이</td>
-                    <td>
-                        <code>blkzone report</code>로 상태 및 Write Pointer 확인<br>
-                        쓰기 시 <strong>Implicit Open</strong>으로 자동 전이 확인
-                    </td>
-                    <td>2. Write Pointer · 3. Open zone</td>
-                </tr>
-                <tr>
-                    <td class="row-label">명시적 수명주기 제어</td>
-                    <td>
-                        Explicit Open → Write → Close → Finish 과정 수행<br>
-                        단계별 Write Pointer 변화 관찰
-                    </td>
-                    <td>3. Zone 관리 명령 4종</td>
-                </tr>
-                <tr>
-                    <td class="row-label">Zone 초기화</td>
-                    <td>
-                        Reset 수행 시 <strong>FULL → EMPTY</strong> 상태 복구 확인<br>
-                        Write Pointer 초기화 검증
-                    </td>
-                    <td>3. Reset zone write pointer</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Lab 3 -->
-        <h3>Lab 3 — WAF 비교 측정</h3>
-        <table class="cmp-table">
-            <thead><tr><th>단계</th><th>Conventional SSD</th><th>ZNS SSD</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td class="row-label">Steady-State 조성</td>
-                    <td>순차 Fill + 랜덤 워크로드</td>
-                    <td>순차 Fill</td>
-                </tr>
-                <tr>
-                    <td class="row-label">워크로드 인가</td>
-                    <td>랜덤 70% + 순차 30%</td>
-                    <td>100% 순차</td>
-                </tr>
-                <tr>
-                    <td class="row-label">WAF 계산 및 분석</td>
-                    <td colspan="2" style="text-align:left;">
-                        <code>write_sectors</code> 변화량 기반 WAF 계산<br>
-                        Host Write vs Device Write 비교 → ZNS vs Conventional WAF 차이 분석
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="callout ok">
-            <span class="callout-icon">✅</span>
-            <span>WAF(Write Amplification Factor) = Device Write / Host Write. ZNS는 순차 쓰기만 허용하므로 GC Copy-back이 발생하지 않아 WAF ≈ 1.0에 근접합니다. 1절의 성능 이점을 수치로 직접 검증하는 실습입니다.</span>
-        </div>
-    </div>
-
-    <div class="nav-between">
-        <a class="nav-btn" href="index.html">← 목록으로</a>
-        <a class="nav-btn" href="setup.html">실습 환경 준비 →</a>
-    </div>
+<div class="nav-between">
+    <a class="nav-btn" href="index.html">← 목록으로</a>
+    <a class="nav-btn" href="setup.html">실습 환경 준비 →</a>
+</div>
 
 </div>
 
