@@ -46,8 +46,8 @@ python3 -m http.server 8080
 ## 실습 환경 (VM)
 
 - QEMU VM (Linux Kernel 5.18.0) 에 SSH 접속: `ssh -p 2222 user@localhost`
-- **`/dev/nullb0`**: Conventional SSD 역할 — `null_blk`, `memory_backed=1`, 2GB, non-zoned
-- **`/dev/nullb1`**: ZNS SSD 역할 — `null_blk`, `memory_backed=1`, 2GB, Zone 64MB × 32
+- **`/dev/nullb0`**: Conventional SSD 역할 — `null_blk`, `memory_backed=1`, 1GB, non-zoned
+- **`/dev/nullb1`**: ZNS SSD 역할 — `null_blk`, `memory_backed=1`, 1GB, Zone 64MB × 16
 
 ## HTML 수정 시 유의사항
 

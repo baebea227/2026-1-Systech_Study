@@ -148,7 +148,7 @@
 <span class="kw">set</span> -euo pipefail
 ZNS_DEV=<span class="str">/dev/nullb1</span>
 CONV_DEV=<span class="str">/dev/nullb0</span>
-SIZE=<span class="str">2g</span>
+SIZE=<span class="str">1g</span>
 BS=<span class="str">64k</span>
 QD=<span class="str">4</span>
 
@@ -173,7 +173,7 @@ sudo fio \
   --size=<span class="str">"${SIZE}"</span> \
   --numjobs=1 \
   --group_reporting \
-  --output-format=normal 2>&amp;1 | tee /tmp/fio_zns_seq.log | grep -E <span class="str">'IOPS|lat \(usec\)'</span>
+  --output-format=normal &gt;/tmp/fio_zns_seq.log 2>&amp;1
 
 ZNS_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
 ZNS_LAT=$(grep -oP <span class="str">'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
@@ -192,7 +192,7 @@ sudo fio \
   --size=<span class="str">"${SIZE}"</span> \
   --numjobs=1 \
   --group_reporting \
-  --output-format=normal 2>&amp;1 | tee /tmp/fio_conv_seq.log | grep -E <span class="str">'IOPS|lat \(usec\)'</span>
+  --output-format=normal &gt;/tmp/fio_conv_seq.log 2>&amp;1
 
 CONV_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
 CONV_LAT=$(grep -oP <span class="str">'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
@@ -230,13 +230,9 @@ printf <span class="str">'\nDone. Record the values in the result table.\n'</spa
       done — all zones EMPTY
 
 <span class="hdr">[2/4] ZNS sequential write (iodepth=4)...</span>
-  <span class="ylw">write: IOPS=17.3k, BW=1079MiB/s (1131MB/s)(2048MiB/1898msec); 0 zone resets</span>
-  <span class="ylw">clat (usec): min=11, max=12010, avg=213.38, stdev=301.49</span>
       ZNS  BW=1079MiB/s  cLat=213.38 us
 
 <span class="hdr">[3/4] Conventional sequential write (iodepth=4)...</span>
-  <span class="ylw">write: IOPS=17.9k, BW=1122MiB/s (1176MB/s)(2048MiB/1826msec)</span>
-  <span class="ylw">clat (usec): min=3, max=28437, avg=168.83, stdev=508.84</span>
       CONV BW=1122MiB/s  cLat=168.83 us
 
 <span class="hdr">[4/4] Result summary</span>
@@ -246,8 +242,6 @@ printf <span class="str">'\nDone. Record the values in the result table.\n'</spa
   <span class="grn">ZNS (nullb1)      1079MiB/s           213.38 us</span>
   <span class="blu">Conv (nullb0)     1122MiB/s           168.83 us</span>
 <span class="sep">────────────────────────────────────────────────────</span>
-
-Done. Record the values in the result table.</pre>
                 </div>
 
                 <div class="callout info">
@@ -329,14 +323,16 @@ sudo fio \
   --iodepth=1 \
   --size=64m \
   --numjobs=1 \
-  --output-format=normal 2>&amp;1 | tee /tmp/fio_zns_rand.log || true
+  --output-format=normal 2>&amp;1 | tee /tmp/fio_zns_rand.log \
+  | grep -iE <span class="str">'error|invalid|io_u'</span> || true
 
-ZNS_ERR=$(grep -oP <span class="str">'error.*$|Invalid argument'</span> /tmp/fio_zns_rand.log | head -1 || echo <span class="str">'no error'</span>)
+ZNS_ERR=$(grep -oP <span class="str">'io_u error[^:]*: \K.+'</span> /tmp/fio_zns_rand.log \
+          | head -1 || echo <span class="str">'no error captured'</span>)
 printf <span class="str">'      ZNS result: %s\n\n'</span> <span class="str">"${ZNS_ERR}"</span>
 
 <span class="comment"># ── 2) check kernel error log ────────────────────────</span>
 printf <span class="str">'[2/3] Kernel error log...\n'</span>
-sudo dmesg | grep -i <span class="str">'zone\|write pointer\|unaligned'</span> | tail -5 || true
+sudo dmesg | tail -n 50 | grep -iE <span class="str">'blk_update_request|nullb1'</span> | grep -iE <span class="str">'error|I/O'</span> || true
 printf <span class="str">'\n'</span>
 
 <span class="comment"># ── 3) Conventional random write (expected OK) ───────</span>
@@ -351,9 +347,10 @@ sudo fio \
   --iodepth=1 \
   --size=64m \
   --numjobs=1 \
-  --output-format=normal 2>&amp;1 | tee /tmp/fio_conv_rand.log | grep -E <span class="str">'IOPS|lat \(usec\)'</span>
+  --output-format=normal &gt;/tmp/fio_conv_rand.log 2>&amp;1
 
 CONV_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_conv_rand.log | head -1 || echo <span class="str">'N/A'</span>)
+printf <span class="str">'      CONV BW=%s\n\n'</span> <span class="str">"${CONV_BW}"</span>
 
 <span class="comment"># ── result summary ────────────────────────────────────</span>
 sep
@@ -382,27 +379,30 @@ sep</code></pre>
                 <div class="output-block">
                     <div class="output-label">Expected output</div>
                     <pre><span class="hdr">[1/3] Resetting ZNS zones, attempting random write...</span>
-<span class="red">zns_randwrite: io_u error on file /dev/nullb1: Invalid argument: write to non-sequential zone</span>
-      ZNS result: Invalid argument
+<span class="red">fio: io_u error on file /dev/nullb1: Input/output error: write offset=65564672, buflen=4096</span>
+<span class="red">fio: pid=1146, err=5/file:io_u.c:2018, func=io_u error, error=Input/output error</span>
+<span class="red">zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, error=Input/output error): pid=1146: ...</span>
+      ZNS result: Input/output error: write offset=65564672, buflen=4096
 
 <span class="hdr">[2/3] Kernel error log...</span>
-<span class="red">[12345.678] nullb1: Unaligned write command to zone 3 (write pointer: 0x180000)</span>
+<span class="red">[  681.573063] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2</span>
+<span class="red">[ 1018.048183] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2</span>
+<span class="red">[ 1089.860865] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2</span>
 
 <span class="hdr">[3/3] Conventional random write...</span>
-  <span class="grn">write: IOPS=245k, BW=956MiB/s (1003MB/s)(64.0MiB/67msec)</span>
-  lat (usec): min=2, max=128, avg=3.98, stdev=2.11
+      CONV BW=561MiB/s
 
 <span class="sep">────────────────────────────────────────────────────</span>
   Device            Random Write Result
 <span class="sep">────────────────────────────────────────────────────</span>
-  <span class="red">ZNS (nullb1)      FAIL: Invalid argument</span>
-  <span class="grn">Conv (nullb0)     OK:   BW=956MiB/s</span>
+  <span class="red">ZNS (nullb1)      FAIL: Input/output error: write offset=65564672, buflen=4096</span>
+  <span class="grn">Conv (nullb0)     OK:   BW=561MiB/s</span>
 <span class="sep">────────────────────────────────────────────────────</span></pre>
                 </div>
 
                 <div class="callout warn">
                     <span class="callout-icon">⚠️</span>
-                    <span><code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 <strong>-EINVAL</strong> 에러를 반환합니다.</span>
+                    <span><code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 <strong>-EIO</strong>(err=5) 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.</span>
                 </div>
             </div>
         </div>

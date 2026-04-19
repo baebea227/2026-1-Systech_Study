@@ -122,11 +122,11 @@
             </div>
             <div class="dev-box conv">
                 <div class="dev-box-name">/dev/nullb0</div>
-                <div class="dev-box-desc">Conventional SSD (비교 대상)<br>null_blk · zoned 없음 · 2GB</div>
+                <div class="dev-box-desc">Conventional SSD (비교 대상)<br>null_blk · zoned 없음 · 1GB</div>
             </div>
             <div class="dev-box zns">
                 <div class="dev-box-name">/dev/nullb1</div>
-                <div class="dev-box-desc">ZNS SSD<br>null_blk · zoned=1 · 2GB</div>
+                <div class="dev-box-desc">ZNS SSD<br>null_blk · zoned=1 · 1GB</div>
             </div>
         </div>
         <div class="callout info">
@@ -277,7 +277,7 @@ sudo modprobe null_blk nr_devices=0
 <span class="comment">## nullb0: Conventional SSD (zoned 없음) — 먼저 power=1</span>
 sudo mkdir /sys/kernel/config/nullb/nvme0
 sudo sh -c <span class="str">'echo 4096 > /sys/kernel/config/nullb/nvme0/blocksize'</span>
-sudo sh -c <span class="str">'echo 2048 > /sys/kernel/config/nullb/nvme0/size'</span>
+sudo sh -c <span class="str">'echo 1024 > /sys/kernel/config/nullb/nvme0/size'</span>
 sudo sh -c <span class="str">'echo 1    > /sys/kernel/config/nullb/nvme0/memory_backed'</span>
 sudo sh -c <span class="str">'echo 1    > /sys/kernel/config/nullb/nvme0/power'</span>
 
@@ -288,7 +288,7 @@ sudo sh -c <span class="str">'echo 64   > /sys/kernel/config/nullb/zns0/zone_siz
 sudo sh -c <span class="str">'echo 16   > /sys/kernel/config/nullb/zns0/zone_max_open'</span>
 sudo sh -c <span class="str">'echo 16   > /sys/kernel/config/nullb/zns0/zone_max_active'</span>
 sudo sh -c <span class="str">'echo 4096 > /sys/kernel/config/nullb/zns0/blocksize'</span>
-sudo sh -c <span class="str">'echo 2048 > /sys/kernel/config/nullb/zns0/size'</span>
+sudo sh -c <span class="str">'echo 1024 > /sys/kernel/config/nullb/zns0/size'</span>
 sudo sh -c <span class="str">'echo 1    > /sys/kernel/config/nullb/zns0/memory_backed'</span>
 sudo sh -c <span class="str">'echo 1    > /sys/kernel/config/nullb/zns0/power'</span>
 
@@ -307,8 +307,8 @@ printf <span class="str">'\n✔ nullb0 (Conventional SSD) · nullb1 (ZNS SSD) �
                 <div class="output-block">
                     <div class="output-label">Expected output</div>
                     <pre>NAME      MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
-<span class="ylw">nullb0</span>    251:0    0   <span class="ylw">2G</span>  0 disk   <span class="sep">← Conventional SSD</span>
-<span class="grn">nullb1</span>    251:1    0   <span class="grn">2G</span>  0 disk   <span class="sep">← ZNS SSD</span></pre>
+<span class="ylw">nullb0</span>    251:0    0   <span class="ylw">1G</span>  0 disk   <span class="sep">← Conventional SSD</span>
+<span class="grn">nullb1</span>    251:1    0   <span class="grn">1G</span>  0 disk   <span class="sep">← ZNS SSD</span></pre>
                 </div>
 
                 <div class="callout warn">
@@ -333,11 +333,11 @@ printf <span class="str">'\n✔ nullb0 (Conventional SSD) · nullb1 (ZNS SSD) �
                 </div>
                 <div class="output-block">
                     <div class="output-label">Expected output</div>
-                    <pre>  start: 0x000000000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span>]
-  start: 0x000020000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span>]
-  start: 0x000040000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span>]
-  start: 0x000060000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span>]
-  start: 0x000080000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span>]</pre>
+                    <pre>  start: 0x000000000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000020000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000040000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000060000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000080000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond:<span class="grn"> 1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]</pre>
                 </div>
                 <div class="callout ok">
                     <span class="callout-icon">✅</span>
@@ -355,8 +355,8 @@ printf <span class="str">'\n✔ nullb0 (Conventional SSD) · nullb1 (ZNS SSD) �
                 <ul style="list-style:disc; padding-left:1.4rem; margin:.5rem 0; display:flex; flex-direction:column; gap:.4rem; font-size:.88rem; color:#374151;">
                     <li>QEMU VM — DPAS 커널(5.18.0) 부팅, SSH 접속</li>
                     <li><code>fio</code> · <code>blkzone</code> 설치 완료</li>
-                    <li><code>/dev/nullb0</code> — Conventional SSD (2 GB, non-zoned)</li>
-                    <li><code>/dev/nullb1</code> — ZNS SSD (2 GB, Zone 64 MB × 32)</li>
+                    <li><code>/dev/nullb0</code> — Conventional SSD (1 GB, non-zoned)</li>
+                    <li><code>/dev/nullb1</code> — ZNS SSD (1 GB, Zone 64 MB × 16)</li>
                 </ul>
             </div>
         </div>
