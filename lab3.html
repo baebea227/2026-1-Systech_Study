@@ -141,8 +141,8 @@
             </div>
         </div>
         <div class="callout callout-info">
-            <span class="callout-title">장치 재구성 안내</span>
-            실습 1·2에서 사용한 장치는 1GB입니다. lab3에서는 GC를 충분히 유발하기 위해 <strong>두 장치를 모두 2GB로 재구성</strong>합니다. 또한 QEMU 메모리가 4GB이므로 Conv 측정 완료 후 <code>umount</code>로 page cache를 해제한 뒤 ZNS 측정을 시작합니다.
+            <span class="callout-title">장치 초기화 안내</span>
+            <code>memory_backed=1</code> null_blk 장치는 데이터를 커널 메모리에 유지합니다. QEMU 메모리가 4GB로 제한되어 있어 nullb0(2GB)와 nullb1(2GB)을 <strong>동시에 올리면 메모리가 부족</strong>하므로 Conv와 ZNS를 순차적으로 측정합니다.
         </div>
     </div>
 
@@ -153,15 +153,27 @@
         <div class="step-entry">
 
             <div class="step-body">
-                <h3>nullb0 재구성 및 F2FS 포맷/마운트 <code style="font-size:.75em; margin-left:.4rem;">setup_conv.sh</code></h3>
-                <p>lab1·2에서 사용한 nullb0은 1GB입니다. GC를 충분히 유발할 쓰기량(1,600MB)을 확보하기 위해 <strong>2GB로 재구성</strong>합니다. nullb1은 이 단계에서 건드리지 않습니다.</p>
+                <h3>재부팅으로 기존 디스크 초기화 후 nullb0(2GB) 생성 및 F2FS 포맷/마운트 <code style="font-size:.75em; margin-left:.4rem;">setup_conv.sh</code></h3>
+                <p>lab1·2에서 사용하던 null_blk 장치와 backing memory를 완전히 초기화하기 위해 <strong>먼저 재부팅</strong>합니다. 재부팅 후 커널 모듈을 로드하고 nullb0을 <strong>2GB로 새로 생성</strong>합니다. nullb1은 이 단계에서 건드리지 않습니다.</p>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — QEMU VM 내부 (재부팅)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code><span class="comment"># 특정 커널로 재부팅하여 기존 null_blk 장치 초기화</span>
+sudo grub-reboot <span class="str">"Advanced options for Ubuntu>Ubuntu, with Linux 5.18.0-dpas"</span>
+sudo reboot</code></pre>
+                </div>
 
                 <div class="script-overview">
                     <div class="script-overview-icon">⚙️</div>
                     <div class="script-overview-body">
                         <strong>setup_conv.sh 동작 순서</strong>
                         <ul class="script-steps">
-                            <li>nullb0 (nvme0 configfs) — power=0 후 재생성, size=2048 (2GB)</li>
+                            <li>null_blk 모듈 로드: <code>modprobe null_blk nr_devices=0</code></li>
+                            <li>f2fs 모듈 로드: <code>modprobe f2fs</code></li>
+                            <li>nullb0 (nvme0 configfs) 신규 생성, size=2048 (2GB)</li>
                             <li>f2fs-tools 설치 여부 확인 (mkfs.f2fs -V)</li>
                             <li>마운트 포인트 <code>/mnt/conv</code> 생성</li>
                             <li>nullb0 포맷: <code>mkfs.f2fs -f /dev/nullb0</code></li>
@@ -176,12 +188,16 @@
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment">#!/usr/bin/env bash
-# setup_conv.sh — reconfigure nullb0 (2 GB) and set up F2FS
+# setup_conv.sh — create nullb0 (2 GB) after reboot and set up F2FS
 # usage: sudo bash setup_conv.sh
 </span>
 <span class="kw">set</span> -euo pipefail
 
-printf <span class="str">'── [1/4] Reconfigure nullb0 (2 GB) ─────────────────\n'</span>
+printf <span class="str">'── [1/5] Load kernel modules ────────────────────────\n'</span>
+modprobe null_blk nr_devices=0
+modprobe f2fs
+
+printf <span class="str">'── [2/5] Create nullb0 (2 GB) ───────────────────────\n'</span>
 <span class="kw">if</span> [ -d /sys/kernel/config/nullb/nvme0 ]; <span class="kw">then</span>
     echo 0 &gt; /sys/kernel/config/nullb/nvme0/power
     rmdir /sys/kernel/config/nullb/nvme0
@@ -192,16 +208,16 @@ echo 2048 &gt; /sys/kernel/config/nullb/nvme0/size
 echo 1    &gt; /sys/kernel/config/nullb/nvme0/memory_backed
 echo 1    &gt; /sys/kernel/config/nullb/nvme0/power
 
-printf <span class="str">'── [2/4] Check f2fs-tools ───────────────────────────\n'</span>
+printf <span class="str">'── [3/5] Check f2fs-tools ───────────────────────────\n'</span>
 <span class="kw">if</span> ! command -v mkfs.f2fs &amp;&gt;/dev/null; <span class="kw">then</span>
     apt-get install -y f2fs-tools
 <span class="kw">fi</span>
 mkfs.f2fs -V 2&gt;&amp;1 | head -1
 
-printf <span class="str">'── [3/4] Create mount point ─────────────────────────\n'</span>
+printf <span class="str">'── [4/5] Create mount point ─────────────────────────\n'</span>
 mkdir -p /mnt/conv
 
-printf <span class="str">'── [4/4] Format and mount F2FS ──────────────────────\n'</span>
+printf <span class="str">'── [5/5] Format and mount F2FS ──────────────────────\n'</span>
 mkfs.f2fs -f /dev/nullb0
 mount /dev/nullb0 /mnt/conv
 df -h /mnt/conv
@@ -241,7 +257,7 @@ printf <span class="str">'\ndone  →  next: sudo bash workload_conv.sh\n'</span
             <div class="step-body">
                 <h3>GC 유발 워크로드 실행 및 언마운트 <code style="font-size:.75em; margin-left:.4rem;">workload_conv.sh</code></h3>
                 <p>F2FS GC가 동작하려면 파일시스템이 충분히 채워진 상태에서 <strong>덮어쓰기(overwrite)</strong>가 일어나야 합니다. 먼저 1,600MB 파일을 순차 write로 채운 뒤, 같은 파일에 랜덤 4KB write를 60초 인가합니다. 덮어쓰인 페이지는 F2FS 세그먼트 내에서 무효(invalid) 상태로 남아 GC Copy-back을 유발합니다.</p>
-                <p>측정 완료 후 <code>umount</code>와 nullb0 device destroy로 backing memory를 완전히 해제합니다. <code>memory_backed=1</code> null_blk은 커널 내부 radix tree에 데이터를 유지하므로 umount만으로는 해제되지 않으며, <code>power=0</code> + <code>rmdir</code>이 필요합니다.</p>
+                <p>측정 완료 후 <code>umount</code>로 파일시스템을 언마운트하고 <strong>재부팅</strong>하여 backing memory를 완전히 초기화합니다. <code>memory_backed=1</code> null_blk은 커널 내부 radix tree에 데이터를 유지하므로, 다음 단계(ZNS 2GB)를 위한 메모리 확보는 재부팅으로 처리합니다.</p>
 
                 <div class="script-overview">
                     <div class="script-overview-icon">🗂️</div>
@@ -252,7 +268,7 @@ printf <span class="str">'\ndone  →  next: sudo bash workload_conv.sh\n'</span
                             <li>fill 완료 후 stat 기준점 기록 (randwrite 구간만 WAF 측정)</li>
                             <li>동일 파일에 randwrite 60초 — F2FS invalid 페이지 누적</li>
                             <li>sync 후 write_sectors 최종값 기록 → <code>/tmp/conv_waf_stat</code> 저장</li>
-                            <li><code>umount /mnt/conv</code> 후 nullb0 destroy — backing memory 완전 해제</li>
+                            <li><code>umount /mnt/conv</code> 후 재부팅 — backing memory 완전 초기화</li>
                         </ul>
                     </div>
                 </div>
@@ -271,7 +287,7 @@ CONV_FILE=<span class="str">/mnt/conv/testfile</span>
 FILL_SIZE=<span class="str">1600m</span>   <span class="comment"># ~80% of 2GB</span>
 RUNTIME=<span class="str">60</span>
 
-printf <span class="str">'── [1/4] Initial fill (1,600 MB) ────────────────────\n'</span>
+printf <span class="str">'── [1/3] Initial fill (1,600 MB) ────────────────────\n'</span>
 fio --name=conv_fill \
     --filename=<span class="str">"${CONV_FILE}"</span> \
     --size=<span class="str">"${FILL_SIZE}"</span> --bs=128k --rw=write \
@@ -280,7 +296,7 @@ fio --name=conv_fill \
     2&gt;/dev/null
 sync
 
-printf <span class="str">'── [2/4] Random write + WAF snapshot (%ds) ──────────\n'</span> <span class="str">"${RUNTIME}"</span>
+printf <span class="str">'── [2/3] Random write + WAF snapshot (%ds) ──────────\n'</span> <span class="str">"${RUNTIME}"</span>
 CONV_B=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb0/stat)
 
 fio --name=conv_rand \
@@ -306,13 +322,9 @@ echo <span class="str">"${CONV_APP} ${CONV_BLK}"</span> &gt; /tmp/conv_waf_stat
 printf <span class="str">'  app: %d MB  |  blk: %d MB\n'</span> \
     "$(( CONV_APP / 1024 / 1024 ))" "$(( CONV_BLK / 1024 / 1024 ))"
 
-printf <span class="str">'── [3/4] Unmount ────────────────────────────────────\n'</span>
+printf <span class="str">'── [3/3] Unmount ────────────────────────────────────\n'</span>
 umount /mnt/conv
-
-printf <span class="str">'── [4/4] Free nullb0 backing memory ─────────────────\n'</span>
-echo 0 &gt; /sys/kernel/config/nullb/nvme0/power
-rmdir /sys/kernel/config/nullb/nvme0
-printf <span class="str">'\ndone  →  next: sudo bash setup_zns.sh\n'</span></code></pre>
+printf <span class="str">'\ndone  →  reboot to clear backing memory, then: sudo bash setup_zns.sh\n'</span></code></pre>
                 </div>
 
                 <div class="code-block">
@@ -344,8 +356,8 @@ printf <span class="str">'\ndone  →  next: sudo bash setup_zns.sh\n'</span></c
         <div class="step-entry">
 
             <div class="step-body">
-                <h3>nullb1 재구성 및 ZNS F2FS 포맷/마운트 <code style="font-size:.75em; margin-left:.4rem;">setup_zns.sh</code></h3>
-                <p>F2FS는 ZNS 장치에서 슈퍼블록, 체크포인트 등 메타데이터를 저장하기 위해 <strong>최소 1개의 Conventional Zone</strong>을 요구합니다. 실습 1·2에서 사용한 nullb1은 Sequential Zone만 32개였으므로, <code>zone_nr_conv=1</code>을 추가하여 재구성해야 합니다.</p>
+                <h3>재부팅 후 nullb1(2GB, zone_nr_conv=1) 생성 및 ZNS F2FS 포맷/마운트 <code style="font-size:.75em; margin-left:.4rem;">setup_zns.sh</code></h3>
+                <p>Conv 측정 완료 후 <strong>재부팅</strong>하여 backing memory를 초기화합니다. 재부팅 후 null_blk 모듈을 새로 로드하고 nullb1을 생성합니다. F2FS는 ZNS 장치에서 슈퍼블록, 체크포인트 등 메타데이터를 저장하기 위해 <strong>최소 1개의 Conventional Zone</strong>을 요구하므로, <code>zone_nr_conv=1</code>을 포함하여 생성합니다.</p>
 
                 <div class="zone-layout">
 <span class="dim">변경 전 (lab1/lab2)</span>
@@ -356,12 +368,24 @@ printf <span class="str">'\ndone  →  next: sudo bash setup_zns.sh\n'</span></c
   zone[ 1~31] = <span class="seq-zone">31개 Sequential</span>   <span class="dim">← 데이터 영역 (총 용량 동일)</span>
                 </div>
 
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — QEMU VM 내부 (재부팅)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code><span class="comment"># Conv 측정 완료 후 재부팅하여 backing memory 초기화</span>
+sudo grub-reboot <span class="str">"Advanced options for Ubuntu>Ubuntu, with Linux 5.18.0-dpas"</span>
+sudo reboot</code></pre>
+                </div>
+
                 <div class="script-overview">
                     <div class="script-overview-icon">⚙️</div>
                     <div class="script-overview-body">
                         <strong>setup_zns.sh 동작 순서</strong>
                         <ul class="script-steps">
-                            <li>nullb1 (zns0 configfs) — power=0 후 재생성, zone_nr_conv=1 추가</li>
+                            <li>null_blk 모듈 로드: <code>modprobe null_blk nr_devices=0</code></li>
+                            <li>f2fs 모듈 로드: <code>modprobe f2fs</code></li>
+                            <li>nullb1 (zns0 configfs) 신규 생성, zone_nr_conv=1 포함</li>
                             <li>마운트 포인트 <code>/mnt/zns</code> 생성</li>
                             <li>nullb1 포맷: <code>mkfs.f2fs -f -m /dev/nullb1</code> (ZNS 모드)</li>
                             <li>마운트 후 blkzone report / df 확인</li>
@@ -375,12 +399,16 @@ printf <span class="str">'\ndone  →  next: sudo bash setup_zns.sh\n'</span></c
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment">#!/usr/bin/env bash
-# setup_zns.sh — reconfigure nullb1 and set up ZNS F2FS
+# setup_zns.sh — create nullb1 (ZNS, zone_nr_conv=1) after reboot and set up ZNS F2FS
 # usage: sudo bash setup_zns.sh
 </span>
 <span class="kw">set</span> -euo pipefail
 
-printf <span class="str">'── [1/3] Reconfigure nullb1 (zone_nr_conv=1) ────────\n'</span>
+printf <span class="str">'── [1/4] Load kernel modules ────────────────────────\n'</span>
+modprobe null_blk nr_devices=0
+modprobe f2fs
+
+printf <span class="str">'── [2/4] Create nullb1 (ZNS, zone_nr_conv=1) ────────\n'</span>
 <span class="kw">if</span> [ -d /sys/kernel/config/nullb/zns0 ]; <span class="kw">then</span>
     echo 0 &gt; /sys/kernel/config/nullb/zns0/power
     rmdir /sys/kernel/config/nullb/zns0
@@ -394,10 +422,10 @@ echo 4096 &gt; /sys/kernel/config/nullb/zns0/blocksize
 echo 1    &gt; /sys/kernel/config/nullb/zns0/memory_backed
 echo 1    &gt; /sys/kernel/config/nullb/zns0/power
 
-printf <span class="str">'── [2/3] Create mount point ─────────────────────────\n'</span>
+printf <span class="str">'── [3/4] Create mount point ─────────────────────────\n'</span>
 mkdir -p /mnt/zns
 
-printf <span class="str">'── [3/3] Format and mount ZNS F2FS ──────────────────\n'</span>
+printf <span class="str">'── [4/4] Format and mount ZNS F2FS ──────────────────\n'</span>
 mkfs.f2fs -f -m /dev/nullb1   <span class="comment"># -m: ZNS mode (requires zone_nr_conv=1)</span>
 mount -t f2fs /dev/nullb1 /mnt/zns
 df -h /mnt/zns
