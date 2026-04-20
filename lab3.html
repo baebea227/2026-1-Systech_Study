@@ -188,9 +188,8 @@ sudo modprobe crc32_generic</code></pre>
                             <li>f2fs 모듈 로드: <code>modprobe f2fs</code></li>
                             <li>nullb0 (nvme0 configfs) 신규 생성, size=2048 (2GB)</li>
                             <li>f2fs-tools 설치 여부 확인 (mkfs.f2fs -V)</li>
-                            <li>마운트 포인트 <code>/mnt/conv</code> 생성</li>
-                            <li>nullb0 포맷: <code>mkfs.f2fs -f /dev/nullb0</code></li>
-                            <li><code>/mnt/conv</code> 마운트 후 df 확인</li>
+                            <li>마운트 포인트 <code>/mnt/conv</code> 생성 · 장치 크기 확인</li>
+                            <li class="dim" style="opacity:.6">※ 포맷·마운트는 <code>workload_conv.sh</code>가 LFS 모드로 수행</li>
                         </ul>
                     </div>
                 </div>
@@ -206,11 +205,11 @@ sudo modprobe crc32_generic</code></pre>
 </span>
 <span class="kw">set</span> -euo pipefail
 
-printf <span class="str">'── [1/5] Load kernel modules ────────────────────────\n'</span>
+printf <span class="str">'── [1/4] Load kernel modules ────────────────────────\n'</span>
 modprobe null_blk nr_devices=0
 modprobe f2fs
 
-printf <span class="str">'── [2/5] Create nullb0 (2 GB) ───────────────────────\n'</span>
+printf <span class="str">'── [2/4] Create nullb0 (2 GB) ───────────────────────\n'</span>
 <span class="kw">if</span> [ -d /sys/kernel/config/nullb/nvme0 ]; <span class="kw">then</span>
     echo 0 &gt; /sys/kernel/config/nullb/nvme0/power
     rmdir /sys/kernel/config/nullb/nvme0
@@ -221,19 +220,16 @@ echo 2048 &gt; /sys/kernel/config/nullb/nvme0/size
 echo 1    &gt; /sys/kernel/config/nullb/nvme0/memory_backed
 echo 1    &gt; /sys/kernel/config/nullb/nvme0/power
 
-printf <span class="str">'── [3/5] Check f2fs-tools ───────────────────────────\n'</span>
+printf <span class="str">'── [3/4] Check f2fs-tools ───────────────────────────\n'</span>
 <span class="kw">if</span> ! command -v mkfs.f2fs &amp;&gt;/dev/null; <span class="kw">then</span>
     apt-get install -y f2fs-tools
 <span class="kw">fi</span>
 mkfs.f2fs -V 2&gt;&amp;1 | head -1
 
-printf <span class="str">'── [4/5] Create mount point ─────────────────────────\n'</span>
+printf <span class="str">'── [4/4] Create mount point &amp; verify device ─────────\n'</span>
 mkdir -p /mnt/conv
-
-printf <span class="str">'── [5/5] Format and mount F2FS ──────────────────────\n'</span>
-mkfs.f2fs -f /dev/nullb0
-mount /dev/nullb0 /mnt/conv
-df -h /mnt/conv                </div>
+printf <span class="str">'  /dev/nullb0 size: %s bytes\n'</span> <span class="str">"$(blockdev --getsize64 /dev/nullb0)"</span>
+printf <span class="str">'\ndone  →  next: sudo bash workload_conv.sh\n'</span></div>
 
                 <div class="code-block">
                     <div class="code-block-label">
@@ -251,9 +247,10 @@ df -h /mnt/conv                </div>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상 출력 — df -h</div>
-                    <pre>Filesystem      Size  Used Avail Use% Mounted on
-/dev/nullb0     <span class="blu">2.0G</span>  213M  1.8G  11% /mnt/conv</pre>
+                    <div class="output-label">예상 출력 — 장치 크기 확인</div>
+                    <pre>  /dev/nullb0 size: <span class="blu">2147483648</span> bytes
+
+done  →  next: sudo bash workload_conv.sh</pre>
                 </div>
             </div>
         </div>
@@ -267,7 +264,7 @@ df -h /mnt/conv                </div>
 
             <div class="step-body">
                 <h3>GC 유발 워크로드 실행 및 언마운트 <code style="font-size:.75em; margin-left:.4rem;">workload_conv.sh</code></h3>
-                <p>F2FS GC가 동작하려면 파일시스템이 충분히 채워진 상태에서 <strong>덮어쓰기(overwrite)</strong>가 일어나야 합니다. 먼저 1,600MB 파일을 순차 write로 채운 뒤, 같은 파일에 랜덤 4KB write를 60초 인가합니다. 덮어쓰인 페이지는 F2FS 세그먼트 내에서 무효(invalid) 상태로 남아 GC Copy-back을 유발합니다.</p>
+                <p>F2FS GC가 동작하려면 파일시스템이 충분히 채워진 상태에서 <strong>덮어쓰기(overwrite)</strong>가 일어나야 합니다. 먼저 1,400MB 파일을 순차 write로 채운 뒤, 같은 파일에 랜덤 4KB write를 800MB만큼 인가합니다 (Conv/ZNS 앱 write량 동일 → WAF 비율만으로 공정 비교). 덮어쓰인 페이지는 F2FS 세그먼트 내에서 무효(invalid) 상태로 남아 GC Copy-back을 유발합니다.</p>
                 <p>측정 완료 후 <code>umount</code>로 파일시스템을 언마운트하고 <strong>재부팅</strong>하여 backing memory를 완전히 초기화합니다. <code>memory_backed=1</code> null_blk은 커널 내부 radix tree에 데이터를 유지하므로, 다음 단계(ZNS 2GB)를 위한 메모리 확보는 재부팅으로 처리합니다.</p>
 
                 <div class="script-overview">
@@ -276,9 +273,9 @@ df -h /mnt/conv                </div>
                         <strong>workload_conv.sh 동작 순서</strong>
                         <ul class="script-steps">
                             <li><code>mkfs.f2fs -f</code> + <code>mount -o mode=lfs</code> — LFS 모드로 재포맷·마운트 (WAF 극대화)</li>
-                            <li>1,600MB 파일 순차 fill — GC 유발 환경 조성</li>
+                            <li>1,400MB 파일 순차 fill — GC 유발 환경 조성</li>
                             <li>fill 완료 후 stat 기준점 기록 (randwrite 구간만 WAF 측정)</li>
-                            <li>동일 파일에 randwrite 60초 — F2FS invalid 페이지 누적</li>
+                            <li>동일 파일에 randwrite 800MB (io_size 고정) — F2FS invalid 페이지 누적</li>
                             <li>sync 후 write_sectors 최종값 기록 → <code>./conv_waf_stat</code> 저장</li>
                             <li><code>umount /mnt/conv</code> 후 재부팅 — backing memory 완전 초기화</li>
                         </ul>
@@ -296,8 +293,8 @@ df -h /mnt/conv                </div>
 </span>
 <span class="kw">set</span> -euo pipefail
 CONV_FILE=<span class="str">/mnt/conv/testfile</span>
-FILL_SIZE=<span class="str">1600m</span>   <span class="comment"># ~80% of 2GB</span>
-RUNTIME=<span class="str">60</span>
+FILL_SIZE=<span class="str">1400m</span>   <span class="comment"># ~70% of 2GB</span>
+IO_SIZE=<span class="str">800m</span>     <span class="comment"># fixed write amount for fair WAF comparison</span>
 
 printf <span class="str">'── [1/4] Format &amp; Mount (LFS mode) ─────────────────\n'</span>
 umount /mnt/conv 2&gt;/dev/null || true
@@ -313,14 +310,14 @@ fio --name=conv_fill \
     2&gt;/dev/null
 sync
 
-printf <span class="str">'── [3/4] Random write + WAF snapshot (%ds) ──────────\n'</span> <span class="str">"${RUNTIME}"</span>
+printf <span class="str">'── [3/4] Random write + WAF snapshot (io_size=%s) ────\n'</span> <span class="str">"${IO_SIZE}"</span>
 CONV_B=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb0/stat)
 
 fio --name=conv_rand \
     --filename=<span class="str">"${CONV_FILE}"</span> \
-    --size=<span class="str">"${FILL_SIZE}"</span> --bs=4k --rw=randwrite \
-    --ioengine=libaio --direct=1 --numjobs=4 \
-    --runtime=<span class="str">"${RUNTIME}"</span> --time_based \
+    --size=<span class="str">"${FILL_SIZE}"</span> --io_size=<span class="str">"${IO_SIZE}"</span> \
+    --bs=4k --rw=randwrite \
+    --ioengine=libaio --direct=1 --numjobs=1 \
     --output-format=json --output=/tmp/fio_conv_rand.json \
     2&gt;/dev/null
 
@@ -401,9 +398,8 @@ sudo reboot</code></pre>
                             <li>null_blk 모듈 로드: <code>modprobe null_blk nr_devices=0</code></li>
                             <li>f2fs 모듈 로드: <code>modprobe f2fs</code></li>
                             <li>nullb1 (zns0 configfs) 신규 생성, zone_nr_conv=1 포함</li>
-                            <li>마운트 포인트 <code>/mnt/zns</code> 생성</li>
-                            <li>nullb1 포맷: <code>mkfs.f2fs -f -m /dev/nullb1</code> (ZNS 모드)</li>
-                            <li>마운트 후 blkzone report / df 확인</li>
+                            <li>마운트 포인트 <code>/mnt/zns</code> 생성 · zone 구성 확인</li>
+                            <li class="dim" style="opacity:.6">※ 포맷·마운트는 <code>workload_zns.sh</code>가 수행</li>
                         </ul>
                     </div>
                 </div>
@@ -419,11 +415,11 @@ sudo reboot</code></pre>
 </span>
 <span class="kw">set</span> -euo pipefail
 
-printf <span class="str">'── [1/4] Load kernel modules ────────────────────────\n'</span>
+printf <span class="str">'── [1/3] Load kernel modules ────────────────────────\n'</span>
 modprobe null_blk nr_devices=0
 modprobe f2fs
 
-printf <span class="str">'── [2/4] Create nullb1 (ZNS, zone_nr_conv=1) ────────\n'</span>
+printf <span class="str">'── [2/3] Create nullb1 (ZNS, zone_nr_conv=1) ────────\n'</span>
 <span class="kw">if</span> [ -d /sys/kernel/config/nullb/zns0 ]; <span class="kw">then</span>
     echo 0 &gt; /sys/kernel/config/nullb/zns0/power
     rmdir /sys/kernel/config/nullb/zns0
@@ -437,13 +433,9 @@ echo 4096 &gt; /sys/kernel/config/nullb/zns0/blocksize
 echo 1    &gt; /sys/kernel/config/nullb/zns0/memory_backed
 echo 1    &gt; /sys/kernel/config/nullb/zns0/power
 
-printf <span class="str">'── [3/4] Create mount point ─────────────────────────\n'</span>
+printf <span class="str">'── [3/3] Create mount point &amp; verify zones ──────────\n'</span>
 mkdir -p /mnt/zns
-
-printf <span class="str">'── [4/4] Format and mount ZNS F2FS ──────────────────\n'</span>
-mkfs.f2fs -f -m /dev/nullb1   <span class="comment"># -m: ZNS mode (requires zone_nr_conv=1)</span>
-mount -t f2fs /dev/nullb1 /mnt/zns
-df -h /mnt/zns
+blkzone report /dev/nullb1 | head -4
 printf <span class="str">'\ndone  →  next: sudo bash workload_zns.sh\n'</span></code></pre>
                 </div>
 
@@ -467,20 +459,8 @@ printf <span class="str">'\ndone  →  next: sudo bash workload_zns.sh\n'</span>
         <div class="step-entry">
 
             <div class="step-body">
-                <h3>Zone 구성 확인</h3>
-                <p>재구성된 nullb1의 Conventional Zone 추가 여부와 F2FS 마운트 상태를 확인합니다.</p>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code><span class="comment"># Zone 구성 확인 — conv 1개 + seq 31개</span>
-blkzone report /dev/nullb1 | head -4
-
-<span class="comment"># 파일시스템 마운트 확인</span>
-df -Th /mnt/zns</code></pre>
-                </div>
+                <h3>Zone 구성 확인 (setup_zns.sh 출력)</h3>
+                <p>setup_zns.sh는 마지막 단계에서 <code>blkzone report</code>로 zone 구성을 출력합니다. Conventional Zone 1개 + Sequential Zone 31개 구성을 확인하세요.</p>
 
                 <div class="output-block">
                     <div class="output-label">예상 출력 — blkzone report (처음 4 zone)</div>
@@ -488,12 +468,6 @@ df -Th /mnt/zns</code></pre>
   start: 0x020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="grn">1(em) [type: 2(SEQ_WRITE_REQUIRED)]</span>
   start: 0x040000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="grn">1(em) [type: 2(SEQ_WRITE_REQUIRED)]</span>
   start: 0x060000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="grn">1(em) [type: 2(SEQ_WRITE_REQUIRED)]</span></pre>
-                </div>
-
-                <div class="output-block">
-                    <div class="output-label">예상 출력 — df -Th</div>
-                    <pre>Filesystem     Type   Size  Used Avail Use% Mounted on
-/dev/nullb1    <span class="blu">f2fs</span>   1.9G   64M  1.8G   4% /mnt/zns</pre>
                 </div>
             </div>
         </div>
@@ -507,16 +481,17 @@ df -Th /mnt/zns</code></pre>
 
             <div class="step-body">
                 <h3>GC 유발 워크로드 실행 <code style="font-size:.75em; margin-left:.4rem;">workload_zns.sh</code></h3>
-                <p>Conv와 동일한 워크로드(1,600MB fill + randwrite 60초)를 nullb1에 적용하여 WAF 비교의 공정성을 유지합니다.</p>
+                <p>Conv와 동일한 워크로드(1,400MB fill + randwrite 800MB)를 nullb1에 적용하여 WAF 비교의 공정성을 유지합니다.</p>
 
                 <div class="script-overview">
                     <div class="script-overview-icon">🗂️</div>
                     <div class="script-overview-body">
                         <strong>workload_zns.sh 동작 순서</strong>
                         <ul class="script-steps">
-                            <li>1,600MB 파일 순차 fill — GC 유발 환경 조성</li>
+                            <li><code>mkfs.f2fs -f -m</code> + <code>mount -t f2fs</code> — ZNS 모드 포맷·마운트</li>
+                            <li>1,400MB 파일 순차 fill — GC 유발 환경 조성</li>
                             <li>fill 완료 후 stat 기준점 기록 (randwrite 구간만 WAF 측정)</li>
-                            <li>동일 파일에 randwrite 60초 — F2FS invalid 페이지 누적</li>
+                            <li>동일 파일에 randwrite 800MB (io_size 고정) — F2FS invalid 페이지 누적</li>
                             <li>sync 후 write_sectors 최종값 기록 → <code>./zns_waf_stat</code> 저장</li>
                             <li><code>umount /mnt/zns</code></li>
                         </ul>
@@ -534,10 +509,15 @@ df -Th /mnt/zns</code></pre>
 </span>
 <span class="kw">set</span> -euo pipefail
 ZNS_FILE=<span class="str">/mnt/zns/testfile</span>
-FILL_SIZE=<span class="str">1600m</span>   <span class="comment"># ~80% of 2GB</span>
-RUNTIME=<span class="str">60</span>
+FILL_SIZE=<span class="str">1400m</span>   <span class="comment"># ~70% of 2GB</span>
+IO_SIZE=<span class="str">800m</span>     <span class="comment"># fixed write amount for fair WAF comparison</span>
 
-printf <span class="str">'── [1/3] Initial fill (1,600 MB) ────────────────────\n'</span>
+printf <span class="str">'── [1/4] Format &amp; Mount (ZNS mode) ──────────────────\n'</span>
+umount /mnt/zns 2&gt;/dev/null || true
+mkfs.f2fs -f -m /dev/nullb1   <span class="comment"># -m: ZNS mode (requires zone_nr_conv=1)</span>
+mount -t f2fs /dev/nullb1 /mnt/zns
+
+printf <span class="str">'── [2/4] Initial fill (1,400 MB) ────────────────────\n'</span>
 fio --name=zns_fill \
     --filename=<span class="str">"${ZNS_FILE}"</span> \
     --size=<span class="str">"${FILL_SIZE}"</span> --bs=128k --rw=write \
@@ -546,14 +526,14 @@ fio --name=zns_fill \
     2&gt;/dev/null
 sync
 
-printf <span class="str">'── [2/3] Random write + WAF snapshot (%ds) ──────────\n'</span> <span class="str">"${RUNTIME}"</span>
+printf <span class="str">'── [3/4] Random write + WAF snapshot (io_size=%s) ────\n'</span> <span class="str">"${IO_SIZE}"</span>
 ZNS_B=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb1/stat)
 
 fio --name=zns_rand \
     --filename=<span class="str">"${ZNS_FILE}"</span> \
-    --size=<span class="str">"${FILL_SIZE}"</span> --bs=4k --rw=randwrite \
-    --ioengine=libaio --direct=1 --numjobs=4 \
-    --runtime=<span class="str">"${RUNTIME}"</span> --time_based \
+    --size=<span class="str">"${FILL_SIZE}"</span> --io_size=<span class="str">"${IO_SIZE}"</span> \
+    --bs=4k --rw=randwrite \
+    --ioengine=libaio --direct=1 --numjobs=1 \
     --output-format=json --output=/tmp/fio_zns_rand.json \
     2&gt;/dev/null
 
@@ -572,7 +552,7 @@ echo <span class="str">"${ZNS_APP} ${ZNS_BLK}"</span> &gt; ./zns_waf_stat
 printf <span class="str">'  app: %d MB  |  blk: %d MB\n'</span> \
     "$(( ZNS_APP / 1024 / 1024 ))" "$(( ZNS_BLK / 1024 / 1024 ))"
 
-printf <span class="str">'── [3/3] Unmount ────────────────────────────────────\n'</span>
+printf <span class="str">'── [4/4] Unmount ────────────────────────────────────\n'</span>
 umount /mnt/zns
 printf <span class="str">'\ndone  →  next: sudo bash calc_waf.sh\n'</span></code></pre>
                 </div>
@@ -593,7 +573,7 @@ printf <span class="str">'\ndone  →  next: sudo bash calc_waf.sh\n'</span></co
                 </div>
                 <div class="callout callout-warn">
                     <span class="callout-title">WAF가 낮게 나오는 경우</span>
-                    null_blk은 메모리 기반 장치이므로 I/O 속도가 매우 빠릅니다. GC가 백그라운드에서 충분히 돌지 못하면 Conv WAF가 예상보다 낮게 나올 수 있습니다. 이 경우 두 <code>workload_*.sh</code>의 <code>RUNTIME</code> 값을 120 이상으로 늘려 재측정하세요.
+                    null_blk은 메모리 기반 장치이므로 I/O 속도가 매우 빠릅니다. GC가 충분히 돌지 못하면 Conv WAF가 예상보다 낮게 나올 수 있습니다. 이 경우 두 <code>workload_*.sh</code>의 <code>IO_SIZE</code> 값을 <code>1200m</code> 이상으로 늘려 재측정하세요.
                 </div>
             </div>
         </div>
@@ -742,14 +722,14 @@ printf <span class="str">'  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC
                         <td class="fill">기록하세요</td>
                         <td class="fill">기록하세요</td>
                         <td class="fill">기록하세요</td>
-                        <td style="font-size:.78rem;color:#64748b;">세그먼트 GC, randwrite 60s</td>
+                        <td style="font-size:.78rem;color:#64748b;">세그먼트 GC, randwrite 800MB</td>
                     </tr>
                     <tr>
                         <td class="tag-col">ZNS F2FS (/dev/nullb1)</td>
                         <td class="fill">기록하세요</td>
                         <td class="fill">기록하세요</td>
                         <td class="highlight-cell">기록하세요</td>
-                        <td style="font-size:.78rem;color:#64748b;">Zone GC, randwrite 60s</td>
+                        <td style="font-size:.78rem;color:#64748b;">Zone GC, randwrite 800MB</td>
                     </tr>
                 </tbody>
             </table>
