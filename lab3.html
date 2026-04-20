@@ -166,6 +166,19 @@ sudo grub-reboot <span class="str">"Advanced options for Ubuntu>Ubuntu, with Lin
 sudo reboot</code></pre>
                 </div>
 
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — QEMU VM 내부 (재부팅 후 — crc32 모듈 설치)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code><span class="comment"># F2FS가 의존하는 crc32_generic 커널 모듈 빌드 및 설치</span>
+cd linux-5.18
+make crypto/crc32_generic.ko
+sudo cp crypto/crc32_generic.ko /lib/modules/$(uname -r)/kernel/crypto/
+sudo depmod -a
+sudo modprobe crc32_generic</code></pre>
+                </div>
+
                 <div class="script-overview">
                     <div class="script-overview-icon">⚙️</div>
                     <div class="script-overview-body">
@@ -220,9 +233,7 @@ mkdir -p /mnt/conv
 printf <span class="str">'── [5/5] Format and mount F2FS ──────────────────────\n'</span>
 mkfs.f2fs -f /dev/nullb0
 mount /dev/nullb0 /mnt/conv
-df -h /mnt/conv
-printf <span class="str">'\ndone  →  next: sudo bash workload_conv.sh\n'</span></code></pre>
-                </div>
+df -h /mnt/conv                </div>
 
                 <div class="code-block">
                     <div class="code-block-label">
@@ -242,7 +253,7 @@ printf <span class="str">'\ndone  →  next: sudo bash workload_conv.sh\n'</span
                 <div class="output-block">
                     <div class="output-label">예상 출력 — df -h</div>
                     <pre>Filesystem      Size  Used Avail Use% Mounted on
-/dev/nullb0     <span class="blu">1.9G</span>   64M  1.8G   4% /mnt/conv</pre>
+/dev/nullb0     <span class="blu">2.0G</span>  213M  1.8G  11% /mnt/conv</pre>
                 </div>
             </div>
         </div>
@@ -264,10 +275,11 @@ printf <span class="str">'\ndone  →  next: sudo bash workload_conv.sh\n'</span
                     <div class="script-overview-body">
                         <strong>workload_conv.sh 동작 순서</strong>
                         <ul class="script-steps">
+                            <li><code>mkfs.f2fs -f</code> + <code>mount -o mode=lfs</code> — LFS 모드로 재포맷·마운트 (WAF 극대화)</li>
                             <li>1,600MB 파일 순차 fill — GC 유발 환경 조성</li>
                             <li>fill 완료 후 stat 기준점 기록 (randwrite 구간만 WAF 측정)</li>
                             <li>동일 파일에 randwrite 60초 — F2FS invalid 페이지 누적</li>
-                            <li>sync 후 write_sectors 최종값 기록 → <code>/tmp/conv_waf_stat</code> 저장</li>
+                            <li>sync 후 write_sectors 최종값 기록 → <code>./conv_waf_stat</code> 저장</li>
                             <li><code>umount /mnt/conv</code> 후 재부팅 — backing memory 완전 초기화</li>
                         </ul>
                     </div>
@@ -287,7 +299,12 @@ CONV_FILE=<span class="str">/mnt/conv/testfile</span>
 FILL_SIZE=<span class="str">1600m</span>   <span class="comment"># ~80% of 2GB</span>
 RUNTIME=<span class="str">60</span>
 
-printf <span class="str">'── [1/3] Initial fill (1,600 MB) ────────────────────\n'</span>
+printf <span class="str">'── [1/4] Format &amp; Mount (LFS mode) ─────────────────\n'</span>
+umount /mnt/conv 2&gt;/dev/null || true
+mkfs.f2fs -f /dev/nullb0
+mount -t f2fs -o mode=lfs /dev/nullb0 /mnt/conv
+
+printf <span class="str">'── [2/4] Initial fill (1,600 MB) ────────────────────\n'</span>
 fio --name=conv_fill \
     --filename=<span class="str">"${CONV_FILE}"</span> \
     --size=<span class="str">"${FILL_SIZE}"</span> --bs=128k --rw=write \
@@ -296,7 +313,7 @@ fio --name=conv_fill \
     2&gt;/dev/null
 sync
 
-printf <span class="str">'── [2/3] Random write + WAF snapshot (%ds) ──────────\n'</span> <span class="str">"${RUNTIME}"</span>
+printf <span class="str">'── [3/4] Random write + WAF snapshot (%ds) ──────────\n'</span> <span class="str">"${RUNTIME}"</span>
 CONV_B=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb0/stat)
 
 fio --name=conv_rand \
@@ -318,14 +335,12 @@ total = sum(j['write']['io_bytes'] for j in rand['jobs'])
 print(total)
 <span class="str">EOF</span>
 )
-echo <span class="str">"${CONV_APP} ${CONV_BLK}"</span> &gt; /tmp/conv_waf_stat
+echo <span class="str">"${CONV_APP} ${CONV_BLK}"</span> &gt; ./conv_waf_stat
 printf <span class="str">'  app: %d MB  |  blk: %d MB\n'</span> \
     "$(( CONV_APP / 1024 / 1024 ))" "$(( CONV_BLK / 1024 / 1024 ))"
 
-printf <span class="str">'── [3/3] Unmount ────────────────────────────────────\n'</span>
-umount /mnt/conv
-printf <span class="str">'\ndone  →  reboot to clear backing memory, then: sudo bash setup_zns.sh\n'</span></code></pre>
-                </div>
+printf <span class="str">'── [4/4] Unmount ────────────────────────────────────\n'</span>
+umount /mnt/conv                </div>
 
                 <div class="code-block">
                     <div class="code-block-label">
@@ -502,7 +517,7 @@ df -Th /mnt/zns</code></pre>
                             <li>1,600MB 파일 순차 fill — GC 유발 환경 조성</li>
                             <li>fill 완료 후 stat 기준점 기록 (randwrite 구간만 WAF 측정)</li>
                             <li>동일 파일에 randwrite 60초 — F2FS invalid 페이지 누적</li>
-                            <li>sync 후 write_sectors 최종값 기록 → <code>/tmp/zns_waf_stat</code> 저장</li>
+                            <li>sync 후 write_sectors 최종값 기록 → <code>./zns_waf_stat</code> 저장</li>
                             <li><code>umount /mnt/zns</code></li>
                         </ul>
                     </div>
@@ -553,7 +568,7 @@ total = sum(j['write']['io_bytes'] for j in rand['jobs'])
 print(total)
 <span class="str">EOF</span>
 )
-echo <span class="str">"${ZNS_APP} ${ZNS_BLK}"</span> &gt; /tmp/zns_waf_stat
+echo <span class="str">"${ZNS_APP} ${ZNS_BLK}"</span> &gt; ./zns_waf_stat
 printf <span class="str">'  app: %d MB  |  blk: %d MB\n'</span> \
     "$(( ZNS_APP / 1024 / 1024 ))" "$(( ZNS_BLK / 1024 / 1024 ))"
 
@@ -607,12 +622,12 @@ printf <span class="str">'\ndone  →  next: sudo bash calc_waf.sh\n'</span></co
 
 <span class="fn">sep()</span> { printf <span class="str">'%s\n'</span> <span class="str">"$(printf '─%.0s' {1..58})"</span>; }
 
-<span class="kw">if</span> [[ ! -f /tmp/conv_waf_stat || ! -f /tmp/zns_waf_stat ]]; <span class="kw">then</span>
+<span class="kw">if</span> [[ ! -f ./conv_waf_stat || ! -f ./zns_waf_stat ]]; <span class="kw">then</span>
     printf <span class="str">'error: run workload_conv.sh and workload_zns.sh first.\n'</span>; exit 1
 <span class="kw">fi</span>
 
-read CONV_APP CONV_BLK &lt; /tmp/conv_waf_stat
-read ZNS_APP  ZNS_BLK  &lt; /tmp/zns_waf_stat
+read CONV_APP CONV_BLK &lt; ./conv_waf_stat
+read ZNS_APP  ZNS_BLK  &lt; ./zns_waf_stat
 
 <span class="kw">if</span> [[ <span class="str">"${CONV_APP}"</span> -eq 0 || <span class="str">"${ZNS_APP}"</span> -eq 0 ]]; <span class="kw">then</span>
     printf <span class="str">'error: write count is 0. re-run workload scripts.\n'</span>; exit 1
