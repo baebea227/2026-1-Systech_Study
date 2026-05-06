@@ -17,7 +17,6 @@
             --code-fg: #e2e8f0;
             --success: #16a34a;
             --warn:    #d97706;
-            --danger:  #dc2626;
             --info:    #2563eb;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,222 +26,213 @@
             background: var(--light);
             line-height: 1.7;
         }
-        .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 
         /* Header */
         header {
             background: linear-gradient(135deg, var(--navy), var(--blue));
             color: white;
-            padding: 2.5rem 0;
+            padding: 3rem 0;
             margin-bottom: 2rem;
         }
         header .container { padding-top: 0; padding-bottom: 0; }
-        .back-link {
-            color: rgba(255,255,255,.75);
-            font-size: .85rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: .3rem;
-            margin-bottom: .8rem;
+        header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+        header p  { font-size: 0.95rem; opacity: 0.85; }
+        header .badge {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--navy);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2em 0.7em;
+            border-radius: 4px;
+            margin-top: 0.8rem;
         }
-        .back-link:hover { color: white; }
-        header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: .3rem; }
-        header p  { font-size: .9rem; opacity: .82; }
 
-        /* Step flow */
-        .step-flow { margin-bottom: 2rem; }
-        .step-entry { display: flex; gap: 1.1rem; align-items: flex-start; margin-bottom: 1.6rem; }
-        .step-entry:last-child { margin-bottom: 0; }
-        .step-body { flex: 1; }
-        .step-body h3 { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: .4rem; }
-        .step-body p  { font-size: .88rem; color: #374151; margin-bottom: .6rem; }
+        /* Back link */
+        .back-link {
+            display: inline-block;
+            color: var(--blue);
+            font-size: 0.85rem;
+            text-decoration: none;
+            margin-bottom: 1rem;
+        }
+        .back-link:hover { text-decoration: underline; }
 
-        /* Cards */
-        .card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; }
-        .card h2 { font-size: 1.1rem; color: var(--navy); margin-bottom: 1rem; }
-        .card p  { font-size: .88rem; color: #374151; margin-bottom: .5rem; }
+        /* TOC */
+        nav.toc {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        nav.toc h2 { font-size: 1rem; color: var(--navy); margin-bottom: 0.6rem; border: none; padding: 0; }
+        nav.toc ol { padding-left: 1.2rem; }
+        nav.toc li { margin: 0.3rem 0; font-size: 0.9rem; }
+        nav.toc a  { color: var(--blue); text-decoration: none; }
+        nav.toc a:hover { text-decoration: underline; }
 
-        /* Inline code */
+        /* Sections */
+        section { background: white; border-radius: 8px; border: 1px solid var(--border); padding: 1.5rem 2rem; margin-bottom: 1.5rem; scroll-margin-top: 1.5rem; }
+        h2 { font-size: 1.3rem; color: var(--navy); margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+        h3 { font-size: 1.05rem; color: var(--blue); margin: 1.2rem 0 0.5rem; }
+        h4 { font-size: 0.95rem; color: #475569; margin: 1rem 0 0.4rem; }
+        p  { margin: 0.5rem 0; font-size: 0.92rem; }
+        ul, ol { margin: 0.5rem 0 0.5rem 1.5rem; font-size: 0.92rem; }
+        li { margin: 0.25rem 0; }
+
+        /* Code */
+        pre {
+            background: var(--code-bg);
+            color: var(--code-fg);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 0.8rem 0;
+            font-size: 0.82rem;
+            line-height: 1.6;
+        }
+        pre code { font-family: 'JetBrains Mono', monospace; background: none; padding: 0; font-size: inherit; }
         code {
             font-family: 'JetBrains Mono', monospace;
-            font-size: .85em;
+            font-size: 0.85em;
             background: #f1f5f9;
-            padding: .15em .4em;
+            padding: 0.15em 0.4em;
             border-radius: 3px;
         }
 
-        /* Code blocks */
-        .code-block { position: relative; background: var(--code-bg); border-radius: 6px; margin: .5rem 0 1rem; overflow: hidden; }
-        .code-block-label {
+        /* Code block with label */
+        .code-block { margin: 0.8rem 0; }
+        .code-label {
             background: #2d3748;
             color: #a0aec0;
             font-family: 'JetBrains Mono', monospace;
-            font-size: .7rem;
-            padding: .35rem .9rem;
-            letter-spacing: .06em;
-            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.72rem;
+            padding: 0.35rem 1rem;
+            border-radius: 6px 6px 0 0;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .code-block-label span { display: flex; align-items: center; gap: .5rem; }
-        .code-block pre { padding: 1rem 1.2rem; overflow-x: auto; }
-        .code-block pre code {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: .82rem;
-            background: none; padding: 0;
-            color: var(--code-fg);
-            line-height: 1.65;
-        }
-        .code-block pre code .comment { color: #6b7a99; }
-        .code-block pre code .kw  { color: #79c0ff; }
-        .code-block pre code .str { color: #a5d6a7; }
-        .code-block pre code .fn  { color: #d2a8ff; }
-        .copy-btn {
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            color: #a0aec0;
-            font-size: .7rem;
-            padding: .25em .6em;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            flex-shrink: 0;
-        }
-        .copy-btn:hover { background: #4a5568; color: white; }
+        .code-block pre { border-radius: 0 0 6px 6px; margin: 0; }
+
+        /* File badge */
         .file-badge {
             display: inline-flex;
             align-items: center;
-            gap: .4rem;
+            gap: 0.3rem;
             background: #1a3a5c;
             color: #7dd3fc;
             font-family: 'JetBrains Mono', monospace;
-            font-size: .72rem;
-            padding: .25em .7em;
+            font-size: 0.72rem;
+            padding: 0.15em 0.6em;
             border-radius: 3px;
             border: 1px solid #2d5a8a;
         }
-        .file-badge::before { content: '📄'; font-size: .85em; }
+        .file-badge::before { content: '📄'; font-size: 0.8em; }
+
+        /* Syntax highlight */
+        .comment { color: #6b7a99; }
+        .kw      { color: #79c0ff; }
+        .str     { color: #a5d6a7; }
+        .fn      { color: #d2a8ff; }
+
+        /* Output colors */
+        .grn { color: #4ade80; font-weight: 600; }
+        .ylw { color: #fde68a; }
+        .blu { color: #7dd3fc; }
+        .red { color: #f87171; font-weight: 600; }
+        .sep { color: #334155; }
+        .hdr { color: #c084fc; font-weight: 600; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
+        th { background: var(--navy); color: white; padding: 0.5rem 0.8rem; text-align: left; font-weight: 500; }
+        td { padding: 0.45rem 0.8rem; border-bottom: 1px solid var(--border); }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .fill    { color: #94a3b8; font-style: italic; font-size: 0.82rem; }
+        .tag-col { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--navy); }
 
         /* Callouts */
         .callout {
             border-left: 4px solid;
-            padding: .8rem 1rem;
-            margin: .8rem 0;
+            padding: 0.8rem 1rem;
+            margin: 0.8rem 0;
             border-radius: 0 6px 6px 0;
-            font-size: .88rem;
+            font-size: 0.88rem;
         }
         .callout-info    { border-color: var(--info);    background: #eff6ff; color: #1e40af; }
         .callout-warn    { border-color: var(--warn);    background: #fffbeb; color: #92400e; }
         .callout-success { border-color: var(--success); background: #f0fdf4; color: #14532d; }
-        .callout-danger  { border-color: var(--danger);  background: #fef2f2; color: #7f1d1d; }
-        .callout-title   { display: block; margin-bottom: .2rem; font-weight: 600; }
-
-        /* Output blocks */
-        .output-block { background: #0f1724; border: 1px solid #2d3748; border-radius: 6px; margin: .4rem 0 1rem; overflow: hidden; }
-        .output-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: .68rem;
-            color: #64748b;
-            letter-spacing: .06em;
-            padding: .5rem .9rem;
-            background: #1a2233;
-            border-bottom: 1px solid #2d3748;
-            display: flex; align-items: center; gap: .5rem;
-        }
-        .output-label::before { content: '▶'; color: #4ade80; font-size: .65rem; }
-        .output-block pre {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: .8rem;
-            color: #94a3b8;
-            line-height: 1.7;
-            overflow-x: auto;
-            padding: .9rem 1.1rem;
-        }
-        .output-block pre .grn { color: #4ade80; font-weight: 600; }
-        .output-block pre .ylw { color: #fde68a; }
-        .output-block pre .blu { color: #7dd3fc; }
-        .output-block pre .red { color: #f87171; font-weight: 600; }
-        .output-block pre .sep { color: #334155; }
-        .output-block pre .hdr { color: #c084fc; font-weight: 600; }
-
-        /* Result tables */
-        .result-table-wrap { overflow-x: auto; margin: .6rem 0 1rem; }
-        .result-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-        .result-table th { background: var(--navy); color: white; padding: .55rem .9rem; text-align: center; font-weight: 600; }
-        .result-table td { padding: .5rem .9rem; text-align: center; border-bottom: 1px solid var(--border); color: #374151; }
-        .result-table tr:nth-child(even) td { background: #f8fafc; }
-        .result-table .fill    { color: #94a3b8; font-style: italic; font-size: .8rem; }
-        .result-table .tag-col { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--navy); }
+        .callout-title   { display: block; margin-bottom: 0.2rem; font-weight: 600; }
 
         /* Metric boxes */
-        .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: .7rem 0; }
-        .metric-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: .9rem 1rem; text-align: center; }
-        .metric-label { font-size: .72rem; color: #64748b; margin-bottom: .3rem; letter-spacing: .04em; }
-        .metric-val   { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 500; color: var(--navy); }
+        .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        .metric-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1rem; text-align: center; }
+        .metric-label { font-size: 0.72rem; color: #64748b; margin-bottom: 0.3rem; letter-spacing: 0.04em; }
+        .metric-val   { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 500; color: var(--navy); }
 
         /* Script overview */
         .script-overview {
             background: #f1f5f9;
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: .9rem 1.1rem;
-            margin: .5rem 0 1rem;
-            display: flex; gap: 1rem; align-items: flex-start;
+            padding: 0.9rem 1.1rem;
+            margin: 0.8rem 0;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
         }
-        .script-overview-icon { font-size: 1.4rem; flex-shrink: 0; }
+        .script-overview-icon { font-size: 1.3rem; flex-shrink: 0; }
         .script-overview-body { flex: 1; }
-        .script-overview-body strong { font-size: .88rem; color: var(--navy); display: block; margin-bottom: .3rem; }
-        .script-steps { list-style: none; margin: .5rem 0 0; }
+        .script-overview-body strong { font-size: 0.88rem; color: var(--navy); display: block; margin-bottom: 0.3rem; }
+        .script-steps { list-style: none; padding: 0; margin: 0.4rem 0 0; }
         .script-steps li {
-            font-size: .82rem; color: #374151;
-            padding: .15rem 0;
-            display: flex; gap: .5rem; align-items: center;
+            font-size: 0.82rem;
+            color: #374151;
+            padding: 0.15rem 0 0.15rem 1.2rem;
+            position: relative;
         }
         .script-steps li::before {
             content: '';
-            display: inline-block;
-            width: 6px; height: 6px;
+            position: absolute;
+            left: 0;
+            top: 0.55rem;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: var(--blue);
-            flex-shrink: 0;
         }
 
-        /* Questions */
-        .question-list { display: flex; flex-direction: column; gap: .7rem; }
-        .question-item { background: white; border: 1px solid var(--border); border-radius: 6px; padding: .9rem 1.2rem; }
-        .question-item .q    { font-size: .88rem; font-weight: 600; color: var(--navy); margin-bottom: .35rem; }
-        .question-item .hint { font-size: .8rem; color: #64748b; }
+        /* Question list */
+        .question-list { display: flex; flex-direction: column; gap: 0.7rem; }
+        .question-item { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.2rem; }
+        .question-item .q    { font-size: 0.88rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem; }
+        .question-item .hint { font-size: 0.8rem; color: #64748b; }
 
         /* Navigation */
         .nav-between { display: flex; justify-content: space-between; margin-top: 2rem; }
         .nav-btn {
-            font-size: .82rem;
+            font-size: 0.82rem;
             color: var(--blue);
             text-decoration: none;
-            padding: .45em 1em;
+            padding: 0.45em 1em;
             border: 1px solid var(--border);
             border-radius: 5px;
             background: white;
-            transition: background .15s, border-color .15s;
+            transition: background 0.15s, border-color 0.15s;
         }
         .nav-btn:hover { background: #eff6ff; border-color: var(--blue); }
 
-        /* Section label */
-        .section-label {
-            font-size: .75rem;
-            font-weight: 700;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: #94a3b8;
-            margin: 1.8rem 0 .8rem;
-            padding-bottom: .4rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        footer { text-align: center; color: #94a3b8; font-size: .8rem; padding: 2rem 0; }
+        footer { text-align: center; color: #94a3b8; font-size: 0.8rem; padding: 2rem 0; }
 
         @media (max-width: 640px) {
             .container { padding: 1rem; }
             header h1  { font-size: 1.3rem; }
+            section    { padding: 1rem 1.2rem; }
+            pre        { font-size: 0.75rem; padding: 0.8rem; }
             .metric-row { grid-template-columns: 1fr 1fr; }
         }
     </style>
@@ -251,54 +241,70 @@
 
 <header>
     <div class="container">
-        <a class="back-link" href="index.html">← 목록으로</a>
         <h1>실습 1: 쓰기 제약 및 기본 성능 비교</h1>
         <p>Sequential Write 처리량 비교 · Random Write 위반 에러 체득</p>
+        <span class="badge">2026-1 시스템최신기술</span>
     </div>
 </header>
 
 <div class="container">
 
-    <div class="card">
-        <h2>실습 목표</h2>
-        <p>Conventional SSD(<code>/dev/nullb0</code>)와 ZNS 장치(<code>/dev/nullb1</code>)에 <strong>동일한 순차 쓰기</strong>를 수행하여 처리량(Throughput)을 비교합니다.</p>
-        <p>이어서 ZNS 장치에 <strong>임의 쓰기(Random Write)</strong>를 시도하여 Write Pointer 위반 에러가 발생하는 것을 직접 확인하고, ZNS의 쓰기 제약 조건을 체득합니다.</p>
-        <div class="metric-row">
-            <div class="metric-box"><div class="metric-label">Step 1.1</div><div class="metric-val" style="font-size:.88rem;">Sequential Write</div></div>
-            <div class="metric-box"><div class="metric-label">Step 1.2</div><div class="metric-val" style="font-size:.88rem;">Random Write 위반</div></div>
-            <div class="metric-box"><div class="metric-label">비교 대상</div><div class="metric-val" style="font-size:.88rem;">Conv vs ZNS</div></div>
+<a class="back-link" href="index.html">← 목록으로</a>
+
+<nav class="toc">
+    <h2>목차</h2>
+    <ol>
+        <li><a href="#s1">실습 목표</a></li>
+        <li><a href="#s2">Step 1.1 — 순차 쓰기 처리량 비교</a></li>
+        <li><a href="#s3">Step 1.2 — Random Write 제약 확인</a></li>
+        <li><a href="#s4">분석 질문</a></li>
+    </ol>
+</nav>
+
+<!-- ── s1: 실습 목표 ── -->
+<section id="s1">
+    <h2>실습 목표</h2>
+    <p>Conventional SSD(<code>/dev/nullb0</code>)와 ZNS 장치(<code>/dev/nullb1</code>)에 <strong>동일한 순차 쓰기</strong>를 수행하여 처리량(Throughput)을 비교합니다.</p>
+    <p>이어서 ZNS 장치에 <strong>임의 쓰기(Random Write)</strong>를 시도하여 Write Pointer 위반 에러가 발생하는 것을 직접 확인하고, ZNS의 쓰기 제약 조건을 체득합니다.</p>
+    <div class="metric-row">
+        <div class="metric-box">
+            <div class="metric-label">Step 1.1</div>
+            <div class="metric-val">Sequential Write</div>
+        </div>
+        <div class="metric-box">
+            <div class="metric-label">Step 1.2</div>
+            <div class="metric-val">Random Write 위반</div>
+        </div>
+        <div class="metric-box">
+            <div class="metric-label">비교 대상</div>
+            <div class="metric-val">Conv vs ZNS</div>
+        </div>
+    </div>
+</section>
+
+<!-- ── s2: Step 1.1 ── -->
+<section id="s2">
+    <h2>Step 1.1 — 순차 쓰기 처리량 비교</h2>
+
+    <h3>통합 벤치마크 실행 <code>bench_seqwrite.sh</code></h3>
+    <p>ZNS Zone 초기화 후 두 장치에 순차 쓰기를 수행하고 Bandwidth · Latency를 비교 출력합니다. <code>/dev/nullb1</code>은 <code>zonemode=zbd</code>로, <code>/dev/nullb0</code>은 일반 write로 실행됩니다.</p>
+
+    <div class="script-overview">
+        <div class="script-overview-icon">🗂️</div>
+        <div class="script-overview-body">
+            <strong>bench_seqwrite.sh 동작 순서</strong>
+            <ul class="script-steps">
+                <li>ZNS Zone 초기화 — <code>blkzone reset /dev/nullb1</code></li>
+                <li>ZNS 순차 쓰기 — <code>fio zonemode=zbd rw=write</code> → <code>/tmp/fio_zns_seq.log</code></li>
+                <li>Conventional SSD 순차 쓰기 — <code>fio rw=write /dev/nullb0</code> → <code>/tmp/fio_conv_seq.log</code></li>
+                <li>BW / Latency 자동 파싱 후 비교표 출력</li>
+            </ul>
         </div>
     </div>
 
-    <!-- ── STEP 1.1 ── -->
-    <div class="section-label">Step 1.1 — 순차 쓰기 처리량 비교</div>
-
-    <div class="step-flow">
-        <div class="step-entry">
-
-            <div class="step-body">
-                <h3>통합 벤치마크 실행 <code style="font-size:.75em; margin-left:.4rem;">bench_seqwrite.sh</code></h3>
-                <p>ZNS Zone 초기화 후 두 장치에 순차 쓰기를 수행하고 Bandwidth · Latency를 비교 출력합니다. <code>/dev/nullb1</code>은 <code>zonemode=zbd</code>로, <code>/dev/nullb0</code>은 일반 write로 실행됩니다.</p>
-
-                <div class="script-overview">
-                    <div class="script-overview-icon">🗂️</div>
-                    <div class="script-overview-body">
-                        <strong>bench_seqwrite.sh 동작 순서</strong>
-                        <ul class="script-steps">
-                            <li>ZNS Zone 초기화 — <code>blkzone reset /dev/nullb0</code></li>
-                            <li>ZNS 순차 쓰기 — <code>fio zonemode=zbd rw=write</code> → <code>/tmp/fio_zns_seq.log</code></li>
-                            <li>Conventional SSD 순차 쓰기 — <code>fio rw=write /dev/nullb0</code> → <code>/tmp/fio_conv_seq.log</code></li>
-                            <li>BW / Latency 자동 파싱 후 비교표 출력</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span><span class="file-badge">bench_seqwrite.sh</span></span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
+    <div class="code-block">
+        <div class="code-label"><span class="file-badge">bench_seqwrite.sh</span></div>
+        <pre><code><span class="comment">#!/usr/bin/env bash
 # bench_seqwrite.sh — sequential write throughput comparison (ZNS vs Conventional)
 # usage: sudo bash bench_seqwrite.sh
 </span>
@@ -330,7 +336,7 @@ sudo fio \
   --size=<span class="str">"${SIZE}"</span> \
   --numjobs=1 \
   --group_reporting \
-  --output-format=normal &gt;/tmp/fio_zns_seq.log 2>&amp;1
+  --output-format=normal &gt;/tmp/fio_zns_seq.log 2&gt;&amp;1
 
 ZNS_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
 ZNS_LAT=$(grep -oP <span class="str">'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
@@ -349,7 +355,7 @@ sudo fio \
   --size=<span class="str">"${SIZE}"</span> \
   --numjobs=1 \
   --group_reporting \
-  --output-format=normal &gt;/tmp/fio_conv_seq.log 2>&amp;1
+  --output-format=normal &gt;/tmp/fio_conv_seq.log 2&gt;&amp;1
 
 CONV_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
 CONV_LAT=$(grep -oP <span class="str">'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
@@ -360,30 +366,23 @@ printf <span class="str">'[4/4] Result summary\n'</span>
 sep
 printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Device"</span> <span class="str">"Bandwidth"</span> <span class="str">"Avg clat"</span>
 sep
-printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"ZNS (nullb1)"</span>   <span class="str">"${ZNS_BW}"</span>  <span class="str">"${ZNS_LAT} us"</span>
-printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Conv (nullb0)"</span> <span class="str">"${CONV_BW}"</span> <span class="str">"${CONV_LAT} us"</span>
-sep
-printf <span class="str">'\nDone. Record the values in the result table.\n'</span></code></pre>
-                </div>
+printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"ZNS (nullb1)"</span>  <span class="str">"${ZNS_BW}"</span>  <span class="str">"${ZNS_LAT} us"</span>
+printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Conv (nullb0)"</span> <span class="str">"${CONV_BW}"</span> <span class="str">"${CONV_LAT} us"</span></code></pre>
+    </div>
 
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>scp -P 2222 bench_seqwrite.sh user@localhost:~/</code></pre>
-                </div>
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>chmod +x bench_seqwrite.sh &amp;&amp; sudo bash bench_seqwrite.sh</code></pre>
-                </div>
+    <div class="code-block">
+        <div class="code-label">bash — 호스트에서 파일 전송</div>
+        <pre><code>scp -P 2222 bench_seqwrite.sh user@localhost:~/</code></pre>
+    </div>
 
-                <div class="output-block">
-                    <div class="output-label">Expected output</div>
-                    <pre><span class="hdr">[1/4] Initializing ZNS zones...</span>
+    <div class="code-block">
+        <div class="code-label">bash — QEMU VM 내부</div>
+        <pre><code>chmod +x bench_seqwrite.sh &amp;&amp; sudo bash bench_seqwrite.sh</code></pre>
+    </div>
+
+    <div class="code-block">
+        <div class="code-label">Expected output</div>
+        <pre><code><span class="hdr">[1/4] Initializing ZNS zones...</span>
       done — all zones EMPTY
 
 <span class="hdr">[2/4] ZNS sequential write (iodepth=4)...</span>
@@ -398,62 +397,52 @@ printf <span class="str">'\nDone. Record the values in the result table.\n'</spa
 <span class="sep">────────────────────────────────────────────────────</span>
   <span class="grn">ZNS (nullb1)      1079MiB/s           213.38 us</span>
   <span class="blu">Conv (nullb0)     1122MiB/s           168.83 us</span>
-<span class="sep">────────────────────────────────────────────────────</span>
-                </div>
+<span class="sep">────────────────────────────────────────────────────</span></code></pre>
+    </div>
 
-                <div class="callout callout-info">
-                    순차 쓰기에서는 ZNS와 Conventional의 처리량이 유사합니다. ZNS의 이점은 내부 GC 부재로 인한 <strong>일관된 성능(꼬리 지연 없음)</strong>에서 드러납니다.
-                </div>
-            </div>
+    <div class="callout callout-info">
+        순차 쓰기에서는 ZNS와 Conventional의 처리량이 유사합니다. ZNS의 이점은 내부 GC 부재로 인한 <strong>일관된 성능(꼬리 지연 없음)</strong>에서 드러납니다.
+    </div>
+
+    <h3>결과 기록표 — Sequential Write 비교</h3>
+    <table>
+        <thead>
+            <tr><th>장치</th><th>Bandwidth (MB/s)</th><th>Avg clat (µs)</th><th>비고</th></tr>
+        </thead>
+        <tbody>
+            <tr><td class="tag-col">ZNS (/dev/nullb1)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">zonemode=zbd</td></tr>
+            <tr><td class="tag-col">Conventional SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">일반 write</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ── s3: Step 1.2 ── -->
+<section id="s3">
+    <h2>Step 1.2 — Random Write 제약 확인</h2>
+
+    <h3>통합 벤치마크 실행 <code>bench_randwrite.sh</code></h3>
+    <p>ZNS 장치에 <code>zonemode=none</code>으로 Random Write를 시도하여 Write Pointer 위반 에러를 유발하고, Conventional 장치에서 동일 Random Write가 정상 동작함을 한 번에 비교합니다.</p>
+
+    <div class="callout callout-warn">
+        이 실험은 <strong>의도적으로 에러를 유발</strong>합니다. 에러 발생이 정상적인 결과입니다. 장치 손상은 없습니다.
+    </div>
+
+    <div class="script-overview">
+        <div class="script-overview-icon">🗂️</div>
+        <div class="script-overview-body">
+            <strong>bench_randwrite.sh 동작 순서</strong>
+            <ul class="script-steps">
+                <li>ZNS Zone 초기화 후 <code>zonemode=none randwrite</code> 시도 → 에러 캡처</li>
+                <li><code>dmesg</code>에서 Write Pointer 위반 로그 확인</li>
+                <li>Conventional 장치에 동일 Random Write → 정상 동작 확인</li>
+                <li>두 결과 나란히 출력</li>
+            </ul>
         </div>
     </div>
 
-    <div class="card">
-        <h2>결과 기록표 — Sequential Write 비교</h2>
-        <div class="result-table-wrap">
-            <table class="result-table">
-                <thead><tr><th>장치</th><th>Bandwidth (MB/s)</th><th>Avg clat (µs)</th><th>비고</th></tr></thead>
-                <tbody>
-                    <tr><td class="tag-col">ZNS (/dev/nullb1)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">zonemode=zbd</td></tr>
-                    <tr><td class="tag-col">Conventional SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">일반 write</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ── STEP 1.2 ── -->
-    <div class="section-label">Step 1.2 — Random Write 제약 확인</div>
-
-    <div class="step-flow">
-        <div class="step-entry">
-
-            <div class="step-body">
-                <h3>통합 벤치마크 실행 <code style="font-size:.75em; margin-left:.4rem;">bench_randwrite.sh</code></h3>
-                <p>ZNS 장치에 <code>zonemode=none</code>으로 Random Write를 시도하여 Write Pointer 위반 에러를 유발하고, Conventional 장치에서 동일 Random Write가 정상 동작함을 한 번에 비교합니다.</p>
-
-                <div class="callout callout-danger">
-                    이 실험은 <strong>의도적으로 에러를 유발</strong>합니다. 에러 발생이 정상적인 결과입니다. 장치 손상은 없습니다.
-                </div>
-
-                <div class="script-overview">
-                    <div class="script-overview-icon">🗂️</div>
-                    <div class="script-overview-body">
-                        <strong>bench_randwrite.sh 동작 순서</strong>
-                        <ul class="script-steps">
-                            <li>ZNS Zone 초기화 후 <code>zonemode=none randwrite</code> 시도 → 에러 캡처</li>
-                            <li><code>dmesg</code>에서 Write Pointer 위반 로그 확인</li>
-                            <li>Conventional 장치에 동일 Random Write → 정상 동작 확인</li>
-                            <li>두 결과 나란히 출력</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span><span class="file-badge">bench_randwrite.sh</span></span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
+    <div class="code-block">
+        <div class="code-label"><span class="file-badge">bench_randwrite.sh</span></div>
+        <pre><code><span class="comment">#!/usr/bin/env bash
 # bench_randwrite.sh — ZNS random write constraint verification
 # usage: sudo bash bench_randwrite.sh
 </span>
@@ -478,7 +467,7 @@ sudo fio \
   --iodepth=1 \
   --size=64m \
   --numjobs=1 \
-  --output-format=normal 2>&amp;1 | tee /tmp/fio_zns_rand.log \
+  --output-format=normal 2&gt;&amp;1 | tee /tmp/fio_zns_rand.log \
   | grep -iE <span class="str">'error|invalid|io_u'</span> || true
 
 ZNS_ERR=$(grep -oP <span class="str">'io_u error[^:]*: \K.+'</span> /tmp/fio_zns_rand.log \
@@ -502,7 +491,7 @@ sudo fio \
   --iodepth=1 \
   --size=64m \
   --numjobs=1 \
-  --output-format=normal &gt;/tmp/fio_conv_rand.log 2>&amp;1
+  --output-format=normal &gt;/tmp/fio_conv_rand.log 2&gt;&amp;1
 
 CONV_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_conv_rand.log | head -1 || echo <span class="str">'N/A'</span>)
 printf <span class="str">'      CONV BW=%s\n\n'</span> <span class="str">"${CONV_BW}"</span>
@@ -511,29 +500,24 @@ printf <span class="str">'      CONV BW=%s\n\n'</span> <span class="str">"${CONV
 sep
 printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"Device"</span> <span class="str">"Random Write Result"</span>
 sep
-printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"ZNS (nullb1)"</span>   <span class="str">"FAIL: ${ZNS_ERR}"</span>
+printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"ZNS (nullb1)"</span>  <span class="str">"FAIL: ${ZNS_ERR}"</span>
 printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"Conv (nullb0)"</span> <span class="str">"OK:   BW=${CONV_BW}"</span>
 sep</code></pre>
-                </div>
+    </div>
 
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>scp -P 2222 bench_randwrite.sh user@localhost:~/</code></pre>
-                </div>
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>chmod +x bench_randwrite.sh &amp;&amp; sudo bash bench_randwrite.sh</code></pre>
-                </div>
+    <div class="code-block">
+        <div class="code-label">bash — 호스트에서 파일 전송</div>
+        <pre><code>scp -P 2222 bench_randwrite.sh user@localhost:~/</code></pre>
+    </div>
 
-                <div class="output-block">
-                    <div class="output-label">Expected output</div>
-                    <pre><span class="hdr">[1/3] Resetting ZNS zones, attempting random write...</span>
+    <div class="code-block">
+        <div class="code-label">bash — QEMU VM 내부</div>
+        <pre><code>chmod +x bench_randwrite.sh &amp;&amp; sudo bash bench_randwrite.sh</code></pre>
+    </div>
+
+    <div class="code-block">
+        <div class="code-label">Expected output</div>
+        <pre><code><span class="hdr">[1/3] Resetting ZNS zones, attempting random write...</span>
 <span class="red">fio: io_u error on file /dev/nullb1: Input/output error: write offset=65564672, buflen=4096</span>
 <span class="red">fio: pid=1146, err=5/file:io_u.c:2018, func=io_u error, error=Input/output error</span>
 <span class="red">zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, error=Input/output error): pid=1146: ...</span>
@@ -552,75 +536,51 @@ sep</code></pre>
 <span class="sep">────────────────────────────────────────────────────</span>
   <span class="red">ZNS (nullb1)      FAIL: Input/output error: write offset=65564672, buflen=4096</span>
   <span class="grn">Conv (nullb0)     OK:   BW=561MiB/s</span>
-<span class="sep">────────────────────────────────────────────────────</span></pre>
-                </div>
+<span class="sep">────────────────────────────────────────────────────</span></code></pre>
+    </div>
 
-                <div class="callout callout-warn">
-                    <code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 <strong>-EIO</strong>(err=5) 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.
-                </div>
-            </div>
+    <div class="callout callout-warn">
+        <code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 <strong>-EIO</strong>(err=5) 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.
+    </div>
+
+    <h3>결과 기록표 — Random Write 제약 확인</h3>
+    <table>
+        <thead>
+            <tr><th>장치</th><th>Random Write 결과</th><th>에러 메시지</th></tr>
+        </thead>
+        <tbody>
+            <tr><td class="tag-col">ZNS (/dev/nullb1)</td><td class="fill">기록하세요</td><td class="fill">에러 내용 기록</td></tr>
+            <tr><td class="tag-col">Conventional SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">정상 / N/A</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ── s4: 분석 질문 ── -->
+<section id="s4">
+    <h2>분석 질문</h2>
+    <div class="question-list">
+        <div class="question-item">
+            <div class="q">Q1. 순차 쓰기에서 ZNS와 Conventional SSD의 처리량 차이가 작은 이유는 무엇일까요?</div>
+            <div class="hint">힌트: null_blk은 메모리 기반 에뮬레이터입니다. 실제 낸드 플래시 기반 SSD에서는 GC 개입 여부가 차이를 만듭니다.</div>
+        </div>
+        <div class="question-item">
+            <div class="q">Q2. ZNS에서 Random Write를 허용하지 않는 이유는 무엇일까요? (낸드 플래시 물리 구조와 연관지어 설명하세요)</div>
+            <div class="hint">힌트: 낸드 플래시는 Erase Block 단위로만 초기화가 가능합니다. 임의 쓰기를 허용하면 내부적으로 어떤 작업이 필요할까요?</div>
+        </div>
+        <div class="question-item">
+            <div class="q">Q3. ZNS에서 기존 애플리케이션이 Random Write를 수행해야 한다면 어떤 소프트웨어 계층이 이를 처리해줄 수 있을까요?</div>
+            <div class="hint">힌트: 강의 슬라이드의 Linux Zoned Storage Support 다이어그램에서 dm-zoned와 F2FS의 역할을 확인하세요.</div>
         </div>
     </div>
+</section>
 
-    <div class="card">
-        <h2>결과 기록표 — Random Write 제약 확인</h2>
-        <div class="result-table-wrap">
-            <table class="result-table">
-                <thead><tr><th>장치</th><th>Random Write 결과</th><th>에러 메시지</th></tr></thead>
-                <tbody>
-                    <tr><td class="tag-col">ZNS (/dev/nullb1)</td><td class="fill">기록하세요</td><td class="fill">에러 내용 기록</td></tr>
-                    <tr><td class="tag-col">Conventional SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">정상 / N/A</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+<div class="nav-between">
+    <a class="nav-btn" href="index.html">← 목록으로</a>
+    <a class="nav-btn" href="lab2.html">실습 2 →</a>
+</div>
 
-    <div class="section-label">분석 질문</div>
-    <div class="card">
-        <h2>생각해보기</h2>
-        <div class="question-list">
-            <div class="question-item">
-                <div class="q">Q1. 순차 쓰기에서 ZNS와 Conventional SSD의 처리량 차이가 작은 이유는 무엇일까요?</div>
-                <div class="hint">힌트: null_blk은 메모리 기반 에뮬레이터입니다. 실제 낸드 플래시 기반 SSD에서는 GC 개입 여부가 차이를 만듭니다.</div>
-            </div>
-            <div class="question-item">
-                <div class="q">Q2. ZNS에서 Random Write를 허용하지 않는 이유는 무엇일까요? (낸드 플래시 물리 구조와 연관지어 설명하세요)</div>
-                <div class="hint">힌트: 낸드 플래시는 Erase Block 단위로만 초기화가 가능합니다. 임의 쓰기를 허용하면 내부적으로 어떤 작업이 필요할까요?</div>
-            </div>
-            <div class="question-item">
-                <div class="q">Q3. ZNS에서 기존 애플리케이션이 Random Write를 수행해야 한다면 어떤 소프트웨어 계층이 이를 처리해줄 수 있을까요?</div>
-                <div class="hint">힌트: 강의 슬라이드의 Linux Zoned Storage Support 다이어그램에서 dm-zoned와 F2FS의 역할을 확인하세요.</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="nav-between">
-        <a class="nav-btn" href="index.html">← 목록으로</a>
-        <a class="nav-btn" href="lab2.html">실습 2 →</a>
-    </div>
 </div>
 
 <footer><p>시스템최신기술 &middot; ZNS SSD 성능 비교 실습</p></footer>
-
-<script>
-function copyCode(btn) {
-    const pre = btn.closest('.code-block').querySelector('pre');
-    const tmp = document.createElement('div');
-    tmp.innerHTML = pre.innerHTML;
-    const text = (tmp.innerText || tmp.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(() => flash(btn)).catch(() => fallback(text, btn));
-    } else { fallback(text, btn); }
-}
-function fallback(text, btn) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try { document.execCommand('copy') ? flash(btn) : err(btn); } catch(e) { err(btn); }
-    finally { document.body.removeChild(ta); }
-}
-function flash(btn) { btn.textContent='copied!'; btn.style.color='#4ade80'; setTimeout(()=>{btn.textContent='copy';btn.style.color='';},1800); }
-function err(btn)   { btn.textContent='failed';  btn.style.color='#f87171'; setTimeout(()=>{btn.textContent='copy';btn.style.color='';},1800); }
-</script>
 </body>
 </html>
