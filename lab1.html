@@ -14,7 +14,7 @@
             --light:   #f7f9fc;
             --border:  #e2e8f0;
             --code-bg: #1e293b;
-            --code-fg: #e2e8f0;
+            --code-fg: #ffffff;
             --success: #16a34a;
             --warn:    #d97706;
             --info:    #2563eb;
@@ -93,7 +93,7 @@
             font-size: 0.82rem;
             line-height: 1.6;
         }
-        pre code { font-family: 'JetBrains Mono', monospace; background: none; padding: 0; font-size: inherit; }
+        pre code { font-family: 'JetBrains Mono', monospace; background: none; padding: 0; font-size: inherit; color: #ffffff; }
         code {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.85em;
@@ -117,6 +117,20 @@
             gap: 0.5rem;
         }
         .code-block pre { border-radius: 0 0 6px 6px; margin: 0; }
+        .copy-btn {
+            margin-left: auto;
+            background: none;
+            border: 1px solid #4a5568;
+            color: #a0aec0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            padding: 0.15em 0.6em;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .copy-btn:hover { background: #4a5568; color: #e2e8f0; }
+        .copy-btn.copied { border-color: var(--success); color: #4ade80; }
 
         /* File badge */
         .file-badge {
@@ -132,20 +146,6 @@
             border: 1px solid #2d5a8a;
         }
         .file-badge::before { content: '📄'; font-size: 0.8em; }
-
-        /* Syntax highlight */
-        .comment { color: #6b7a99; }
-        .kw      { color: #79c0ff; }
-        .str     { color: #a5d6a7; }
-        .fn      { color: #d2a8ff; }
-
-        /* Output colors */
-        .grn { color: #4ade80; font-weight: 600; }
-        .ylw { color: #fde68a; }
-        .blu { color: #7dd3fc; }
-        .red { color: #f87171; font-weight: 600; }
-        .sep { color: #334155; }
-        .hdr { color: #c084fc; font-weight: 600; }
 
         /* Tables */
         table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.85rem; }
@@ -243,7 +243,6 @@
     <div class="container">
         <h1>실습 1: 쓰기 제약 및 기본 성능 비교</h1>
         <p>Sequential Write 처리량 비교 · Random Write 위반 에러 체득</p>
-        <span class="badge">2026-1 시스템최신기술</span>
     </div>
 </header>
 
@@ -255,8 +254,8 @@
     <h2>목차</h2>
     <ol>
         <li><a href="#s1">실습 목표</a></li>
-        <li><a href="#s2">Step 1.1 — 순차 쓰기 처리량 비교</a></li>
-        <li><a href="#s3">Step 1.2 — Random Write 제약 확인</a></li>
+        <li><a href="#s2">순차 쓰기 처리량 비교</a></li>
+        <li><a href="#s3">Random Write 제약 확인</a></li>
         <li><a href="#s4">분석 질문</a></li>
     </ol>
 </nav>
@@ -268,15 +267,12 @@
     <p>이어서 ZNS 장치에 <strong>임의 쓰기(Random Write)</strong>를 시도하여 Write Pointer 위반 에러가 발생하는 것을 직접 확인하고, ZNS의 쓰기 제약 조건을 체득합니다.</p>
     <div class="metric-row">
         <div class="metric-box">
-            <div class="metric-label">Step 1.1</div>
             <div class="metric-val">Sequential Write</div>
         </div>
         <div class="metric-box">
-            <div class="metric-label">Step 1.2</div>
             <div class="metric-val">Random Write 위반</div>
         </div>
         <div class="metric-box">
-            <div class="metric-label">비교 대상</div>
             <div class="metric-val">Conv vs ZNS</div>
         </div>
     </div>
@@ -284,13 +280,11 @@
 
 <!-- ── s2: Step 1.1 ── -->
 <section id="s2">
-    <h2>Step 1.1 — 순차 쓰기 처리량 비교</h2>
+    <h2>순차 쓰기 처리량 비교</h2>
 
-    <h3>통합 벤치마크 실행 <code>bench_seqwrite.sh</code></h3>
     <p>ZNS Zone 초기화 후 두 장치에 순차 쓰기를 수행하고 Bandwidth · Latency를 비교 출력합니다. <code>/dev/nullb1</code>은 <code>zonemode=zbd</code>로, <code>/dev/nullb0</code>은 일반 write로 실행됩니다.</p>
 
     <div class="script-overview">
-        <div class="script-overview-icon">🗂️</div>
         <div class="script-overview-body">
             <strong>bench_seqwrite.sh 동작 순서</strong>
             <ul class="script-steps">
@@ -303,124 +297,112 @@
     </div>
 
     <div class="code-block">
-        <div class="code-label"><span class="file-badge">bench_seqwrite.sh</span></div>
-        <pre><code><span class="comment">#!/usr/bin/env bash
+        <div class="code-label">bench_seqwrite.sh<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <pre><code>#!/usr/bin/env bash
 # bench_seqwrite.sh — sequential write throughput comparison (ZNS vs Conventional)
 # usage: sudo bash bench_seqwrite.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-ZNS_DEV=<span class="str">/dev/nullb1</span>
-CONV_DEV=<span class="str">/dev/nullb0</span>
-SIZE=<span class="str">1g</span>
-BS=<span class="str">64k</span>
-QD=<span class="str">4</span>
 
-<span class="fn">sep()</span> { printf <span class="str">'%s\n'</span> <span class="str">"$(printf '─%.0s' {1..52})"</span>; }
+set -euo pipefail
+ZNS_DEV=/dev/nullb1
+CONV_DEV=/dev/nullb0
+SIZE=1g
+BS=64k
+QD=4
 
-<span class="comment"># ── 1) reset ZNS zones ───────────────────────────────</span>
-printf <span class="str">'[1/4] Initializing ZNS zones...\n'</span>
-sudo blkzone reset <span class="str">"${ZNS_DEV}"</span>
-printf <span class="str">'      done — all zones EMPTY\n\n'</span>
+sep() { printf '%s\n' "$(printf '─%.0s' {1..52})"; }
 
-<span class="comment"># ── 2) ZNS sequential write ──────────────────────────</span>
-printf <span class="str">'[2/4] ZNS sequential write (iodepth=%s)...\n'</span> <span class="str">"${QD}"</span>
+# ── 1) reset ZNS zones ───────────────────────────────
+printf '[1/4] Initializing ZNS zones...\n'
+sudo blkzone reset "${ZNS_DEV}"
+printf '      done — all zones EMPTY\n\n'
+
+# ── 2) ZNS sequential write ──────────────────────────
+printf '[2/4] ZNS sequential write (iodepth=%s)...\n' "${QD}"
 sudo fio \
   --name=zns_seqwrite \
-  --filename=<span class="str">"${ZNS_DEV}"</span> \
+  --filename="${ZNS_DEV}" \
   --ioengine=libaio \
   --direct=1 \
   --zonemode=zbd \
   --rw=write \
-  --bs=<span class="str">"${BS}"</span> \
-  --iodepth=<span class="str">"${QD}"</span> \
-  --size=<span class="str">"${SIZE}"</span> \
+  --bs="${BS}" \
+  --iodepth="${QD}" \
+  --size="${SIZE}" \
   --numjobs=1 \
   --group_reporting \
   --output-format=normal &gt;/tmp/fio_zns_seq.log 2&gt;&amp;1
 
-ZNS_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
-ZNS_LAT=$(grep -oP <span class="str">'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_zns_seq.log | head -1 || echo <span class="str">'N/A'</span>)
-printf <span class="str">'      ZNS  BW=%s  cLat=%s us\n\n'</span> <span class="str">"${ZNS_BW}"</span> <span class="str">"${ZNS_LAT}"</span>
+ZNS_BW=$(grep -oP '(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s' /tmp/fio_zns_seq.log | head -1 || echo 'N/A')
+ZNS_LAT=$(grep -oP 'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?' /tmp/fio_zns_seq.log | head -1 || echo 'N/A')
+printf '      ZNS  BW=%s  cLat=%s us\n\n' "${ZNS_BW}" "${ZNS_LAT}"
 
-<span class="comment"># ── 3) Conventional sequential write ─────────────────</span>
-printf <span class="str">'[3/4] Conventional sequential write (iodepth=%s)...\n'</span> <span class="str">"${QD}"</span>
+# ── 3) Conventional sequential write ─────────────────
+printf '[3/4] Conventional sequential write (iodepth=%s)...\n' "${QD}"
 sudo fio \
   --name=conv_seqwrite \
-  --filename=<span class="str">"${CONV_DEV}"</span> \
+  --filename="${CONV_DEV}" \
   --ioengine=libaio \
   --direct=1 \
   --rw=write \
-  --bs=<span class="str">"${BS}"</span> \
-  --iodepth=<span class="str">"${QD}"</span> \
-  --size=<span class="str">"${SIZE}"</span> \
+  --bs="${BS}" \
+  --iodepth="${QD}" \
+  --size="${SIZE}" \
   --numjobs=1 \
   --group_reporting \
   --output-format=normal &gt;/tmp/fio_conv_seq.log 2&gt;&amp;1
 
-CONV_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
-CONV_LAT=$(grep -oP <span class="str">'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?'</span> /tmp/fio_conv_seq.log | head -1 || echo <span class="str">'N/A'</span>)
-printf <span class="str">'      CONV BW=%s  cLat=%s us\n\n'</span> <span class="str">"${CONV_BW}"</span> <span class="str">"${CONV_LAT}"</span>
+CONV_BW=$(grep -oP '(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s' /tmp/fio_conv_seq.log | head -1 || echo 'N/A')
+CONV_LAT=$(grep -oP 'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?' /tmp/fio_conv_seq.log | head -1 || echo 'N/A')
+printf '      CONV BW=%s  cLat=%s us\n\n' "${CONV_BW}" "${CONV_LAT}"
 
-<span class="comment"># ── 4) result summary ────────────────────────────────</span>
-printf <span class="str">'[4/4] Result summary\n'</span>
+# ── 4) result summary ────────────────────────────────
+printf '[4/4] Result summary\n'
 sep
-printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Device"</span> <span class="str">"Bandwidth"</span> <span class="str">"Avg clat"</span>
+printf '  %-16s  %-18s  %-14s\n' "Device" "Bandwidth" "Avg clat"
 sep
-printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"ZNS (nullb1)"</span>  <span class="str">"${ZNS_BW}"</span>  <span class="str">"${ZNS_LAT} us"</span>
-printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Conv (nullb0)"</span> <span class="str">"${CONV_BW}"</span> <span class="str">"${CONV_LAT} us"</span></code></pre>
+printf '  %-16s  %-18s  %-14s\n' "ZNS (nullb1)"  "${ZNS_BW}"  "${ZNS_LAT} us"
+printf '  %-16s  %-18s  %-14s\n' "Conv (nullb0)" "${CONV_BW}" "${CONV_LAT} us"</code></pre>
     </div>
 
     <div class="code-block">
-        <div class="code-label">bash — 호스트에서 파일 전송</div>
-        <pre><code>scp -P 2222 bench_seqwrite.sh user@localhost:~/</code></pre>
+        <div class="code-label">bash — 벤치마크 파일 생성<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <pre><code>vi bench_seqwrite.sh</code></pre>
     </div>
 
     <div class="code-block">
-        <div class="code-label">bash — QEMU VM 내부</div>
+        <div class="code-label">bash — 파일 권한 부여 및 실행<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
         <pre><code>chmod +x bench_seqwrite.sh &amp;&amp; sudo bash bench_seqwrite.sh</code></pre>
     </div>
 
     <div class="code-block">
         <div class="code-label">Expected output</div>
-        <pre><code><span class="hdr">[1/4] Initializing ZNS zones...</span>
+        <pre><code>[1/4] Initializing ZNS zones...
       done — all zones EMPTY
 
-<span class="hdr">[2/4] ZNS sequential write (iodepth=4)...</span>
+[2/4] ZNS sequential write (iodepth=4)...
       ZNS  BW=1079MiB/s  cLat=213.38 us
 
-<span class="hdr">[3/4] Conventional sequential write (iodepth=4)...</span>
+[3/4] Conventional sequential write (iodepth=4)...
       CONV BW=1122MiB/s  cLat=168.83 us
 
-<span class="hdr">[4/4] Result summary</span>
-<span class="sep">────────────────────────────────────────────────────</span>
+[4/4] Result summary
+────────────────────────────────────────────────────
   Device            Bandwidth           Avg clat
-<span class="sep">────────────────────────────────────────────────────</span>
-  <span class="grn">ZNS (nullb1)      1079MiB/s           213.38 us</span>
-  <span class="blu">Conv (nullb0)     1122MiB/s           168.83 us</span>
-<span class="sep">────────────────────────────────────────────────────</span></code></pre>
+────────────────────────────────────────────────────
+  ZNS (nullb1)      1079MiB/s           213.38 us
+  Conv (nullb0)     1122MiB/s           168.83 us
+────────────────────────────────────────────────────</code></pre>
     </div>
 
     <div class="callout callout-info">
         순차 쓰기에서는 ZNS와 Conventional의 처리량이 유사합니다. ZNS의 이점은 내부 GC 부재로 인한 <strong>일관된 성능(꼬리 지연 없음)</strong>에서 드러납니다.
     </div>
 
-    <h3>결과 기록표 — Sequential Write 비교</h3>
-    <table>
-        <thead>
-            <tr><th>장치</th><th>Bandwidth (MB/s)</th><th>Avg clat (µs)</th><th>비고</th></tr>
-        </thead>
-        <tbody>
-            <tr><td class="tag-col">ZNS (/dev/nullb1)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">zonemode=zbd</td></tr>
-            <tr><td class="tag-col">Conventional SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td><td class="fill">일반 write</td></tr>
-        </tbody>
-    </table>
 </section>
 
-<!-- ── s3: Step 1.2 ── -->
 <section id="s3">
-    <h2>Step 1.2 — Random Write 제약 확인</h2>
+    <h2>Random Write 제약 확인</h2>
 
-    <h3>통합 벤치마크 실행 <code>bench_randwrite.sh</code></h3>
     <p>ZNS 장치에 <code>zonemode=none</code>으로 Random Write를 시도하여 Write Pointer 위반 에러를 유발하고, Conventional 장치에서 동일 Random Write가 정상 동작함을 한 번에 비교합니다.</p>
 
     <div class="callout callout-warn">
@@ -428,7 +410,6 @@ printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Con
     </div>
 
     <div class="script-overview">
-        <div class="script-overview-icon">🗂️</div>
         <div class="script-overview-body">
             <strong>bench_randwrite.sh 동작 순서</strong>
             <ul class="script-steps">
@@ -441,24 +422,24 @@ printf <span class="str">'  %-16s  %-18s  %-14s\n'</span> <span class="str">"Con
     </div>
 
     <div class="code-block">
-        <div class="code-label"><span class="file-badge">bench_randwrite.sh</span></div>
-        <pre><code><span class="comment">#!/usr/bin/env bash
+        <div class="code-label">bench_randwrite.sh<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <pre><code>#!/usr/bin/env bash
 # bench_randwrite.sh — ZNS random write constraint verification
 # usage: sudo bash bench_randwrite.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-ZNS_DEV=<span class="str">/dev/nullb1</span>
-CONV_DEV=<span class="str">/dev/nullb0</span>
 
-<span class="fn">sep()</span> { printf <span class="str">'%s\n'</span> <span class="str">"$(printf '─%.0s' {1..52})"</span>; }
+set -euo pipefail
+ZNS_DEV=/dev/nullb1
+CONV_DEV=/dev/nullb0
 
-<span class="comment"># ── 1) attempt ZNS random write (expects error) ───────</span>
-printf <span class="str">'[1/3] Resetting ZNS zones, attempting random write...\n'</span>
-sudo blkzone reset <span class="str">"${ZNS_DEV}"</span>
+sep() { printf '%s\n' "$(printf '─%.0s' {1..52})"; }
+
+# ── 1) attempt ZNS random write (expects error) ───────
+printf '[1/3] Resetting ZNS zones, attempting random write...\n'
+sudo blkzone reset "${ZNS_DEV}"
 
 sudo fio \
   --name=zns_randwrite \
-  --filename=<span class="str">"${ZNS_DEV}"</span> \
+  --filename="${ZNS_DEV}" \
   --ioengine=libaio \
   --direct=1 \
   --zonemode=none \
@@ -468,22 +449,22 @@ sudo fio \
   --size=64m \
   --numjobs=1 \
   --output-format=normal 2&gt;&amp;1 | tee /tmp/fio_zns_rand.log \
-  | grep -iE <span class="str">'error|invalid|io_u'</span> || true
+  | grep -iE 'error|invalid|io_u' || true
 
-ZNS_ERR=$(grep -oP <span class="str">'io_u error[^:]*: \K.+'</span> /tmp/fio_zns_rand.log \
-          | head -1 || echo <span class="str">'no error captured'</span>)
-printf <span class="str">'      ZNS result: %s\n\n'</span> <span class="str">"${ZNS_ERR}"</span>
+ZNS_ERR=$(grep -oP 'io_u error[^:]*: \K.+' /tmp/fio_zns_rand.log \
+          | head -1 || echo 'no error captured')
+printf '      ZNS result: %s\n\n' "${ZNS_ERR}"
 
-<span class="comment"># ── 2) check kernel error log ────────────────────────</span>
-printf <span class="str">'[2/3] Kernel error log...\n'</span>
-sudo dmesg | tail -n 50 | grep -iE <span class="str">'blk_update_request|nullb1'</span> | grep -iE <span class="str">'error|I/O'</span> || true
-printf <span class="str">'\n'</span>
+# ── 2) check kernel error log ────────────────────────
+printf '[2/3] Kernel error log...\n'
+sudo dmesg | tail -n 50 | grep -iE 'blk_update_request|nullb1' | grep -iE 'error|I/O' || true
+printf '\n'
 
-<span class="comment"># ── 3) Conventional random write (expected OK) ───────</span>
-printf <span class="str">'[3/3] Conventional random write...\n'</span>
+# ── 3) Conventional random write (expected OK) ───────
+printf '[3/3] Conventional random write...\n'
 sudo fio \
   --name=conv_randwrite \
-  --filename=<span class="str">"${CONV_DEV}"</span> \
+  --filename="${CONV_DEV}" \
   --ioengine=libaio \
   --direct=1 \
   --rw=randwrite \
@@ -493,66 +474,56 @@ sudo fio \
   --numjobs=1 \
   --output-format=normal &gt;/tmp/fio_conv_rand.log 2&gt;&amp;1
 
-CONV_BW=$(grep -oP <span class="str">'(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s'</span> /tmp/fio_conv_rand.log | head -1 || echo <span class="str">'N/A'</span>)
-printf <span class="str">'      CONV BW=%s\n\n'</span> <span class="str">"${CONV_BW}"</span>
+CONV_BW=$(grep -oP '(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s' /tmp/fio_conv_rand.log | head -1 || echo 'N/A')
+printf '      CONV BW=%s\n\n' "${CONV_BW}"
 
-<span class="comment"># ── result summary ────────────────────────────────────</span>
+# ── result summary ────────────────────────────────────
 sep
-printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"Device"</span> <span class="str">"Random Write Result"</span>
+printf '  %-16s  %s\n' "Device" "Random Write Result"
 sep
-printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"ZNS (nullb1)"</span>  <span class="str">"FAIL: ${ZNS_ERR}"</span>
-printf <span class="str">'  %-16s  %s\n'</span> <span class="str">"Conv (nullb0)"</span> <span class="str">"OK:   BW=${CONV_BW}"</span>
+printf '  %-16s  %s\n' "ZNS (nullb1)"  "FAIL: ${ZNS_ERR}"
+printf '  %-16s  %s\n' "Conv (nullb0)" "OK:   BW=${CONV_BW}"
 sep</code></pre>
     </div>
 
     <div class="code-block">
-        <div class="code-label">bash — 호스트에서 파일 전송</div>
-        <pre><code>scp -P 2222 bench_randwrite.sh user@localhost:~/</code></pre>
+        <div class="code-label">bash — 벤치마크 파일 생성<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <pre><code>vi bench_randwrite.sh</code></pre>
     </div>
 
     <div class="code-block">
-        <div class="code-label">bash — QEMU VM 내부</div>
+        <div class="code-label">bash — 파일 권한 부여 및 실행<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
         <pre><code>chmod +x bench_randwrite.sh &amp;&amp; sudo bash bench_randwrite.sh</code></pre>
     </div>
 
     <div class="code-block">
         <div class="code-label">Expected output</div>
-        <pre><code><span class="hdr">[1/3] Resetting ZNS zones, attempting random write...</span>
-<span class="red">fio: io_u error on file /dev/nullb1: Input/output error: write offset=65564672, buflen=4096</span>
-<span class="red">fio: pid=1146, err=5/file:io_u.c:2018, func=io_u error, error=Input/output error</span>
-<span class="red">zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, error=Input/output error): pid=1146: ...</span>
+        <pre><code>[1/3] Resetting ZNS zones, attempting random write...
+fio: io_u error on file /dev/nullb1: Input/output error: write offset=65564672, buflen=4096
+fio: pid=1146, err=5/file:io_u.c:2018, func=io_u error, error=Input/output error
+zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, error=Input/output error): pid=1146: ...
       ZNS result: Input/output error: write offset=65564672, buflen=4096
 
-<span class="hdr">[2/3] Kernel error log...</span>
-<span class="red">[  681.573063] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2</span>
-<span class="red">[ 1018.048183] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2</span>
-<span class="red">[ 1089.860865] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2</span>
+[2/3] Kernel error log...
+[  681.573063] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2
+[ 1018.048183] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2
+[ 1089.860865] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2
 
-<span class="hdr">[3/3] Conventional random write...</span>
+[3/3] Conventional random write...
       CONV BW=561MiB/s
 
-<span class="sep">────────────────────────────────────────────────────</span>
+────────────────────────────────────────────────────
   Device            Random Write Result
-<span class="sep">────────────────────────────────────────────────────</span>
-  <span class="red">ZNS (nullb1)      FAIL: Input/output error: write offset=65564672, buflen=4096</span>
-  <span class="grn">Conv (nullb0)     OK:   BW=561MiB/s</span>
-<span class="sep">────────────────────────────────────────────────────</span></code></pre>
+────────────────────────────────────────────────────
+  ZNS (nullb1)      FAIL: Input/output error: write offset=65564672, buflen=4096
+  Conv (nullb0)     OK:   BW=561MiB/s
+────────────────────────────────────────────────────</code></pre>
     </div>
 
     <div class="callout callout-warn">
         <code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 <strong>-EIO</strong>(err=5) 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.
     </div>
 
-    <h3>결과 기록표 — Random Write 제약 확인</h3>
-    <table>
-        <thead>
-            <tr><th>장치</th><th>Random Write 결과</th><th>에러 메시지</th></tr>
-        </thead>
-        <tbody>
-            <tr><td class="tag-col">ZNS (/dev/nullb1)</td><td class="fill">기록하세요</td><td class="fill">에러 내용 기록</td></tr>
-            <tr><td class="tag-col">Conventional SSD (/dev/nullb0)</td><td class="fill">기록하세요</td><td class="fill">정상 / N/A</td></tr>
-        </tbody>
-    </table>
 </section>
 
 <!-- ── s4: 분석 질문 ── -->
@@ -582,5 +553,15 @@ sep</code></pre>
 </div>
 
 <footer><p>시스템최신기술 &middot; ZNS SSD 성능 비교 실습</p></footer>
+<script>
+function copyCode(btn) {
+    const code = btn.closest('.code-block').querySelector('pre code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+        btn.textContent = 'copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+</script>
 </body>
 </html>
