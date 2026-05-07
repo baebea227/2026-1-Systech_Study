@@ -117,16 +117,15 @@
                 <p><code>blkzone report</code>로 모든 Zone의 현재 상태, 시작 LBA, 크기, Write Pointer 위치를 확인합니다.</p>
                 <div class="code-block">
                     <div class="code-block-label"><span>bash — Zone 목록 조회</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
-                    <pre><code># 전체 Zone 목록 (처음 5개)
+                    <pre><code>sudo blkzone reset /dev/nullb1
+                        
 sudo blkzone report /dev/nullb1 | head -5
 
-# Zone 상태별 개수 집계
 sudo blkzone report /dev/nullb1 \
   | grep -oP 'zcond:\s*\d+\s*\(\K\w+' \
   | sort | uniq -c \
   | awk '{printf "  %-8s : %s zones\n", $2, $1}'
 
-# 총 Zone 수 확인
 cat /sys/block/nullb1/queue/nr_zones</code></pre>
                 </div>
                 <div class="output-block">
@@ -134,10 +133,11 @@ cat /sys/block/nullb1/queue/nr_zones</code></pre>
                     <pre>  start: 0x000000000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
   start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
   start: 0x000040000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
-
-  em       : 16 zones    ← all zones EMPTY
-
-16</pre>
+  start: 0x000060000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000080000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
+  em       : 16 zones
+16
+</pre>
                 </div>
             </div>
         </div>
@@ -200,8 +200,7 @@ printf '── [3] Zone state summary ──────────────
 sudo blkzone report "${DEV}" \
   | grep -oP 'zcond:\s*\d+\s*\(\K\w+' \
   | sort | uniq -c \
-  | awk '{printf "  %-8s : %s zones\n", $2, $1}'
-printf '\ndone\n'</code></pre>
+  | awk '{printf "  %-8s : %s zones\n", $2, $1}'</code></pre>
                 </div>
 
                 <div class="code-block">
@@ -224,18 +223,22 @@ printf '\ndone\n'</code></pre>
                     <pre>── [1] Full reset ───────────────────────────────
 Zone 0 state: wptr=0x000000       state=em
 ── [2] Write 32MB (no OPEN ZONE) ───────────────
-  BW: 1024MiB/s
+  BW: 395MiB/s
 Zone 0 state: wptr=0x010000       state=oi
 ── [3] Zone state summary ───────────────────────
-  oi       : 1 zones
   em       : 15 zones
-
-done</pre>
+  oi       : 1 zones</pre>
                 </div>
 
                 <div class="callout callout-info">
                     <span class="callout-title">참고</span>
                     Implicit Open은 애플리케이션이 <code>OPEN ZONE</code> 명령 없이 바로 쓰기를 시작할 때 장치가 자동으로 부여하는 상태입니다.
+                </div>
+                <div class="callout callout-success">
+                    <span class="callout-title">결과 해석</span>
+                    <strong>WP 이동 (0x000000 → 0x010000):</strong> 32MB 쓰기 후 Write Pointer가 Zone 0의 정확히 절반 지점으로 전진했습니다. Zone 크기가 0x020000 섹터(64MB)이므로 0x010000은 32MB 경계에 해당합니다.<br><br>
+                    <strong>상태 전이 (em → oi):</strong> <code>OPEN ZONE</code> 명령 없이 fio가 순차 쓰기를 시작하자 장치가 자동으로 zcond를 oi로 설정했습니다. 이는 호스트가 명시적으로 Zone을 열지 않아도 쓰기 요청만으로 상태 전이가 일어남을 보여줍니다.<br><br>
+                    <strong>Zone 집계 (oi 1 / em 15):</strong> 실제로 기록된 Zone 0만 oi로 전환되고 나머지 15개는 여전히 em 상태입니다. Implicit Open은 필요한 Zone에만 선택적으로 적용됩니다.
                 </div>
             </div>
         </div>
@@ -310,8 +313,7 @@ show_zone
 
 printf '── [5] Finish Zone ──────────────────────────────\n'
 sudo blkzone finish --offset 0x20000 --length 0x20000 "${DEV}"
-show_zone
-printf '\ndone\n'</code></pre>
+show_zone</code></pre>
                 </div>
 
                 <div class="code-block">
@@ -341,14 +343,19 @@ Zone 1 state: wptr=0x010000       state=oe
 ── [4] Close Zone ───────────────────────────────
 Zone 1 state: wptr=0x010000       state=cl
 ── [5] Finish Zone ──────────────────────────────
-Zone 1 state: wptr=0x020000       state=fu
-
-done</pre>
+Zone 1 state: wptr=0x020000       state=fu</pre>
                 </div>
 
                 <div class="callout callout-warn">
                     <span class="callout-title">주의</span>
                     Close 상태에서는 쓰기가 불가능합니다. Finish 상태는 Reset 전까지 영구 봉인됩니다. Close와 Finish의 차이에 주목하세요.
+                </div>
+                <div class="callout callout-success">
+                    <span class="callout-title">결과 해석</span>
+                    <strong>[2] Explicit Open — wptr 불변(0x000000), state=oe:</strong> <code>OPEN ZONE</code> 명령은 Zone을 쓸 준비 상태로 전환할 뿐, 실제 데이터가 기록되지 않았으므로 WP는 그대로입니다. oi와 달리 호스트가 명시적으로 자원을 예약했음을 oe 상태로 표현합니다.<br><br>
+                    <strong>[3] 32MB 쓰기 — wptr=0x010000, state=oe 유지:</strong> 쓰기가 완료되면 WP가 Zone 절반까지 전진합니다. Explicit Open 상태(oe)는 Close 또는 Finish 명령을 받기 전까지 유지됩니다.<br><br>
+                    <strong>[4] Close — wptr=0x010000 보존, state=cl:</strong> Close는 Open Zone 자원 슬롯을 반납하지만 WP 위치는 기억합니다. 이후 다시 Open하면 0x010000 지점부터 이어 쓰기가 가능합니다.<br><br>
+                    <strong>[5] Finish — wptr=0x020000(Zone 끝), state=fu:</strong> WP가 강제로 Zone 끝으로 이동하며 FULL 상태가 됩니다. 이 시점부터 Reset 없이는 추가 쓰기가 전혀 불가능합니다.
                 </div>
             </div>
         </div>
@@ -421,10 +428,9 @@ printf '\nAll zones restored to EMPTY\n'</code></pre>
 
 [2/3] Zone 1 Reset...
   start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
-                                                    ↑ WP reset to zone start        ↑ EMPTY
 
 [3/3] Bulk reset all zones...
-  em       : 16 zones    ← all zones EMPTY
+  em       : 16 zones
 
 First 3 zones WP check:
   start: 0x000000000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
@@ -437,6 +443,12 @@ All zones restored to EMPTY</pre>
                 <div class="callout callout-info">
                     <span class="callout-title">참고</span>
                     Zone Reset은 데이터를 일괄 삭제하고 Write Pointer를 Zone 시작으로 되돌립니다. Conventional SSD의 Trim 명령과 유사하지만 <strong>Zone 단위</strong>로만 동작합니다.
+                </div>
+                <div class="callout callout-success">
+                    <span class="callout-title">결과 해석</span>
+                    <strong>[1] Reset 전 Zone 1 상태 (wptr=0x020000, fu):</strong> zone_lifecycle.sh 직후 상태를 그대로 이어받아 Zone 1이 FULL로 봉인된 상태입니다. WP가 Zone 끝(0x020000)에 위치하여 추가 쓰기가 불가능합니다.<br><br>
+                    <strong>[2] 단일 Zone Reset — wptr=0x000000, state=em:</strong> Reset 명령 한 번으로 WP가 Zone 시작으로 즉시 복귀하고 zcond가 fu → em으로 전이됩니다. 논리 삭제가 아닌 장치 수준 초기화이므로 GC 지연 없이 바로 재사용 가능합니다.<br><br>
+                    <strong>[3] Bulk Reset — 16개 Zone 전체 em 복원:</strong> <code>blkzone reset</code>에 오프셋을 지정하지 않으면 전체 Zone을 원자적으로 초기화합니다. 첫 3개 Zone의 WP가 모두 0x000000임을 확인하여 완전 초기화가 보장됩니다.
                 </div>
             </div>
         </div>
