@@ -47,7 +47,7 @@
         .output-block { background:#0f1724; border:1px solid #2d3748; border-radius:6px; margin:.4rem 0 1rem; overflow:hidden; }
         .output-label { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:#64748b; letter-spacing:.06em; padding:.5rem .9rem; background:#1a2233; border-bottom:1px solid #2d3748; display:flex; align-items:center; gap:.5rem; }
         .output-label::before { content:''; }
-        .output-block pre { font-family:'JetBrains Mono',monospace; font-size:.8rem; color:#94a3b8; line-height:1.7; overflow-x:auto; padding:.9rem 1.1rem; }
+        .output-block pre { font-family:'JetBrains Mono',monospace; font-size:.8rem; color:#f8fafc; line-height:1.7; overflow-x:auto; padding:.9rem 1.1rem; }
         .result-table-wrap { overflow-x:auto; margin:.6rem 0 1rem; }
         .result-table { width:100%; border-collapse:collapse; font-size:.85rem; }
         .result-table th { background:var(--navy); color:white; padding:.55rem .9rem; text-align:center; font-weight:600; }
@@ -74,10 +74,6 @@
         .waf-box.conv .waf-val { color:#dc2626; }
         .waf-box.zns  .waf-val { color:var(--success); }
         .waf-sub { font-size:.78rem; color:#64748b; margin-top:.2rem; }
-        .zone-layout { background:#1e2533; border-radius:6px; padding:1rem 1.2rem; margin:.5rem 0 1rem; font-family:'JetBrains Mono',monospace; font-size:.8rem; color:#e2e8f0; line-height:1.8; }
-        .zone-layout .conv-zone { color:#fde68a; }
-        .zone-layout .seq-zone  { color:#7dd3fc; }
-        .zone-layout .dim { color:#6b7a99; }
         .question-list { display:flex; flex-direction:column; gap:.7rem; }
         .question-item { background:white; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.2rem; }
         .question-item .q { font-size:.88rem; font-weight:600; color:var(--navy); margin-bottom:.35rem; }
@@ -110,11 +106,17 @@
     <!-- ── 실습 목표 ── -->
     <div class="card">
         <h2>실습 목표</h2>
-        <p>이번 실습은 <strong>QEMU + null_blk + F2FS</strong> 환경에서 WAF를 계산해 보고, 그 값이 무엇을 의미하는지 구분하는 데 목적이 있습니다. 여기서 측정하는 값은 실제 SSD 내부 NAND write amplification이 아니라, F2FS가 블록 장치에 발행한 <strong>host-visible WAF</strong>입니다.</p>
-        <p><code>null_blk</code>에는 SSD FTL, NAND page, erase block, device-side GC가 없습니다. 따라서 이 실습만으로 "conventional SSD 내부 WAF가 ZNS SSD보다 크다"를 실측 증명할 수 없습니다. 오히려 ZNS F2FS가 host-visible write를 더 많이 발행하는 결과도 나올 수 있습니다.</p>
+        <p>이번 실습은 <strong>QEMU + null_blk + F2FS</strong> 환경에서 WAF를 계산해 보고, 처음의 직관이 실제 측정값과 어떻게 다른지 확인하는 데 목적이 있습니다.</p>
+        <p>처음에는 conventional SSD는 내부 FTL/GC 때문에 WAF가 1보다 크고, ZNS SSD는 host가 zone write 위치를 관리하므로 WAF가 1에 가까울 것이라고 예상해볼 수 있습니다. 이제 그 가설을 <code>null_blk</code>와 F2FS로 직접 측정해 봅니다.</p>
+        <div class="callout callout-info">
+            <span class="callout-title">왜 F2FS 환경에서 시작하는가</span>
+            <code>null_blk</code>는 빠르고 재현 가능한 block device 실험에는 좋지만, 실제 SSD 하드웨어 FTL, NAND, device-side GC가 없습니다. 그래서 <code>nvme smart-log</code>로 NAND writes 같은 하드웨어 counter를 읽을 수 없고, device-internal WAF도 직접 측정할 수 없습니다. QEMU 6.0 이상의 가상 NVMe 컨트롤러로 <code>smart-log</code>가 완전히 지원되는 환경을 만들 수도 있지만, 현재 Ubuntu 20.04 기본 환경에서는 어렵습니다. 따라서 이번 lab3는 <code>null_blk</code>를 conventional/zoned 두 모드로 만들고 그 위에 F2FS를 올려, 파일시스템과 block layer에서 관찰 가능한 host-visible write를 간접 측정합니다. 실습 환경은 <strong>QEMU RAM 4GB, null_blk 2GB</strong>로 고정하고, Conv와 Zoned 장치를 동시에 올리지 않고 순차 실행합니다.
+        </div>
         <div class="formula-box">
-            <div class="formula">WAF<sub style="font-size:.7em;">host</sub> = device write bytes (Δ stat field 7 × 512) / fio logical write bytes</div>
-            <div class="formula-note">Linux block layer가 <code>/dev/nullb*</code>에 발행한 sector 수 증가량을 fio가 요청한 논리 write 바이트로 나눈 비율</div>
+            <div class="formula">WAF = data written to flash memory / data written by the host</div>
+            <div class="formula-note">WAF의 기본 정의. 실제 SSD에서는 flash/NAND에 실제 기록된 양을 host가 요청한 write 양으로 나눈 값입니다.</div>
+            <div class="formula" style="font-size:.92rem; margin-top:.8rem;">WAF<sub style="font-size:.7em;">proxy</sub> = device write bytes (Δ stat field 7 × 512) / fio logical write bytes</div>
+            <div class="formula-note">이번 실습에서 계산하는 대체값. <code>null_blk</code>에는 flash memory가 없으므로 Linux block layer가 <code>/dev/nullb*</code>에 발행한 sector 수를 사용합니다.</div>
         </div>
         <div class="metric-row">
             <div class="metric-box"><div class="metric-label">Step 3.1 ~ 3.6</div><div class="metric-val" style="font-size:.88rem;">스크립트 구조</div></div>
@@ -124,18 +126,14 @@
         <div class="waf-compare" style="margin-top:1rem;">
             <div class="waf-box conv">
                 <div class="waf-box-title">Conv null_blk + F2FS</div>
-                <div class="waf-val">≈ 1.0×</div>
-                <div class="waf-sub">F2FS metadata · checkpoint · cleaner overhead 반영</div>
+                <div class="waf-val">&gt; 1?</div>
+                <div class="waf-sub">FTL/GC가 있다면 더 클 것이라는 초기 가설</div>
             </div>
             <div class="waf-box zns">
                 <div class="waf-box-title">Zoned null_blk + F2FS</div>
-                <div class="waf-val">변동</div>
-                <div class="waf-sub">Zone 제약 + F2FS zoned mode overhead로 더 클 수 있음</div>
+                <div class="waf-val">≈ 1?</div>
+                <div class="waf-sub">Host-managed placement로 줄어들 것이라는 초기 가설</div>
             </div>
-        </div>
-        <div class="callout callout-warn">
-            <span class="callout-title">중요한 정정</span>
-            이 실습의 결론은 "ZNS WAF가 1이고 Conv WAF가 더 크다"가 아닙니다. 결론은 <strong>null_blk와 F2FS만으로는 SSD 내부 WAF를 비교할 수 없고, host-visible WAF와 device-internal WAF를 구분해야 한다</strong>입니다.
         </div>
     </div>
 
@@ -172,7 +170,7 @@
 
                 <div class="callout callout-info">
                     <span class="callout-title">메모리 조건</span>
-                    QEMU RAM이 5GB라면 2GB 또는 3GB <code>memory_backed=1</code> null_blk를 <strong>순차 실행</strong>하는 구성이 안전합니다. Conv와 Zoned 장치를 동시에 올리지 않고, 항상 <code>cleanup.sh</code>로 이전 장치를 내린 뒤 다음 <code>setup.sh</code>를 실행합니다.
+                    QEMU RAM은 <strong>4GB</strong>, <code>memory_backed=1</code> null_blk 크기는 <strong>2GB</strong>로 고정합니다. Conv와 Zoned 장치를 동시에 올리지 않고, 항상 <code>cleanup.sh</code>로 이전 장치를 내린 뒤 다음 <code>setup.sh</code>를 실행합니다.
                 </div>
 
                 <div class="code-block">
@@ -212,8 +210,8 @@ SYS_BLOCK="${SYS_BLOCK:-/sys/block/nullb0}"
 MNT="${MNT:-/mnt/f2fs-waf}"
 NULLB_NAME="${NULLB_NAME:-f2fs_waf0}"
 NULLB_CONFIGFS="${NULLB_CONFIGFS:-/sys/kernel/config/nullb/$NULLB_NAME}"
-NULL_GB="${NULL_GB:-2}"
-NULL_SIZE_MB="${NULL_SIZE_MB:-2048}"
+NULL_GB="2"
+NULL_SIZE_MB="2048"
 NULL_BLOCKSIZE="${NULL_BLOCKSIZE:-4096}"
 ZONE_SIZE_MB="${ZONE_SIZE_MB:-64}"
 ZONE_NR_CONV="${ZONE_NR_CONV:-4}"
@@ -515,7 +513,7 @@ usage() {
 Usage: sudo $0 conv|zoned
 
 Environment overrides:
-  NULL_SIZE_MB=$NULL_SIZE_MB
+  NULL_SIZE_MB is fixed at $NULL_SIZE_MB
   NULL_BLOCKSIZE=$NULL_BLOCKSIZE
   MNT=$MNT
   ZONE_SIZE_MB=$ZONE_SIZE_MB
@@ -582,17 +580,21 @@ echo "Ready. Run:"
 echo "  sudo $SCRIPT_DIR/bench.sh $mode"</code></pre>
                 </div>
 
-                <div class="zone-layout">
-<span class="dim">Conv 모드</span>
-  size              = <span class="seq-zone">2048 MB</span>
-  blocksize         = <span class="seq-zone">4096</span>
-  zoned             = <span class="dim">0 (일반 block device)</span>
-
-<span class="dim">Zoned 모드 (실습 권장값)</span>
-  size              = <span class="seq-zone">3072 MB</span>   <span class="dim">← 2GB는 usable space 부족</span>
-  zone_size         = <span class="seq-zone">32 MB</span>
-  zone_nr_conv      = <span class="conv-zone">8 conventional zones</span>
-  나머지            = <span class="seq-zone">sequential write required zones</span>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <thead>
+                            <tr><th>모드</th><th>항목</th><th>값</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="tag-col">Conv</td><td>size</td><td>2048 MB</td></tr>
+                            <tr><td class="tag-col">Conv</td><td>blocksize</td><td>4096</td></tr>
+                            <tr><td class="tag-col">Conv</td><td>zoned</td><td>0 (일반 block device)</td></tr>
+                            <tr><td class="tag-col">Zoned</td><td>size</td><td>2048 MB</td></tr>
+                            <tr><td class="tag-col">Zoned</td><td>zone_size</td><td>32 MB</td></tr>
+                            <tr><td class="tag-col">Zoned</td><td>zone_nr_conv</td><td>8 conventional zones</td></tr>
+                            <tr><td class="tag-col">Zoned</td><td>remaining zones</td><td>sequential write required zones</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1137,8 +1139,8 @@ F2FS sysfs snapshot:
                 </div>
 
                 <div class="callout callout-warn">
-                    <span class="callout-title">결과 해석</span>
-                    <code>1.012</code>처럼 1을 살짝 넘는 값은 F2FS metadata, checkpoint, 일부 cleaning overhead로 설명할 수 있습니다. 이 값만으로 "conventional SSD 내부 GC 때문에 WAF가 증가했다"고 말하면 안 됩니다.
+                    <span class="callout-title">관찰</span>
+                    <code>1.012</code>처럼 1을 살짝 넘는 값이 나올 수 있습니다. 처음 가설처럼 큰 WAF가 보이지 않는다면, 이 숫자가 정말 SSD 내부 GC를 본 것인지 다음 단계에서 다시 확인해야 합니다.
                 </div>
             </div>
         </div>
@@ -1150,15 +1152,21 @@ F2FS sysfs snapshot:
     <div class="step-flow">
         <div class="step-entry">
             <div class="step-body">
-                <h3>3GB zoned null_blk 위에서 host-visible WAF 측정</h3>
-                <p>2GB zoned null_blk에서는 F2FS zoned mode의 usable space가 너무 작게 잡혀 fill 단계에서 실패할 수 있습니다. ZNS 쪽만 3GB로 늘리고, zone 수를 확보하기 위해 <code>ZONE_SIZE_MB=32</code>, <code>ZONE_NR_CONV=8</code>을 사용합니다.</p>
+                <h3>2GB zoned null_blk 위에서 host-visible WAF 측정</h3>
+                <p>QEMU RAM 4GB 조건에 맞춰 Zoned도 2GB null_blk로 고정합니다. F2FS zoned mode의 usable space를 고려해 fill/measure 크기는 작게 잡고, zone 수를 확보하기 위해 <code>ZONE_SIZE_MB=32</code>, <code>ZONE_NR_CONV=8</code>을 사용합니다.</p>
 
-                <div class="zone-layout">
-<span class="dim">Zoned null_blk (실습 권장값)</span>
-  size              = <span class="seq-zone">3072 MB</span>
-  zone_size         = <span class="seq-zone">32 MB</span>
-  zone_nr_conv      = <span class="conv-zone">8 conventional zones</span>
-  remaining zones   = <span class="seq-zone">sequential write required zones</span>
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <thead>
+                            <tr><th>항목</th><th>Zoned null_blk 설정값</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="tag-col">size</td><td>2048 MB</td></tr>
+                            <tr><td class="tag-col">zone_size</td><td>32 MB</td></tr>
+                            <tr><td class="tag-col">zone_nr_conv</td><td>8 conventional zones</td></tr>
+                            <tr><td class="tag-col">remaining zones</td><td>sequential write required zones</td></tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="code-block">
@@ -1167,7 +1175,7 @@ F2FS sysfs snapshot:
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>sudo bash cleanup.sh
-sudo NULL_SIZE_MB=3072 ZONE_SIZE_MB=32 ZONE_NR_CONV=8 bash setup.sh zoned
+sudo ZONE_SIZE_MB=32 ZONE_NR_CONV=8 bash setup.sh zoned
 sudo FIO_FILL_SIZE=512M FIO_MEASURE_SIZE=512M FIO_RUNTIME=15 bash bench.sh zoned</code></pre>
                 </div>
 
@@ -1177,7 +1185,7 @@ sudo FIO_FILL_SIZE=512M FIO_MEASURE_SIZE=512M FIO_RUNTIME=15 bash bench.sh zoned
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>sudo bash cleanup.sh
-sudo NULL_SIZE_MB=3072 ZONE_SIZE_MB=32 ZONE_NR_CONV=8 bash setup.sh zoned
+sudo ZONE_SIZE_MB=32 ZONE_NR_CONV=8 bash setup.sh zoned
 sudo GC_TARGET_FREE_SEGMENTS=260 GC_MIN_AVAIL_MIB=200 bash bench_gc.sh zoned</code></pre>
                 </div>
 
@@ -1195,7 +1203,7 @@ F2FS sysfs snapshot:
 
                 <div class="callout callout-info">
                     <span class="callout-title">예상과 다른 결과가 정상일 수 있음</span>
-                    Zoned라고 해서 이 실습의 WAF가 반드시 1에 가까워지지는 않습니다. F2FS zoned mode는 zone sequential write 제약, conventional zone metadata 영역, discard/zone reset, checkpoint 정책 때문에 host-visible write가 오히려 더 크게 측정될 수 있습니다.
+                    처음 가설과 달리 Zoned 측정값이 반드시 1에 가까워지지는 않습니다. F2FS zoned mode에서는 zone sequential write 제약, conventional zone metadata 영역, discard/zone reset, checkpoint 정책 때문에 관찰되는 write량이 오히려 더 크게 나올 수 있습니다.
                 </div>
             </div>
         </div>
@@ -1234,13 +1242,13 @@ sudo bash run_all.sh bench_gc 3</code></pre>
     </div>
 
     <!-- ── STEP 3.9 ── -->
-    <div class="section-label">Step 3.9 — 왜 SSD 내부 WAF가 아닌가</div>
+    <div class="section-label">Step 3.9 — 왜 처음 가설을 그대로 결론낼 수 없는가</div>
 
     <div class="step-flow">
         <div class="step-entry">
             <div class="step-body">
                 <h3>측정 대상의 계층 분리</h3>
-                <p>이번 실습의 핵심은 숫자를 얻는 것보다, 숫자가 가리키는 계층을 구분하는 것입니다. <code>/sys/block/nullb*/stat</code>은 Linux block layer가 장치에 제출한 write sector를 보여줍니다. 실제 SSD의 NAND program 횟수나 FTL GC copy량을 보여주지 않습니다.</p>
+                <p>측정 결과만 보면 처음의 "Conv는 크고 ZNS는 1에 가까울 것"이라는 가설을 바로 판단하고 싶어집니다. 하지만 WAF의 기본 정의는 <strong>data written to flash memory / data written by the host</strong>입니다. <code>/sys/block/nullb*/stat</code>은 Linux block layer가 장치에 제출한 write sector를 보여줄 뿐, 실제 SSD의 flash/NAND program 횟수나 FTL GC copy량을 보여주지 않습니다.</p>
 
                 <div class="result-table-wrap">
                     <table class="result-table">
@@ -1248,7 +1256,8 @@ sudo bash run_all.sh bench_gc 3</code></pre>
                             <tr><th>측정 항목</th><th>null_blk + F2FS</th><th>실제 SSD 내부</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td class="tag-col">관찰 가능한 write</td><td>Host가 block device에 보낸 sector</td><td>NAND page program 횟수</td></tr>
+                            <tr><td class="tag-col">WAF 분자</td><td>Block layer가 null_blk에 보낸 write sector</td><td>Flash/NAND에 실제 기록된 양</td></tr>
+                            <tr><td class="tag-col">WAF 분모</td><td>fio가 요청한 logical write bytes</td><td>Host가 SSD에 요청한 write bytes</td></tr>
                             <tr><td class="tag-col">GC 주체</td><td>F2FS cleaner / checkpoint</td><td>SSD FTL firmware</td></tr>
                             <tr><td class="tag-col">Conv SSD FTL</td><td>없음</td><td>있음</td></tr>
                             <tr><td class="tag-col">ZNS 내부 WAF 비교</td><td>직접 비교 불가</td><td>장치 counter 또는 emulator 필요</td></tr>
@@ -1256,23 +1265,21 @@ sudo bash run_all.sh bench_gc 3</code></pre>
                     </table>
                 </div>
 
-                <div class="output-block">
-                    <div class="output-label">정확한 표현 vs 잘못된 표현</div>
-                    <pre>말할 수 있는 것:
-  F2FS가 null_blk에 발행한 host-visible WAF를 측정했다.
-  Conv mode와 zoned mode의 F2FS write behavior가 다르게 나타났다.
-  Zoned mode에서도 host-visible WAF가 1보다 클 수 있다.
+                <div class="callout callout-success">
+                    <span class="callout-title">말할 수 있는 것</span>
+                    WAF의 기본 정의는 flash memory에 기록된 양 / host가 기록한 양입니다. lab3에서는 flash memory write를 직접 볼 수 없어 block-layer proxy 값을 측정했고, Conv mode와 zoned mode의 F2FS write behavior가 다르게 나타났다고 말할 수 있습니다. Zoned mode에서도 proxy WAF가 1보다 클 수 있습니다.
+                </div>
 
-말하면 안 되는 것:
-  Conventional SSD 내부 WAF가 ZNS SSD 내부 WAF보다 크다는 것을 증명했다.
-  ZNS SSD 내부 WAF가 1임을 null_blk로 측정했다.</pre>
+                <div class="callout callout-warn">
+                    <span class="callout-title">말하면 안 되는 것</span>
+                    null_blk에서 측정한 proxy WAF가 곧 flash memory WAF라고 말하면 안 됩니다. 또한 이 결과만으로 conventional SSD 내부 WAF가 ZNS SSD 내부 WAF보다 크다거나, ZNS SSD 내부 WAF가 1임을 증명했다고 말할 수 없습니다.
                 </div>
 
                 <div class="script-overview">
                     <div class="script-overview-body">
                         <strong>진짜 device-internal WAF 비교에 필요한 것</strong>
                         <ul class="script-steps">
-                            <li>실제 NVMe SSD의 host writes와 NAND writes / vendor SMART counter</li>
+                            <li>실제 NVMe SSD의 host writes와 flash/NAND writes / vendor SMART counter</li>
                             <li>실제 ZNS SSD의 zone reset/write 통계와 NAND write counter</li>
                             <li>FEMU, SimpleSSD, MQSim 같은 SSD/ZNS emulator 또는 simulator</li>
                             <li>동일 workload, 동일 유효 용량, 동일 over-provision 조건</li>
@@ -1282,7 +1289,7 @@ sudo bash run_all.sh bench_gc 3</code></pre>
 
                 <div class="callout callout-success">
                     <span class="callout-title">수정된 실습 결론</span>
-                    이 실습은 "Conv SSD vs ZNS SSD 내부 WAF 비교"가 아니라, <strong>F2FS host-visible WAF 측정과 그 한계 확인</strong> 실습입니다. 실제 SSD 내부 WAF 비교는 다음 단계의 장치 counter 또는 emulator 실습으로 분리해야 합니다.
+                    WAF의 정의는 <strong>data written to flash memory / data written by the host</strong>입니다. 이 실습의 결론은 "ZNS WAF가 1이고 Conv WAF가 더 크다"가 아닙니다. 결론은 <strong>null_blk와 F2FS만으로는 flash memory에 실제 기록된 양을 볼 수 없으므로, proxy WAF와 device-internal WAF를 구분해야 한다</strong>입니다. 실제 SSD 내부 WAF 비교는 다음 단계의 장치 counter 또는 emulator 실습으로 분리해야 합니다.
                 </div>
             </div>
         </div>
@@ -1294,7 +1301,7 @@ sudo bash run_all.sh bench_gc 3</code></pre>
         <h2>생각해보기</h2>
         <div class="question-list">
             <div class="question-item">
-                <div class="q">Q1. 이 실습에서 계산한 WAF가 SSD 내부 NAND WAF가 아닌 이유는 무엇인가요?</div>
+                <div class="q">Q1. WAF의 정의가 flash memory에 기록된 양 / host가 기록한 양이라면, 이 실습에서 계산한 값이 SSD 내부 WAF가 아닌 이유는 무엇인가요?</div>
                 <div class="hint">힌트: <code>null_blk</code>에 FTL, NAND page, erase block, firmware GC가 존재하는지 생각해보세요.</div>
             </div>
             <div class="question-item">
@@ -1302,11 +1309,11 @@ sudo bash run_all.sh bench_gc 3</code></pre>
                 <div class="hint">힌트: <code>GC_TARGET_FREE_SEGMENTS</code>까지 적응형 fill을 한다는 점, 측정 구간 동안 <code>f2fs_gc_counters</code>의 delta가 어떻게 변하는지 비교해 보세요.</div>
             </div>
             <div class="question-item">
-                <div class="q">Q3. Zoned F2FS에서 host-visible WAF가 Conv보다 크게 나올 수 있는 이유는 무엇인가요?</div>
+                <div class="q">Q3. 처음 예상과 달리 Zoned F2FS에서 proxy WAF가 Conv보다 크게 나올 수 있는 이유는 무엇인가요?</div>
                 <div class="hint">힌트: zone sequential write 제약, conventional zone에 저장되는 metadata, checkpoint, discard/zone reset 처리가 host write량에 어떤 영향을 줄 수 있을까요?</div>
             </div>
             <div class="question-item">
-                <div class="q">Q4. 실제 Conv SSD와 ZNS SSD의 device-internal WAF를 비교하려면 어떤 추가 측정값과 환경이 필요할까요?</div>
+                <div class="q">Q4. 실제 Conv SSD와 ZNS SSD의 WAF를 정의대로 비교하려면 어떤 추가 측정값과 환경이 필요할까요?</div>
                 <div class="hint">힌트: host write bytes만으로는 NAND 내부 program/write 횟수를 알 수 없습니다. SMART counter, ZNS zone counter, emulator를 떠올려 보세요.</div>
             </div>
         </div>
