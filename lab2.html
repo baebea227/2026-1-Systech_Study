@@ -63,7 +63,7 @@
         .question-list { display:flex; flex-direction:column; gap:.7rem; }
         .question-item { background:white; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.2rem; }
         .question-item .q { font-size:.88rem; font-weight:600; color:var(--navy); margin-bottom:.35rem; }
-        .question-item .hint { font-size:.8rem; color:#64748b; }
+        .question-item .answer { font-size:.8rem; color:#64748b; }
         .nav-between { display:flex; justify-content:space-between; margin-top:2rem; }
         .nav-btn { font-size:.82rem; color:var(--blue); text-decoration:none; padding:.45em 1em; border:1px solid var(--border); border-radius:5px; background:white; transition:background .15s,border-color .15s; }
         .nav-btn:hover { background:#eff6ff; border-color:var(--blue); }
@@ -448,15 +448,15 @@ All zones restored to EMPTY</pre>
         <div class="question-list">
             <div class="question-item">
                 <div class="q">Q1. Implicit Open과 Explicit Open의 차이점은 무엇이며, 언제 각각을 사용하는 것이 유리할까요?</div>
-                <div class="hint">힌트: 장치에는 동시에 열 수 있는 Zone 수(max_open_zones)에 제한이 있습니다. 명시적 제어가 이 자원 관리에 어떤 도움을 줄까요?</div>
+                <div class="answer">Implicit Open은 쓰기 요청이 들어오면 장치가 자동으로 zone을 여는 방식이고, Explicit Open은 host가 <code>OPEN ZONE</code> 명령으로 미리 열어 두는 방식입니다. 단순 순차 쓰기에는 Implicit Open이 편하지만, 동시에 열 수 있는 zone 수가 제한된 환경에서는 Explicit Open/Close로 어떤 zone을 열어 둘지 명확히 관리하는 것이 유리합니다.</div>
             </div>
             <div class="question-item">
                 <div class="q">Q2. Zone Reset이 일반 파일 삭제와 다른 점은 무엇인가요? 낸드 플래시 관점에서 설명하세요.</div>
-                <div class="hint">힌트: 일반 파일 삭제는 메타데이터만 변경합니다. Reset은 Erase Block 수준에서 무엇을 다르게 처리할까요?</div>
+                <div class="answer">일반 파일 삭제는 보통 파일시스템 메타데이터에서 해당 공간을 free로 표시할 뿐, 장치의 데이터 영역을 즉시 초기화하지 않습니다. Zone Reset은 zone의 write pointer를 처음으로 되돌리고 zone 전체를 다시 쓸 수 있는 상태로 만드는 장치 수준 동작이며, 실제 NAND 관점에서는 erase block을 재사용 가능하게 만드는 erase/초기화 의미에 가깝습니다.</div>
             </div>
             <div class="question-item">
                 <div class="q">Q3. Close 상태에서 Write Pointer가 유지되는 이유는 무엇이며, 이것이 Finish와 어떻게 다른가요?</div>
-                <div class="hint">힌트: Close는 자원 절약을 위한 일시 정지, Finish는 영구 봉인입니다. 각 상태에서 다음 가능한 연산을 비교해 보세요.</div>
+                <div class="answer">Close는 열린 zone을 닫아 open zone 자원을 반납하지만, 아직 zone에 남은 공간이 있으면 write pointer 위치부터 나중에 다시 이어 쓸 수 있습니다. Finish는 zone을 더 이상 쓸 공간이 없는 것처럼 완료 상태로 만들기 때문에 write pointer가 zone 끝으로 이동하고, 이후에는 reset 전까지 추가 쓰기가 불가능합니다.</div>
             </div>
         </div>
     </div>

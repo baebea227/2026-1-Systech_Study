@@ -77,7 +77,7 @@
         .question-list { display:flex; flex-direction:column; gap:.7rem; }
         .question-item { background:white; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.2rem; }
         .question-item .q { font-size:.88rem; font-weight:600; color:var(--navy); margin-bottom:.35rem; }
-        .question-item .hint { font-size:.8rem; color:#64748b; }
+        .question-item .answer { font-size:.8rem; color:#64748b; }
         .nav-between { display:flex; justify-content:space-between; margin-top:2rem; }
         .nav-btn { font-size:.82rem; color:var(--blue); text-decoration:none; padding:.45em 1em; border:1px solid var(--border); border-radius:5px; background:white; transition:background .15s,border-color .15s; }
         .nav-btn:hover { background:#eff6ff; border-color:var(--blue); }
@@ -977,19 +977,19 @@ F2FS sysfs snapshot:
         <div class="question-list">
             <div class="question-item">
                 <div class="q">Q1. WAF의 정의가 flash memory에 기록된 양 / host가 기록한 양이라면, 이 실습에서 계산한 값이 SSD 내부 WAF가 아닌 이유는 무엇인가요?</div>
-                <div class="hint">힌트: <code>null_blk</code>에 FTL, NAND page, erase block, firmware GC가 존재하는지 생각해보세요.</div>
+                <div class="answer">이 실습의 분자는 실제 flash memory에 기록된 byte가 아니라 <code>/sys/block/nullb*/stat</code>에서 읽은 block-layer write sector 변화량입니다. <code>null_blk</code>에는 NAND page, erase block, FTL, firmware GC가 없으므로 SSD 내부에서 발생하는 실제 NAND write amplification을 측정한 값이 아닙니다.</div>
             </div>
             <div class="question-item">
                 <div class="q">Q2. <code>bench.sh</code>에서 GC delta가 0일 때와 0보다 클 때 WAF가 다르게 보일 수 있습니다. 어떤 동작이 이 차이를 만드나요?</div>
-                <div class="hint">힌트: <code>GC_TARGET_FREE_SEGMENTS</code>까지 적응형 fill을 한다는 점, 측정 구간 동안 <code>f2fs_gc_counters</code>의 delta가 어떻게 변하는지 비교해 보세요.</div>
+                <div class="answer">GC delta가 0이면 측정 구간 동안 fio write가 주로 사용자 데이터 쓰기로 처리되어 추가 cleaning write가 거의 섞이지 않은 상태입니다. GC delta가 0보다 크면 F2FS cleaner가 valid block 이동이나 checkpoint 관련 쓰기를 함께 수행했기 때문에, fio가 요청한 logical write보다 block layer에 제출된 write가 더 커질 수 있습니다.</div>
             </div>
             <div class="question-item">
                 <div class="q">Q3. 처음 예상과 달리 Zoned F2FS에서 proxy WAF가 Conv보다 크게 나올 수 있는 이유는 무엇인가요?</div>
-                <div class="hint">힌트: zone sequential write 제약, conventional zone에 저장되는 metadata, checkpoint, discard/zone reset 처리가 host write량에 어떤 영향을 줄 수 있을까요?</div>
+                <div class="answer">Zoned F2FS는 zone 순차 쓰기 제약을 지키기 위해 배치와 cleaning을 더 신중하게 수행하며, metadata/checkpoint, conventional zone 사용, discard 또는 zone reset 처리 같은 부가 write가 측정 구간에 섞일 수 있습니다. 그래서 proxy WAF는 장치 내부 효율만 반영하는 값이 아니라 파일시스템이 zone 제약을 만족시키기 위해 host-visible write를 얼마나 냈는지도 함께 반영합니다.</div>
             </div>
             <div class="question-item">
                 <div class="q">Q4. 실제 Conv SSD와 ZNS SSD의 WAF를 정의대로 비교하려면 어떤 추가 측정값과 환경이 필요할까요?</div>
-                <div class="hint">힌트: host write bytes만으로는 NAND 내부 program/write 횟수를 알 수 없습니다. SMART counter, ZNS zone counter, emulator를 떠올려 보세요.</div>
+                <div class="answer">정의대로 비교하려면 host가 보낸 write byte와 SSD 내부 NAND/flash에 실제 program된 byte를 동시에 측정할 수 있어야 합니다. 이를 위해서는 실제 SSD의 SMART/vendor counter, ZNS 관련 장치 counter, 또는 FTL과 NAND 동작을 모델링해 내부 write량을 노출하는 emulator가 필요합니다.</div>
             </div>
         </div>
     </div>

@@ -210,7 +210,7 @@
         .question-list { display: flex; flex-direction: column; gap: 0.7rem; }
         .question-item { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 0.9rem 1.2rem; }
         .question-item .q    { font-size: 0.88rem; font-weight: 600; color: var(--navy); margin-bottom: 0.35rem; }
-        .question-item .hint { font-size: 0.8rem; color: #64748b; }
+        .question-item .answer { font-size: 0.8rem; color: #64748b; }
 
         /* Navigation */
         .nav-between { display: flex; justify-content: space-between; margin-top: 2rem; }
@@ -380,18 +380,17 @@ printf '  %-16s  %-18s  %-14s\n' "Conv (nullb0)" "${CONV_BW}" "${CONV_LAT} us"</
       done — all zones EMPTY
 
 [2/4] ZNS sequential write (iodepth=4)...
-      ZNS  BW=1079MiB/s  cLat=213.38 us
+      ZNS  BW=730MiB/s  cLat=319.71 us
 
 [3/4] Conventional sequential write (iodepth=4)...
-      CONV BW=1122MiB/s  cLat=168.83 us
+      CONV BW=620MiB/s  cLat=303.71 us
 
 [4/4] Result summary
 ────────────────────────────────────────────────────
-  Device            Bandwidth           Avg clat
+  Device            Bandwidth           Avg clat      
 ────────────────────────────────────────────────────
-  ZNS (nullb1)      1079MiB/s           213.38 us
-  Conv (nullb0)     1122MiB/s           168.83 us
-────────────────────────────────────────────────────</code></pre>
+  ZNS (nullb1)      730MiB/s            319.71 us     
+  Conv (nullb0)     620MiB/s            303.71 us</code></pre>
     </div>
 
     <div class="callout callout-info">
@@ -482,8 +481,7 @@ sep
 printf '  %-16s  %s\n' "Device" "Random Write Result"
 sep
 printf '  %-16s  %s\n' "ZNS (nullb1)"  "FAIL: ${ZNS_ERR}"
-printf '  %-16s  %s\n' "Conv (nullb0)" "OK:   BW=${CONV_BW}"
-sep</code></pre>
+printf '  %-16s  %s\n' "Conv (nullb0)" "OK:   BW=${CONV_BW}"</code></pre>
     </div>
 
     <div class="code-block">
@@ -500,28 +498,25 @@ sep</code></pre>
         <div class="code-label">Expected output</div>
         <pre><code>[1/3] Resetting ZNS zones, attempting random write...
 fio: io_u error on file /dev/nullb1: Input/output error: write offset=65564672, buflen=4096
-fio: pid=1146, err=5/file:io_u.c:2018, func=io_u error, error=Input/output error
-zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, error=Input/output error): pid=1146: ...
+fio: pid=1136, err=5/file:io_u.c:2018, func=io_u error, error=Input/output error
+zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, error=Input/output error): pid=1136: Thu May  7 07:47:01 2026
       ZNS result: Input/output error: write offset=65564672, buflen=4096
 
 [2/3] Kernel error log...
-[  681.573063] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2
-[ 1018.048183] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2
-[ 1089.860865] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2
+[  422.748383] I/O error, dev nullb1, sector 128056 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 2
 
 [3/3] Conventional random write...
-      CONV BW=561MiB/s
+      CONV BW=496MiB/s
 
 ────────────────────────────────────────────────────
   Device            Random Write Result
 ────────────────────────────────────────────────────
   ZNS (nullb1)      FAIL: Input/output error: write offset=65564672, buflen=4096
-  Conv (nullb0)     OK:   BW=561MiB/s
-────────────────────────────────────────────────────</code></pre>
+  Conv (nullb0)     OK:   BW=496MiB/s</code></pre>
     </div>
 
     <div class="callout callout-warn">
-        <code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 <strong>-EIO</strong>(err=5) 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.
+        <code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 err=5 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.
     </div>
 
 </section>
@@ -532,15 +527,15 @@ zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, e
     <div class="question-list">
         <div class="question-item">
             <div class="q">Q1. 순차 쓰기에서 ZNS와 Conventional SSD의 처리량 차이가 작은 이유는 무엇일까요?</div>
-            <div class="hint">힌트: null_blk은 메모리 기반 에뮬레이터입니다. 실제 낸드 플래시 기반 SSD에서는 GC 개입 여부가 차이를 만듭니다.</div>
+            <div class="answer">이번 실습의 <code>null_blk</code>는 메모리 기반 block device라 실제 NAND program, erase, FTL GC 비용이 거의 반영되지 않습니다. 따라서 순차 쓰기에서는 Conventional과 ZNS 모두 block layer에 들어온 요청을 빠르게 처리해 처리량 차이가 작게 보입니다.</div>
         </div>
         <div class="question-item">
-            <div class="q">Q2. ZNS에서 Random Write를 허용하지 않는 이유는 무엇일까요? (낸드 플래시 물리 구조와 연관지어 설명하세요)</div>
-            <div class="hint">힌트: 낸드 플래시는 Erase Block 단위로만 초기화가 가능합니다. 임의 쓰기를 허용하면 내부적으로 어떤 작업이 필요할까요?</div>
+            <div class="q">Q2. ZNS에서 Random Write를 허용하지 않는 이유는 무엇일까요?</div>
+            <div class="answer">NAND flash는 page 단위로 쓰지만, 이미 기록된 page를 덮어쓰려면 더 큰 erase block 단위의 erase가 필요합니다. Random Write를 장치가 직접 허용하면 내부에서 valid data 복사, erase, 재배치가 필요해 write amplification과 GC 비용이 커지므로 ZNS는 zone 안의 순차 쓰기만 허용합니다.</div>
         </div>
         <div class="question-item">
-            <div class="q">Q3. ZNS에서 기존 애플리케이션이 Random Write를 수행해야 한다면 어떤 소프트웨어 계층이 이를 처리해줄 수 있을까요?</div>
-            <div class="hint">힌트: 강의 슬라이드의 Linux Zoned Storage Support 다이어그램에서 dm-zoned와 F2FS의 역할을 확인하세요.</div>
+            <div class="q">Q3. ZNS에서 기존 애플리케이션이 Random Write를 수행해야 한다면 어떤 방법으로 이를 처리해줄 수 있을까요?</div>
+            <div class="answer">Random Write가 필요한 기존 애플리케이션은 ZNS를 직접 다루기보다 중간 소프트웨어 계층의 도움을 받을 수 있습니다. 예를 들어 <code>dm-zoned</code>는 zoned device를 일반 block device처럼 보이게 하고, F2FS 같은 파일시스템은 로그 구조 배치와 cleaning으로 zone 순차 쓰기 제약을 흡수합니다.</div>
         </div>
     </div>
 </section>

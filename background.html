@@ -496,26 +496,38 @@
         <tbody>
             <tr>
                 <td class="row-label">Steady-State 조성</td>
-                <td>순차 Fill + 랜덤 워크로드</td>
-                <td>순차 Fill</td>
+                <td>
+                    <code>free_segments</code> 목표치까지 적응형 fill<br>
+                    fragment로 invalid block 생성
+                </td>
+                <td>
+                    2GB zoned <code>null_blk</code> 위 F2FS 구성<br>
+                    usable space를 고려해 fill 강도 조절
+                </td>
             </tr>
             <tr>
                 <td class="row-label">워크로드 인가</td>
-                <td>랜덤 70% + 순차 30%</td>
-                <td>100% 순차</td>
+                <td>
+                    측정 파일을 1MB 순차로 pre-layout한 뒤<br>
+                    <code>randwrite</code>로 WAF 측정
+                </td>
+                <td>
+                    동일한 pre-layout 후 <code>randwrite</code> 측정<br>
+                    ZNS에서도 WAF가 1에 가깝게 나오는지 확인
+                </td>
             </tr>
             <tr>
                 <td class="row-label">WAF 계산 및 분석</td>
                 <td colspan="2" style="text-align:left;">
                     <code>write_sectors</code> 변화량 기반 WAF 계산<br>
-                    Host Write vs Device Write 비교 → ZNS vs Conventional WAF 차이 분석
+                    Host Write vs Device Write 비교 → WAF가 1에 가깝게 측정되는지 확인
                 </td>
             </tr>
         </tbody>
     </table>
 
     <div class="callout callout-success">
-        WAF(Write Amplification Factor) = Device Write / Host Write. ZNS는 순차 쓰기만 허용하므로 GC Copy-back이 발생하지 않아 WAF ≈ 1.0에 근접합니다. 1절의 성능 이점을 수치로 직접 검증하는 실습입니다.
+        WAF(Write Amplification Factor) = Device Write / Host Write. Lab 3에서는 GC 압박 상태에서 측정 워크로드를 인가하고, Conventional과 ZNS 모두에서 WAF가 1에 가깝게 측정되는지 확인합니다. 결과 해석은 실습 수행 후 관찰값을 기준으로 진행합니다.
     </div>
 </section>
 
