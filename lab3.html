@@ -178,45 +178,6 @@ sudo modprobe crc32_generic</code></pre>
     <div class="step-flow">
         <div class="step-entry">
             <div class="step-body">
-                <h3>실습 스크립트</h3>
-
-                <div class="script-overview">
-                    <div class="script-overview-body">
-                        <strong>스크립트 실행 흐름</strong>
-                        <ul class="script-steps">
-                            <li><code>setup.sh conv|zoned</code> — null_blk configfs 장치 생성, F2FS 포맷, <code>/mnt/f2fs-waf</code>에 마운트</li>
-                            <li><code>bench.sh conv|zoned</code> — free_segments 목표치까지 적응형 fill로 GC 압박 후 host-visible WAF 측정</li>
-                            <li><code>cleanup.sh</code> — 마운트 해제, null_blk 장치 제거 (다음 모드로 넘어가기 전 필수)</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="callout callout-info">
-                    QEMU RAM은 <strong>4GB</strong>, <code>memory_backed=1</code> null_blk 크기는 <strong>2GB</strong>로 고정합니다. Conv와 Zoned 장치를 동시에 올리지 않고, 항상 <code>cleanup.sh</code>로 이전 장치를 내린 뒤 다음 <code>setup.sh</code>를 실행합니다.
-                </div>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — 스크립트 권한 부여</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>chmod +x *.sh
-which fio mkfs.f2fs awk blockdev mountpoint modprobe
-which jq || echo "jq optional: awk fallback will be used"
-grep f2fs /proc/filesystems || sudo modprobe f2fs</code></pre>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── STEP 3.3 ── -->
-    <div class="section-label">Step 3.3 — common.sh: 공통 함수 라이브러리</div>
-
-    <div class="step-flow">
-        <div class="step-entry">
-            <div class="step-body">
-                <h3>모든 스크립트가 source하는 공통 헬퍼</h3>
-                <p>장치 경로/마운트 포인트/fio 파라미터의 기본값을 정의하고, configfs 기반 null_blk 장치 생성, write_sectors 측정, F2FS sysfs/debugfs 접근, CSV 로깅을 모두 함수로 제공합니다. 환경변수로 모든 기본값을 override할 수 있습니다.</p>
 
                 <div class="code-block">
                     <div class="code-block-label">
@@ -253,9 +214,6 @@ GC_FRAGMENT_FILE_SIZE="${GC_FRAGMENT_FILE_SIZE:-1M}"
 GC_MEASURE_SIZE="${GC_MEASURE_SIZE:-128M}"
 GC_MEASURE_BS="${GC_MEASURE_BS:-4K}"
 GC_MEASURE_RW="${GC_MEASURE_RW:-randwrite}"
-
-RESULTS_CSV="${RESULTS_CSV:-$(cd "$(dirname "${BASH_SOURCE[0]}")" &amp;&amp; pwd)/results.csv}"
-RUN_TAG="${RUN_TAG:-}"
 
 need_root() {
     if [ "$(id -u)" -ne 0 ]; then
@@ -463,26 +421,6 @@ f2fs_gc_counters() {
     ' &lt;&lt;&lt;"$status"
 }
 
-csv_init() {
-    if [ ! -f "$RESULTS_CSV" ]; then
-        mkdir -p "$(dirname "$RESULTS_CSV")"
-        echo "timestamp,tag,bench,mode,logical_bytes,device_bytes,waf,gc_calls_delta,gc_calls_bg_delta,blocks_moved_delta,blocks_moved_bg_delta,free_segments_after" &gt; "$RESULTS_CSV"
-    fi
-}
-
-csv_append() {
-    local bench="$1" mode="$2" logical="$3" device="$4" waf="$5"
-    local gc_d="$6" gc_bg_d="$7" mv_d="$8" mv_bg_d="$9" free_after="${10}"
-    local ts
-    ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    csv_init
-    printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
-        "$ts" "$RUN_TAG" "$bench" "$mode" \
-        "$logical" "$device" "$waf" \
-        "$gc_d" "$gc_bg_d" "$mv_d" "$mv_bg_d" "$free_after" \
-        &gt;&gt; "$RESULTS_CSV"
-}
-
 avail_mib() { df -Pm "$MNT" | awk 'NR == 2 { print $4 }'; }
 
 print_f2fs_hint_stats() {
@@ -500,23 +438,6 @@ print_f2fs_hint_stats() {
     done
 }</code></pre>
                 </div>
-
-                <div class="callout callout-info">
-                    <span class="callout-title">핵심 함수 요약</span>
-                    <code>create_nullblk_conv/zoned</code>은 configfs로 장치를 생성하고, <code>write_sectors</code>는 <code>/sys/block/nullb0/stat</code>에서 스크립트 기준 <code>awk '{ print $7 }'</code>로 write sectors 항목을 읽습니다. 이 값은 device 내부 write가 아니라 block layer가 <code>null_blk</code>에 제출한 write sector입니다. <code>f2fs_gc_counters</code>는 debugfs에서 GC 호출/이동 블록 수를 가져와 측정 구간 동안의 cleaning 활동을 정량화합니다.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── STEP 3.4 ── -->
-    <div class="section-label">Step 3.4 — setup.sh: 환경 구성</div>
-
-    <div class="step-flow">
-        <div class="step-entry">
-            <div class="step-body">
-                <h3>null_blk 생성 → mkfs.f2fs → mount</h3>
-                <p>인자로 <code>conv</code> 또는 <code>zoned</code>를 받아 그에 맞는 null_blk을 생성하고 F2FS를 포맷·마운트합니다. <code>background_gc=off,noatime</code>으로 마운트하여 측정 구간 외의 GC 노이즈를 줄입니다.</p>
 
                 <div class="code-block">
                     <div class="code-block-label">
@@ -602,47 +523,6 @@ echo "Ready. Run:"
 echo "  sudo $SCRIPT_DIR/bench.sh $mode"</code></pre>
                 </div>
 
-                <div class="result-table-wrap">
-                    <table class="result-table">
-                        <thead>
-                            <tr><th>모드</th><th>항목</th><th>값</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td class="tag-col">Conv</td><td>size</td><td>2048 MB</td></tr>
-                            <tr><td class="tag-col">Conv</td><td>blocksize</td><td>4096</td></tr>
-                            <tr><td class="tag-col">Conv</td><td>zoned</td><td>0 (일반 block device)</td></tr>
-                            <tr><td class="tag-col">Zoned</td><td>size</td><td>2048 MB</td></tr>
-                            <tr><td class="tag-col">Zoned</td><td>zone_size</td><td>64 MB</td></tr>
-                            <tr><td class="tag-col">Zoned</td><td>zone_nr_conv</td><td>4 conventional zones</td></tr>
-                            <tr><td class="tag-col">Zoned</td><td>remaining zones</td><td>sequential write required zones</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── STEP 3.5 ── -->
-    <div class="section-label">Step 3.5 — bench.sh: GC 압박형 측정</div>
-
-    <div class="step-flow">
-        <div class="step-entry">
-            <div class="step-body">
-                <h3>적응형 fill로 free_segments 목표치까지 채워 cleaning 유발</h3>
-                <p><code>bench.sh</code>는 <code>free_segments</code>를 목표값(<code>GC_TARGET_FREE_SEGMENTS</code>) 이하가 될 때까지 chunk 단위로 fill을 반복하고, fragment 후 측정 파일을 미리 layout한 뒤 그 위에 randwrite를 수행합니다. GC delta가 0이면 압박이 약한 것이므로 목표 free_segments를 더 낮춰 재시도합니다.</p>
-
-                <div class="script-overview">
-                    <div class="script-overview-body">
-                        <strong>bench.sh 핵심 차이</strong>
-                        <ul class="script-steps">
-                            <li>고정 크기 fill 대신 <code>free_segments &lt;= TARGET</code> 또는 <code>avail &lt;= MIN_AVAIL_MIB</code>까지 적응형 fill</li>
-                            <li>fragment 후 측정 파일을 <strong>먼저 1MB 순차로 layout</strong>한 뒤 그 위에 randwrite 측정 (pre-layout 구간은 측정 제외)</li>
-                            <li>측정 size 기본값이 작음 (128MiB) — GC 압박 상태에서 ENOSPC 회피</li>
-                            <li>측정 구간 GC delta가 0이면 압박이 약한 것 → <code>GC_TARGET_FREE_SEGMENTS</code>를 더 낮춰 재시도</li>
-                        </ul>
-                    </div>
-                </div>
-
                 <div class="code-block">
                     <div class="code-block-label">
                         <span>bench.sh</span>
@@ -673,8 +553,6 @@ Environment overrides:
   GC_MEASURE_SIZE=$GC_MEASURE_SIZE
   GC_MEASURE_BS=$GC_MEASURE_BS
   GC_MEASURE_RW=$GC_MEASURE_RW   (randwrite recommended to invalidate blocks)
-  RESULTS_CSV=$RESULTS_CSV
-  RUN_TAG=$RUN_TAG
 EOF
 }
 
@@ -807,31 +685,10 @@ printf "%-24s %12s\n" "host-visible WAF" "$waf"
 printf "%-24s calls=%s (bg=%s) blocks_moved=%s (bg=%s)\n" \
     "F2FS GC delta" "$gc_calls_d" "$gc_bg_d" "$mv_d" "$mv_bg_d"
 
-print_f2fs_hint_stats
+printf "%-24s %12s\n" "free_segments_after" "$free_after"
 
-csv_append "bench" "$mode" "$logical_bytes" "$device_bytes" "$waf" \
-    "$gc_calls_d" "$gc_bg_d" "$mv_d" "$mv_bg_d" "$free_after"
-echo
-echo "Logged to: $RESULTS_CSV"
-
-echo
-echo "Interpretation:"
-echo "  GC delta &gt; 0 means F2FS cleaning ran inside the measured interval."
-echo "  If WAF is ~1.0 with GC delta = 0, raise pressure (lower GC_TARGET_FREE_SEGMENTS)."
-echo "  If it hits ENOSPC, lower GC_MEASURE_SIZE or relax GC_TARGET_FREE_SEGMENTS."</code></pre>
+print_f2fs_hint_stats</code></pre>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── STEP 3.6 ── -->
-    <div class="section-label">Step 3.6 — cleanup.sh & 수동 반복 실행</div>
-
-    <div class="step-flow">
-        <div class="step-entry">
-            <div class="step-body">
-                <h3>cleanup.sh — 마운트 해제 및 null_blk 제거</h3>
-                <p>모드 전환 전에 반드시 호출합니다. <code>common.sh</code>의 <code>cleanup_mount</code>와 <code>cleanup_nullblk</code>를 호출해 마운트를 풀고 configfs 디렉터리를 제거하며 <code>null_blk</code> 모듈을 unload합니다.</p>
 
                 <div class="code-block">
                     <div class="code-block-label">
@@ -850,6 +707,32 @@ cleanup_mount
 cleanup_nullblk
 
 echo "Cleaned up $MNT and null_blk"</code></pre>
+                </div>
+
+                <div class="script-overview">
+                    <div class="script-overview-body">
+                        <strong>스크립트 실행 흐름</strong>
+                        <ul class="script-steps">
+                            <li><code>setup.sh conv|zoned</code> — null_blk configfs 장치 생성, F2FS 포맷, <code>/mnt/f2fs-waf</code>에 마운트 (<code>background_gc=off,noatime</code>으로 측정 구간 외 GC 노이즈 차단)</li>
+                            <li><code>bench.sh conv|zoned</code> — [1/3] <code>free_segments &lt;= GC_TARGET_FREE_SEGMENTS</code>까지 64MiB 단위 적응형 fill → [2/3] 소파일 64개 생성 후 절반 삭제로 invalid block 조성 → [3/3] measurefile pre-layout 후 randwrite 측정 구간에서 host-visible WAF 계산 · CSV 저장</li>
+                            <li><code>cleanup.sh</code> — 마운트 해제, configfs 디렉터리 제거, null_blk 모듈 unload (모드 전환 전 필수)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="callout callout-info">
+                    QEMU RAM은 <strong>4GB</strong>, <code>memory_backed=1</code> null_blk 크기는 <strong>2GB</strong>로 고정합니다. Conv와 Zoned 장치를 동시에 올리지 않고, 항상 <code>cleanup.sh</code>로 이전 장치를 내린 뒤 다음 <code>setup.sh</code>를 실행합니다.
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — 스크립트 권한 부여</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>chmod +x *.sh
+which fio mkfs.f2fs awk blockdev mountpoint modprobe
+which jq || echo "jq optional: awk fallback will be used"
+grep f2fs /proc/filesystems || sudo modprobe f2fs</code></pre>
                 </div>
             </div>
         </div>
