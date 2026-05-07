@@ -767,7 +767,7 @@ sudo GC_TARGET_FREE_SEGMENTS=230 GC_MIN_AVAIL_MIB=120 GC_MEASURE_SIZE=48M bash b
 
                 <div class="output-block">
                     <div class="output-label">출력 예시 — Conv 실행</div>
-                    <pre>RResult:
+                    <pre>Result:
 before write sectors          3272328 sectors     1597.82 MiB
 after write sectors           3370856 sectors     1645.93 MiB
 delta write sectors             98528 sectors       48.11 MiB
@@ -820,19 +820,28 @@ F2FS sysfs snapshot:
                     </div>
                     <pre><code>sudo bash cleanup.sh
 sudo bash setup.sh zoned
-sudo GC_TARGET_FREE_SEGMENTS=260 GC_MIN_AVAIL_MIB=200 bash bench.sh zoned</code></pre>
+sudo GC_TARGET_FREE_SEGMENTS=260 GC_MIN_AVAIL_MIB=400 GC_MEASURE_RW=write GC_MEASURE_SIZE=256M bash bench.sh zoned</code></pre>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">출력 예시 — Zoned 한 실행</div>
+                    <div class="output-label">출력 예시 — Zoned 실행</div>
                     <pre>Result:
-host-visible WAF                2.111
+before write sectors          2191608 sectors     1070.12 MiB
+after write sectors          24423240 sectors    11925.41 MiB
+delta write sectors          22231632 sectors    10855.29 MiB
+fio logical writes          268435456 bytes        256.00 MiB
+device writes             11382595584 bytes      10855.29 MiB
+host-visible WAF               42.403
+F2FS GC delta            calls=336 (bg=0) blocks_moved=2744319 (bg=0)
+free_segments_after               966
 
 F2FS sysfs snapshot:
   gc_urgent        GC_NORMAL
-  dirty_segments   82
-  free_segments    1121
-  ovp_segments     981</pre>
+  gc_idle          0
+  dirty_segments   6
+  free_segments    966
+  ovp_segments     981
+  unusable         0</pre>
                 </div>
             </div>
         </div>
@@ -880,16 +889,8 @@ F2FS sysfs snapshot:
                 <div class="answer">이 실습의 분자는 실제 flash memory에 기록된 byte가 아니라 <code>/sys/block/nullb*/stat</code>에서 읽은 block-layer write sector 변화량입니다. <code>null_blk</code>에는 NAND page, erase block, FTL, firmware GC가 없으므로 SSD 내부에서 발생하는 실제 NAND write amplification을 측정한 값이 아닙니다.</div>
             </div>
             <div class="question-item">
-                <div class="q">Q2. <code>bench.sh</code>에서 GC delta가 0일 때와 0보다 클 때 WAF가 다르게 보일 수 있습니다. 어떤 동작이 이 차이를 만드나요?</div>
-                <div class="answer">GC delta가 0이면 측정 구간 동안 fio write가 주로 사용자 데이터 쓰기로 처리되어 추가 cleaning write가 거의 섞이지 않은 상태입니다. GC delta가 0보다 크면 F2FS cleaner가 valid block 이동이나 checkpoint 관련 쓰기를 함께 수행했기 때문에, fio가 요청한 logical write보다 block layer에 제출된 write가 더 커질 수 있습니다.</div>
-            </div>
-            <div class="question-item">
-                <div class="q">Q3. 처음 예상과 달리 Zoned F2FS에서 proxy WAF가 Conv보다 크게 나올 수 있는 이유는 무엇인가요?</div>
-                <div class="answer">Zoned F2FS는 zone 순차 쓰기 제약을 지키기 위해 배치와 cleaning을 더 신중하게 수행하며, metadata/checkpoint, conventional zone 사용, discard 또는 zone reset 처리 같은 부가 write가 측정 구간에 섞일 수 있습니다. 그래서 proxy WAF는 장치 내부 효율만 반영하는 값이 아니라 파일시스템이 zone 제약을 만족시키기 위해 host-visible write를 얼마나 냈는지도 함께 반영합니다.</div>
-            </div>
-            <div class="question-item">
-                <div class="q">Q4. 실제 Conv SSD와 ZNS SSD의 WAF를 정의대로 비교하려면 어떤 추가 측정값과 환경이 필요할까요?</div>
-                <div class="answer">정의대로 비교하려면 host가 보낸 write byte와 SSD 내부 NAND/flash에 실제 program된 byte를 동시에 측정할 수 있어야 합니다. 이를 위해서는 실제 SSD의 SMART/vendor counter, ZNS 관련 장치 counter, 또는 FTL과 NAND 동작을 모델링해 내부 write량을 노출하는 emulator가 필요합니다.</div>
+                <div class="q">Q2. 처음 예상과 달리 Zoned F2FS에서 proxy WAF가 Conv보다 크게 나올 수 있는 이유는 무엇인가요?</div>
+                <div class="answer">Conv에서는 공간이 부족해지면 F2FS가 기존 세그먼트를 제자리에서 덮어쓸 수 있어 GC 없이도 write가 진행됩니다. 반면 Zoned에서는 순차 쓰기 제약 때문에 제자리 덮어쓰기가 불가능하고, 새 write를 위한 빈 zone을 확보하려면 F2FS가 해당 zone 안의 valid block 전체를 다른 zone으로 복사한 뒤 zone을 reset해야 합니다. 즉 Conv에서 firmware가 투명하게 처리할 수 있는 GC를 Zoned에서는 F2FS가 직접 떠안아야 하므로, 측정 구간에 GC 복사 write가 그대로 block-layer write로 노출되어 proxy WAF가 크게 높아집니다.</div>
             </div>
         </div>
     </div>
