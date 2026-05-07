@@ -119,9 +119,9 @@
             <div class="formula-note">이번 실습에서 계산하는 대체값. <code>null_blk</code>에는 flash memory가 없으므로 Linux block layer가 <code>/dev/nullb*</code>에 발행한 sector 수를 사용합니다.</div>
         </div>
         <div class="metric-row">
-            <div class="metric-box"><div class="metric-label">Step 3.1 ~ 3.5</div><div class="metric-val" style="font-size:.88rem;">스크립트 구조</div></div>
-            <div class="metric-box"><div class="metric-label">Step 3.6 ~ 3.7</div><div class="metric-val" style="font-size:.88rem;">Conv/Zoned 측정</div></div>
-            <div class="metric-box"><div class="metric-label">Step 3.8</div><div class="metric-val" style="font-size:.88rem;">한계 분석</div></div>
+            <div class="metric-box"><div class="metric-label">Step 3.1</div><div class="metric-val" style="font-size:.88rem;">Conv 환경 준비</div></div>
+            <div class="metric-box"><div class="metric-label">Step 3.2 ~ 3.6</div><div class="metric-val" style="font-size:.88rem;">스크립트 구조</div></div>
+            <div class="metric-box"><div class="metric-label">Step 3.7 ~ 3.9</div><div class="metric-val" style="font-size:.88rem;">측정·한계 분석</div></div>
         </div>
         <div class="waf-compare" style="margin-top:1rem;">
             <div class="waf-box conv">
@@ -138,7 +138,42 @@
     </div>
 
     <!-- ── STEP 3.1 ── -->
-    <div class="section-label">Step 3.1 — 스크립트 구조 개요</div>
+    <div class="section-label">Step 3.1 — Conv F2FS 환경 준비</div>
+
+    <div class="step-flow">
+        <div class="step-entry">
+
+            <div class="step-body">
+                <h3>재부팅으로 기존 디스크 초기화</h3>
+                <p>lab1·2에서 사용하던 null_blk 장치와 backing memory를 완전히 초기화하기 위해 <strong>먼저 재부팅</strong>합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — QEMU VM 내부 (재부팅)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>sudo grub-reboot <span class="str">"Advanced options for Ubuntu&gt;Ubuntu, with Linux 5.18.0-dpas"</span>
+sudo reboot</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — QEMU VM 내부 (재부팅 후 — crc32 모듈 설치)</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code><span class="comment"># F2FS가 의존하는 crc32_generic 커널 모듈 빌드 및 설치</span>
+cd linux-5.18
+make crypto/crc32_generic.ko
+sudo cp crypto/crc32_generic.ko /lib/modules/$(uname -r)/kernel/crypto/
+sudo depmod -a
+sudo modprobe crc32_generic</code></pre>
+                </div>                
+            </div>
+        </div>
+    </div>
+
+    <!-- ── STEP 3.2 ── -->
+    <div class="section-label">Step 3.2 — 스크립트 구조 개요</div>
 
     <div class="step-flow">
         <div class="step-entry">
@@ -174,8 +209,8 @@ grep f2fs /proc/filesystems || sudo modprobe f2fs</code></pre>
         </div>
     </div>
 
-    <!-- ── STEP 3.2 ── -->
-    <div class="section-label">Step 3.2 — common.sh: 공통 함수 라이브러리</div>
+    <!-- ── STEP 3.3 ── -->
+    <div class="section-label">Step 3.3 — common.sh: 공통 함수 라이브러리</div>
 
     <div class="step-flow">
         <div class="step-entry">
@@ -474,8 +509,8 @@ print_f2fs_hint_stats() {
         </div>
     </div>
 
-    <!-- ── STEP 3.3 ── -->
-    <div class="section-label">Step 3.3 — setup.sh: 환경 구성</div>
+    <!-- ── STEP 3.4 ── -->
+    <div class="section-label">Step 3.4 — setup.sh: 환경 구성</div>
 
     <div class="step-flow">
         <div class="step-entry">
@@ -587,8 +622,8 @@ echo "  sudo $SCRIPT_DIR/bench.sh $mode"</code></pre>
         </div>
     </div>
 
-    <!-- ── STEP 3.4 ── -->
-    <div class="section-label">Step 3.4 — bench.sh: GC 압박형 측정</div>
+    <!-- ── STEP 3.5 ── -->
+    <div class="section-label">Step 3.5 — bench.sh: GC 압박형 측정</div>
 
     <div class="step-flow">
         <div class="step-entry">
@@ -789,8 +824,8 @@ echo "  If it hits ENOSPC, lower GC_MEASURE_SIZE or relax GC_TARGET_FREE_SEGMENT
         </div>
     </div>
 
-    <!-- ── STEP 3.5 ── -->
-    <div class="section-label">Step 3.5 — cleanup.sh & 수동 반복 실행</div>
+    <!-- ── STEP 3.6 ── -->
+    <div class="section-label">Step 3.6 — cleanup.sh & 수동 반복 실행</div>
 
     <div class="step-flow">
         <div class="step-entry">
@@ -820,8 +855,8 @@ echo "Cleaned up $MNT and null_blk"</code></pre>
         </div>
     </div>
 
-    <!-- ── STEP 3.6 ── -->
-    <div class="section-label">Step 3.6 — Conv F2FS 측정 실행</div>
+    <!-- ── STEP 3.7 ── -->
+    <div class="section-label">Step 3.7 — Conv F2FS 측정 실행</div>
 
     <div class="step-flow">
         <div class="step-entry">
@@ -855,8 +890,8 @@ F2FS sysfs snapshot:
         </div>
     </div>
 
-    <!-- ── STEP 3.7 ── -->
-    <div class="section-label">Step 3.7 — Zoned F2FS 측정 실행</div>
+    <!-- ── STEP 3.8 ── -->
+    <div class="section-label">Step 3.8 — Zoned F2FS 측정 실행</div>
 
     <div class="step-flow">
         <div class="step-entry">
@@ -903,8 +938,8 @@ F2FS sysfs snapshot:
         </div>
     </div>
 
-    <!-- ── STEP 3.8 ── -->
-    <div class="section-label">Step 3.8 — 왜 처음 가설을 그대로 결론낼 수 없는가</div>
+    <!-- ── STEP 3.9 ── -->
+    <div class="section-label">Step 3.9 — 왜 처음 가설을 그대로 결론낼 수 없는가</div>
 
     <div class="step-flow">
         <div class="step-entry">
