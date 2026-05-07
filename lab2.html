@@ -7,16 +7,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --code-bg:#1e293b; --code-fg:#e2e8f0; --success:#16a34a; --warn:#d97706; --info:#2563eb; }
+        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --code-bg:#1e293b; --code-fg:#ffffff; --success:#16a34a; --warn:#d97706; --info:#2563eb; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.7; }
-        .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
-        header { background:linear-gradient(135deg, var(--navy), var(--blue)); color:white; padding:2.5rem 0; margin-bottom:2rem; }
+        .container { max-width:860px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+        header { background:linear-gradient(135deg, var(--navy), var(--blue)); color:white; padding:3rem 0; margin-bottom:2rem; }
         header .container { padding-top:0; padding-bottom:0; }
-        .back-link { color:rgba(255,255,255,.75); font-size:.85rem; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-bottom:.8rem; }
-        .back-link:hover { color:white; }
-        header h1 { font-size:1.6rem; font-weight:700; margin-bottom:.3rem; }
-        header p  { font-size:.9rem; opacity:.82; }
+        header h1 { font-size:1.8rem; font-weight:700; margin-bottom:0.3rem; }
+        header p  { font-size:0.95rem; opacity:0.85; }
+        header .badge { display:inline-block; background:var(--accent); color:var(--navy); font-size:0.75rem; font-weight:600; padding:0.2em 0.7em; border-radius:4px; margin-top:0.8rem; }
+        .back-link { display:inline-block; color:var(--blue); font-size:0.85rem; text-decoration:none; margin-bottom:1rem; }
+        .back-link:hover { text-decoration:underline; }
         .step-flow { margin-bottom:2rem; }
         .step-entry { display:flex; gap:1.1rem; align-items:flex-start; margin-bottom:1.6rem; }
         .step-entry:last-child { margin-bottom:0; }
@@ -31,15 +32,10 @@
         .code-block-label { background:#2d3748; color:#a0aec0; font-family:'JetBrains Mono',monospace; font-size:.7rem; padding:.35rem .9rem; letter-spacing:.06em; display:flex; align-items:center; justify-content:space-between; }
         .code-block-label span { display:flex; align-items:center; gap:.5rem; }
         .code-block pre { padding:1rem 1.2rem; overflow-x:auto; }
-        .code-block pre code { font-family:'JetBrains Mono',monospace; font-size:.82rem; background:none; padding:0; color:#e2e8f0; line-height:1.65; }
-        .code-block pre code .comment { color:#6b7a99; }
-        .code-block pre code .kw { color:#79c0ff; }
-        .code-block pre code .str { color:#a5d6a7; }
-        .code-block pre code .fn { color:#d2a8ff; }
-        .copy-btn { background:#2d3748; border:1px solid #4a5568; color:#a0aec0; font-size:.7rem; padding:.25em .6em; border-radius:3px; cursor:pointer; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
-        .copy-btn:hover { background:#4a5568; color:white; }
-        .file-badge { display:inline-flex; align-items:center; gap:.4rem; background:#1a3a5c; color:#7dd3fc; font-family:'JetBrains Mono',monospace; font-size:.72rem; padding:.25em .7em; border-radius:3px; border:1px solid #2d5a8a; }
-        .file-badge::before { content:'📄'; font-size:.85em; }
+        .code-block pre code { font-family:'JetBrains Mono',monospace; font-size:.82rem; background:none; padding:0; color:#ffffff; line-height:1.65; }
+        .copy-btn { margin-left:auto; background:none; border:1px solid #4a5568; color:#a0aec0; font-family:'JetBrains Mono',monospace; font-size:0.68rem; padding:0.15em 0.6em; border-radius:3px; cursor:pointer; transition:background 0.15s,color 0.15s; }
+        .copy-btn:hover { background:#4a5568; color:#e2e8f0; }
+        .copy-btn.copied { border-color:var(--success); color:#4ade80; }
         .callout { border-left:4px solid; padding:.8rem 1rem; margin:.8rem 0; border-radius:0 6px 6px 0; font-size:.88rem; }
         .callout-info    { border-color:var(--info);    background:#eff6ff; }
         .callout-warn    { border-color:var(--warn);    background:#fffbeb; }
@@ -47,14 +43,8 @@
         .callout-title { display:block; margin-bottom:.2rem; font-weight:600; }
         .output-block { background:#0f1724; border:1px solid #2d3748; border-radius:6px; margin:.4rem 0 1rem; overflow:hidden; }
         .output-label { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:#64748b; letter-spacing:.06em; padding:.5rem .9rem; background:#1a2233; border-bottom:1px solid #2d3748; display:flex; align-items:center; gap:.5rem; }
-        .output-label::before { content:'▶'; color:#4ade80; font-size:.65rem; }
+        .output-label::before { content:''; }
         .output-block pre { font-family:'JetBrains Mono',monospace; font-size:.8rem; color:#94a3b8; line-height:1.7; overflow-x:auto; padding:.9rem 1.1rem; }
-        .output-block pre .grn { color:#4ade80; font-weight:600; }
-        .output-block pre .ylw { color:#fde68a; }
-        .output-block pre .blu { color:#7dd3fc; }
-        .output-block pre .prp { color:#c084fc; font-weight:600; }
-        .output-block pre .sep { color:#334155; }
-        .output-block pre .hdr { color:#c084fc; font-weight:600; }
         .zone-state-row { display:flex; flex-wrap:wrap; gap:.6rem; margin:.6rem 0 1rem; }
         .zs-badge { display:inline-flex; align-items:center; gap:.4rem; font-family:'JetBrains Mono',monospace; font-size:.75rem; padding:.3em .75em; border-radius:4px; font-weight:600; }
         .zs-badge.em   { background:#1e3a5c; color:#7dd3fc; }
@@ -62,20 +52,10 @@
         .zs-badge.oe   { background:#1a3a2c; color:#86efac; border:1px solid #4ade80; }
         .zs-badge.cl   { background:#3a2c1a; color:#fbbf24; }
         .zs-badge.fu   { background:#3a1a1a; color:#f87171; }
-        .result-table-wrap { overflow-x:auto; margin:.6rem 0 1rem; }
-        .result-table { width:100%; border-collapse:collapse; font-size:.85rem; }
-        .result-table th { background:var(--navy); color:white; padding:.55rem .9rem; text-align:center; font-weight:600; }
-        .result-table td { padding:.5rem .9rem; text-align:left; border-bottom:1px solid var(--border); color:#374151; }
-        .result-table tr:nth-child(even) td { background:#f8fafc; }
-        .result-table .fill { color:#94a3b8; font-style:italic; font-size:.8rem; }
-        .result-table .tag-col { font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--navy); }
         .metric-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:.7rem 0; }
         .metric-box { background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:.9rem 1rem; text-align:center; }
-        .metric-label { font-size:.72rem; color:#64748b; margin-bottom:.3rem; letter-spacing:.04em; }
         .metric-val { font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:500; color:var(--navy); }
-        .script-overview { background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.1rem; margin:.5rem 0 1rem; display:flex; gap:1rem; align-items:flex-start; }
-        .script-overview-icon { font-size:1.4rem; flex-shrink:0; }
-        .script-overview-body { flex:1; }
+        .script-overview { background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.1rem; margin:.5rem 0 1rem; }
         .script-overview-body strong { font-size:.88rem; color:var(--navy); display:block; margin-bottom:.3rem; }
         .script-steps { list-style:none; margin:.5rem 0 0; }
         .script-steps li { font-size:.82rem; color:#374151; padding:.15rem 0; display:flex; gap:.5rem; align-items:center; }
@@ -96,7 +76,6 @@
 
 <header>
     <div class="container">
-        <a class="back-link" href="lab1.html">← 실습 1로</a>
         <h1>실습 2: Zone 관리 상태 전이</h1>
         <p>blkzone report · Explicit Open · Write Pointer 이동 · Zone Reset</p>
     </div>
@@ -104,14 +83,16 @@
 
 <div class="container">
 
+    <a class="back-link" href="lab1.html">← 실습 1로</a>
+
     <div class="card">
         <h2>실습 목표</h2>
         <p><code>blkzone report</code>를 사용하여 각 Zone의 상태를 확인하고, <strong>Explicit Open</strong> 명령으로 Zone을 열어 데이터를 기록하면서 <strong>Write Pointer</strong> 이동을 관찰합니다.</p>
         <p>마지막으로 <strong>Zone Reset</strong>을 통해 데이터를 삭제하고 Zone을 초기 상태로 복구합니다.</p>
         <div class="metric-row">
-            <div class="metric-box"><div class="metric-label">Step 2.1</div><div class="metric-val" style="font-size:.88rem;">상태 확인</div></div>
-            <div class="metric-box"><div class="metric-label">Step 2.2</div><div class="metric-val" style="font-size:.88rem;">명시적 제어</div></div>
-            <div class="metric-box"><div class="metric-label">Step 2.3</div><div class="metric-val" style="font-size:.88rem;">자원 회수</div></div>
+            <div class="metric-box"><div class="metric-val" style="font-size:.88rem;">상태 확인</div></div>
+            <div class="metric-box"><div class="metric-val" style="font-size:.88rem;">명시적 제어</div></div>
+            <div class="metric-box"><div class="metric-val" style="font-size:.88rem;">자원 회수</div></div>
         </div>
         <div style="margin-top:1rem;">
             <p style="font-size:.8rem; color:#64748b; margin-bottom:.4rem;">Zone 상태 범례</p>
@@ -136,25 +117,25 @@
                 <p><code>blkzone report</code>로 모든 Zone의 현재 상태, 시작 LBA, 크기, Write Pointer 위치를 확인합니다.</p>
                 <div class="code-block">
                     <div class="code-block-label"><span>bash — Zone 목록 조회</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
-                    <pre><code><span class="comment"># 전체 Zone 목록 (처음 5개)</span>
+                    <pre><code># 전체 Zone 목록 (처음 5개)
 sudo blkzone report /dev/nullb1 | head -5
 
-<span class="comment"># Zone 상태별 개수 집계</span>
+# Zone 상태별 개수 집계
 sudo blkzone report /dev/nullb1 \
-  | grep -oP <span class="str">'zcond:\s*\d+\s*\(\K\w+'</span> \
+  | grep -oP 'zcond:\s*\d+\s*\(\K\w+' \
   | sort | uniq -c \
-  | awk <span class="str">'{printf "  %-8s : %s zones\n", $2, $1}'</span>
+  | awk '{printf "  %-8s : %s zones\n", $2, $1}'
 
-<span class="comment"># 총 Zone 수 확인</span>
+# 총 Zone 수 확인
 cat /sys/block/nullb1/queue/nr_zones</code></pre>
                 </div>
                 <div class="output-block">
-                    <div class="output-label">Expected output — initial state (all EMPTY)</div>
-                    <pre>  start: 0x000000000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
-  start: 0x000020000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
-  start: 0x000040000, len 0x020000, cap 0x020000, <span class="blu">wptr 0x000000</span> reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+                    <div class="output-label">예상출력 — initial state (all EMPTY)</div>
+                    <pre>  start: 0x000000000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000040000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
 
-  <span class="grn">em</span>       : 16 zones    <span class="sep">← all zones EMPTY</span>
+  em       : 16 zones    ← all zones EMPTY
 
 16</pre>
                 </div>
@@ -164,40 +145,94 @@ cat /sys/block/nullb1/queue/nr_zones</code></pre>
         <div class="step-entry">
 
             <div class="step-body">
-                <h3>Implicit Open 상태 유발 및 확인</h3>
-                <p>명시적 Open 명령 없이 쓰기를 수행하면 Zone이 자동으로 <strong>Implicit Open</strong> 상태로 전이됩니다.</p>
+                <h3>Implicit Open 상태 유발 및 확인 <code style="font-size:.75em; margin-left:.4rem;">implicit_open.sh</code></h3>
+                <p>명시적 Open 명령 없이 쓰기를 수행하면 Zone이 자동으로 <strong>Implicit Open</strong> 상태로 전이됩니다. 초기화부터 상태 확인까지 전체 시퀀스를 한 번에 실행합니다.</p>
+
+                <div class="script-overview">
+                    <div class="script-overview-body">
+                        <strong>implicit_open.sh 동작 순서</strong>
+                        <ul class="script-steps">
+                            <li>전체 Zone Reset — EMPTY 상태 기준선 확인</li>
+                            <li>Zone 0에 32MB 순차 쓰기 — <code>OPEN ZONE</code> 명령 없이 fio 직접 실행</li>
+                            <li>Zone 0 상태 확인 — WP 이동 및 <code>zcond: oi</code> 전이 확인</li>
+                            <li>전체 Zone 상태 집계 — oi/em 개수 확인</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="code-block">
-                    <div class="code-block-label"><span>bash — 쓰기로 Implicit Open 유발</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
-                    <pre><code><span class="comment"># Zone 0에 32MB 순차 쓰기 (Implicit Open 유발, 절반만 채워 oi 상태 유지)</span>
+                    <div class="code-block-label">
+                        <span>implicit_open.sh</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>#!/usr/bin/env bash
+# implicit_open.sh — trigger and verify Implicit Open state
+# usage: sudo bash implicit_open.sh
+
+set -euo pipefail
+DEV=/dev/nullb1
+
+show_zone0() {
+    printf 'Zone 0 state: '
+    sudo blkzone report "${DEV}" | sed -n '1p' \
+      | grep -oP 'wptr\s+\K0x\S+|zcond:\s*\d+\s*\(\K\w+(?=\))' \
+      | paste - - \
+      | awk '{printf "wptr=%-14s state=%s\n", $1, $2}'
+}
+
+printf '── [1] Full reset ───────────────────────────────\n'
+sudo blkzone reset "${DEV}"
+show_zone0
+
+printf '── [2] Write 32MB (no OPEN ZONE) ───────────────\n'
 sudo fio \
   --name=implicit_open \
-  --filename=/dev/nullb1 \
-  --ioengine=libaio \
-  --direct=1 \
-  --zonemode=zbd \
-  --rw=write \
-  --bs=64k \
-  --iodepth=1 \
-  --size=64m \
-  --io_size=32m \
-  --numjobs=1 \
-  --output-format=normal 2>&amp;1 | grep -E <span class="str">'write:|IOPS'</span>
+  --filename="${DEV}" \
+  --ioengine=libaio --direct=1 --zonemode=zbd \
+  --rw=write --bs=64k --iodepth=1 \
+  --offset=0 --size=64m --io_size=32m --numjobs=1 \
+  --output-format=normal 2>/dev/null \
+  | grep -oP 'write:.*BW=\K\S+' \
+  | xargs -I{} printf '  BW: {}\n'
+show_zone0
 
-<span class="comment"># Zone 상태 재확인</span>
-sudo blkzone report /dev/nullb1 | head -3
-sudo blkzone report /dev/nullb1 \
-  | grep -oP <span class="str">'zcond:\s*\d+\s*\(\K\w+'</span> \
-  | sort | uniq -c</code></pre>
+printf '── [3] Zone state summary ───────────────────────\n'
+sudo blkzone report "${DEV}" \
+  | grep -oP 'zcond:\s*\d+\s*\(\K\w+' \
+  | sort | uniq -c \
+  | awk '{printf "  %-8s : %s zones\n", $2, $1}'
+printf '\ndone\n'</code></pre>
                 </div>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — 파일 생성</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>vi implicit_open.sh</code></pre>
+                </div>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — 파일 권한 부여 및 실행</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>chmod +x implicit_open.sh &amp;&amp; sudo bash implicit_open.sh</code></pre>
+                </div>
+
                 <div class="output-block">
-                    <div class="output-label">Expected output — Implicit Open state</div>
-                    <pre>  start: 0x000000000, len 0x020000, cap 0x020000, <span class="ylw">wptr 0x010000</span> reset:0 non-seq:0, zcond: <span class="ylw">2(oi)</span> [type: 2(SEQ_WRITE_REQUIRED)]
-  <span class="sep">                                                   ↑ WP moved: 0 → 0x10000 (32MB written)</span>
-  start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
-  start: 0x000040000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
-       1 <span class="ylw">oi</span>    <span class="sep">← Implicit Open: 1</span>
-      15 <span class="grn">em</span>    <span class="sep">← EMPTY: 15</span></pre>
+                    <div class="output-label">예상출력 — implicit_open.sh</div>
+                    <pre>── [1] Full reset ───────────────────────────────
+Zone 0 state: wptr=0x000000       state=em
+── [2] Write 32MB (no OPEN ZONE) ───────────────
+  BW: 1024MiB/s
+Zone 0 state: wptr=0x010000       state=oi
+── [3] Zone state summary ───────────────────────
+  oi       : 1 zones
+  em       : 15 zones
+
+done</pre>
                 </div>
+
                 <div class="callout callout-info">
                     <span class="callout-title">참고</span>
                     Implicit Open은 애플리케이션이 <code>OPEN ZONE</code> 명령 없이 바로 쓰기를 시작할 때 장치가 자동으로 부여하는 상태입니다.
@@ -217,7 +252,6 @@ sudo blkzone report /dev/nullb1 \
                 <p>Zone을 명시적으로 열고 데이터를 기록하면서 Write Pointer 이동을 관찰한 뒤, Close와 Finish까지 전체 상태 전이 시퀀스를 한 번에 확인합니다.</p>
 
                 <div class="script-overview">
-                    <div class="script-overview-icon">🗂️</div>
                     <div class="script-overview-body">
                         <strong>zone_lifecycle.sh 동작 순서</strong>
                         <ul class="script-steps">
@@ -232,82 +266,82 @@ sudo blkzone report /dev/nullb1 \
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span><span class="file-badge">zone_lifecycle.sh</span></span>
+                        <span>zone_lifecycle.sh</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
+                    <pre><code>#!/usr/bin/env bash
 # zone_lifecycle.sh — zone state transition (Open -> Write -> Close -> Finish)
 # usage: sudo bash zone_lifecycle.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-DEV=<span class="str">/dev/nullb1</span>
 
-<span class="fn">show_zone()</span> {
-    printf <span class="str">'Zone 1 state: '</span>
-    sudo blkzone report <span class="str">"${DEV}"</span> | sed -n <span class="str">'2p'</span> \
-      | grep -oP <span class="str">'wptr\s+\K0x\S+|zcond:\s*\d+\s*\(\K\w+(?=\))'</span> \
+set -euo pipefail
+DEV=/dev/nullb1
+
+show_zone() {
+    printf 'Zone 1 state: '
+    sudo blkzone report "${DEV}" | sed -n '2p' \
+      | grep -oP 'wptr\s+\K0x\S+|zcond:\s*\d+\s*\(\K\w+(?=\))' \
       | paste - - \
-      | awk <span class="str">'{printf "wptr=%-14s state=%s\n", $1, $2}'</span>
+      | awk '{printf "wptr=%-14s state=%s\n", $1, $2}'
 }
 
-printf <span class="str">'── [1] Full reset ───────────────────────────────\n'</span>
-sudo blkzone reset <span class="str">"${DEV}"</span>
+printf '── [1] Full reset ───────────────────────────────\n'
+sudo blkzone reset "${DEV}"
 show_zone
 
-printf <span class="str">'── [2] Explicit Open ────────────────────────────\n'</span>
-sudo blkzone open --offset 0x20000 --length 0x20000 <span class="str">"${DEV}"</span>
+printf '── [2] Explicit Open ────────────────────────────\n'
+sudo blkzone open --offset 0x20000 --length 0x20000 "${DEV}"
 show_zone
 
-printf <span class="str">'── [3] Write 32MB ───────────────────────────────\n'</span>
+printf '── [3] Write 32MB ───────────────────────────────\n'
 sudo fio \
   --name=write_z1 \
-  --filename=<span class="str">"${DEV}"</span> \
+  --filename="${DEV}" \
   --ioengine=libaio --direct=1 --zonemode=zbd \
   --rw=write --bs=4m --iodepth=1 \
   --offset=64m --size=64m --io_size=32m --numjobs=1 \
   --output-format=normal 2>/dev/null \
-  | grep -oP <span class="str">'write:.*BW=\K\S+'</span> \
-  | xargs -I{} printf <span class="str">'  BW: {}\n'</span>
+  | grep -oP 'write:.*BW=\K\S+' \
+  | xargs -I{} printf '  BW: {}\n'
 show_zone
 
-printf <span class="str">'── [4] Close Zone ───────────────────────────────\n'</span>
-sudo blkzone close --offset 0x20000 --length 0x20000 <span class="str">"${DEV}"</span>
+printf '── [4] Close Zone ───────────────────────────────\n'
+sudo blkzone close --offset 0x20000 --length 0x20000 "${DEV}"
 show_zone
 
-printf <span class="str">'── [5] Finish Zone ──────────────────────────────\n'</span>
-sudo blkzone finish --offset 0x20000 --length 0x20000 <span class="str">"${DEV}"</span>
+printf '── [5] Finish Zone ──────────────────────────────\n'
+sudo blkzone finish --offset 0x20000 --length 0x20000 "${DEV}"
 show_zone
-printf <span class="str">'\ndone\n'</span></code></pre>
+printf '\ndone\n'</code></pre>
                 </div>
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
+                        <span>bash — 파일 생성</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
-                    <pre><code>scp -P 2222 zone_lifecycle.sh user@localhost:~/</code></pre>
+                    <pre><code>vi zone_lifecycle.sh</code></pre>
                 </div>
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — QEMU VM 내부</span>
+                        <span>bash — 파일 권한 부여 및 실행</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>chmod +x zone_lifecycle.sh &amp;&amp; sudo bash zone_lifecycle.sh</code></pre>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">Expected output — zone_lifecycle.sh</div>
+                    <div class="output-label">예상출력 — zone_lifecycle.sh</div>
                     <pre>── [1] Full reset ───────────────────────────────
-Zone 1 state: wptr=0x000000       state=<span class="grn">em</span>
+Zone 1 state: wptr=0x000000       state=em
 ── [2] Explicit Open ────────────────────────────
-Zone 1 state: wptr=0x000000       state=<span class="prp">oe</span>
+Zone 1 state: wptr=0x000000       state=oe
 ── [3] Write 32MB ───────────────────────────────
   BW: 1024MiB/s
-Zone 1 state: wptr=<span class="ylw">0x010000</span>       state=<span class="prp">oe</span>
+Zone 1 state: wptr=0x010000       state=oe
 ── [4] Close Zone ───────────────────────────────
-Zone 1 state: wptr=0x010000       state=<span class="ylw">cl</span>
+Zone 1 state: wptr=0x010000       state=cl
 ── [5] Finish Zone ──────────────────────────────
-Zone 1 state: wptr=<span class="ylw">0x020000</span>       state=<span class="ylw">fu</span>
+Zone 1 state: wptr=0x020000       state=fu
 
 done</pre>
                 </div>
@@ -332,70 +366,70 @@ done</pre>
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span><span class="file-badge">zone_reset.sh</span></span>
+                        <span>zone_reset.sh</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
+                    <pre><code>#!/usr/bin/env bash
 # zone_reset.sh — single zone reset, then bulk reset all zones
 # usage: sudo bash zone_reset.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-DEV=<span class="str">/dev/nullb1</span>
 
-<span class="comment"># ── 1) Zone 1 state before reset ─────────────────────</span>
-printf <span class="str">'[1/3] Zone 1 state before reset:\n'</span>
-sudo blkzone report <span class="str">"${DEV}"</span> | sed -n <span class="str">'2p'</span>
+set -euo pipefail
+DEV=/dev/nullb1
 
-<span class="comment"># ── 2) single zone 1 reset ───────────────────────────</span>
-printf <span class="str">'\n[2/3] Zone 1 Reset...\n'</span>
-sudo blkzone reset --offset 0x20000 --length 0x20000 <span class="str">"${DEV}"</span>
-sudo blkzone report <span class="str">"${DEV}"</span> | sed -n <span class="str">'2p'</span>
+# ── 1) Zone 1 state before reset ─────────────────────
+printf '[1/3] Zone 1 state before reset:\n'
+sudo blkzone report "${DEV}" | sed -n '2p'
 
-<span class="comment"># ── 3) bulk reset all zones ──────────────────────────</span>
-printf <span class="str">'\n[3/3] Bulk reset all zones...\n'</span>
-sudo blkzone reset <span class="str">"${DEV}"</span>
+# ── 2) single zone 1 reset ───────────────────────────
+printf '\n[2/3] Zone 1 Reset...\n'
+sudo blkzone reset --offset 0x20000 --length 0x20000 "${DEV}"
+sudo blkzone report "${DEV}" | sed -n '2p'
 
-sudo blkzone report <span class="str">"${DEV}"</span> \
-  | grep -oP <span class="str">'zcond:\s*\d+\s*\(\K\w+'</span> \
+# ── 3) bulk reset all zones ──────────────────────────
+printf '\n[3/3] Bulk reset all zones...\n'
+sudo blkzone reset "${DEV}"
+
+sudo blkzone report "${DEV}" \
+  | grep -oP 'zcond:\s*\d+\s*\(\K\w+' \
   | sort | uniq -c \
-  | awk <span class="str">'{printf "  %-8s : %s zones\n", $2, $1}'</span>
+  | awk '{printf "  %-8s : %s zones\n", $2, $1}'
 
-printf <span class="str">'\nFirst 3 zones WP check:\n'</span>
-sudo blkzone report <span class="str">"${DEV}"</span> | head -3
-printf <span class="str">'\nAll zones restored to EMPTY\n'</span></code></pre>
+printf '\nFirst 3 zones WP check:\n'
+sudo blkzone report "${DEV}" | head -3
+printf '\nAll zones restored to EMPTY\n'</code></pre>
                 </div>
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
+                        <span>bash — 파일 생성</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
-                    <pre><code>scp -P 2222 zone_reset.sh user@localhost:~/</code></pre>
+                    <pre><code>vi zone_reset.sh</code></pre>
                 </div>
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — QEMU VM 내부</span>
+                        <span>bash — 파일 권한 부여 및 실행</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>chmod +x zone_reset.sh &amp;&amp; sudo bash zone_reset.sh</code></pre>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">Expected output — zone_reset.sh</div>
-                    <pre><span class="hdr">[1/3] Zone 1 state before reset:</span>
-  start: 0x000020000, len 0x020000, cap 0x020000, <span class="ylw">wptr 0x020000</span> reset:0 non-seq:0, zcond:<span class="ylw">14(fu)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+                    <div class="output-label">예상출력 — zone_reset.sh</div>
+                    <pre>[1/3] Zone 1 state before reset:
+  start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x020000 reset:0 non-seq:0, zcond:14(fu) [type: 2(SEQ_WRITE_REQUIRED)]
 
-<span class="hdr">[2/3] Zone 1 Reset...</span>
-  start: 0x000020000, len 0x020000, cap 0x020000, <span class="grn">wptr 0x000000</span> reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
-  <span class="sep">                                                    ↑ WP reset to zone start        ↑ EMPTY</span>
+[2/3] Zone 1 Reset...
+  start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
+                                                    ↑ WP reset to zone start        ↑ EMPTY
 
-<span class="hdr">[3/3] Bulk reset all zones...</span>
-  <span class="grn">em</span>       : 16 zones    <span class="sep">← all zones EMPTY</span>
+[3/3] Bulk reset all zones...
+  em       : 16 zones    ← all zones EMPTY
 
 First 3 zones WP check:
-  start: 0x000000000, len 0x020000, cap 0x020000, <span class="grn">wptr 0x000000</span> reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
-  start: 0x000020000, len 0x020000, cap 0x020000, <span class="grn">wptr 0x000000</span> reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
-  start: 0x000040000, len 0x020000, cap 0x020000, <span class="grn">wptr 0x000000</span> reset:0 non-seq:0, zcond: <span class="grn">1(em)</span> [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000000000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
+  start: 0x000040000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
 
 All zones restored to EMPTY</pre>
                 </div>
@@ -405,24 +439,6 @@ All zones restored to EMPTY</pre>
                     Zone Reset은 데이터를 일괄 삭제하고 Write Pointer를 Zone 시작으로 되돌립니다. Conventional SSD의 Trim 명령과 유사하지만 <strong>Zone 단위</strong>로만 동작합니다.
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>결과 기록표 — Zone 상태 전이</h2>
-        <p>각 명령 실행 후 Zone 1의 상태(zcond)와 Write Pointer 위치를 기록합니다.</p>
-        <div class="result-table-wrap">
-            <table class="result-table">
-                <thead><tr><th>단계</th><th>명령</th><th>zcond (상태)</th><th>Write Pointer</th></tr></thead>
-                <tbody>
-                    <tr><td class="tag-col">초기</td><td>blkzone reset (전체)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td></tr>
-                    <tr><td class="tag-col">Open</td><td>blkzone open</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td></tr>
-                    <tr><td class="tag-col">쓰기 후</td><td>fio (32MB write)</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td></tr>
-                    <tr><td class="tag-col">Close</td><td>blkzone close</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td></tr>
-                    <tr><td class="tag-col">Finish</td><td>blkzone finish</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td></tr>
-                    <tr><td class="tag-col">Reset</td><td>blkzone reset</td><td class="fill">기록하세요</td><td class="fill">기록하세요</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -455,23 +471,13 @@ All zones restored to EMPTY</pre>
 
 <script>
 function copyCode(btn) {
-    const pre = btn.closest('.code-block').querySelector('pre');
-    const tmp = document.createElement('div');
-    tmp.innerHTML = pre.innerHTML;
-    const text = (tmp.innerText || tmp.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(() => flash(btn)).catch(() => fallback(text, btn));
-    } else { fallback(text, btn); }
+    const code = btn.closest('.code-block').querySelector('pre code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+        btn.textContent = 'copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+    });
 }
-function fallback(text, btn) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try { document.execCommand('copy') ? flash(btn) : err(btn); } catch(e) { err(btn); }
-    finally { document.body.removeChild(ta); }
-}
-function flash(btn) { btn.textContent='copied!'; btn.style.color='#4ade80'; setTimeout(()=>{btn.textContent='copy';btn.style.color='';},1800); }
-function err(btn)   { btn.textContent='failed';  btn.style.color='#f87171'; setTimeout(()=>{btn.textContent='copy';btn.style.color='';},1800); }
 </script>
 </body>
 </html>

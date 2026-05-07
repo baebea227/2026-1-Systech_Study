@@ -3,20 +3,21 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실습 3: F2FS 파일시스템 레벨 WAF 측정</title>
+    <title>실습 3: F2FS Host-visible WAF 측정과 한계</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --code-bg:#1e293b; --code-fg:#e2e8f0; --success:#16a34a; --warn:#d97706; --info:#2563eb; }
+        :root { --navy:#003366; --blue:#004a99; --accent:#c9a227; --light:#f7f9fc; --border:#e2e8f0; --code-bg:#1e293b; --code-fg:#ffffff; --success:#16a34a; --warn:#d97706; --info:#2563eb; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Noto Sans KR',-apple-system,sans-serif; color:#1a202c; background:var(--light); line-height:1.7; }
-        .container { max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem; }
-        header { background:linear-gradient(135deg, var(--navy), var(--blue)); color:white; padding:2.5rem 0; margin-bottom:2rem; }
+        .container { max-width:860px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+        header { background:linear-gradient(135deg, var(--navy), var(--blue)); color:white; padding:3rem 0; margin-bottom:2rem; }
         header .container { padding-top:0; padding-bottom:0; }
-        .back-link { color:rgba(255,255,255,.75); font-size:.85rem; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; margin-bottom:.8rem; }
-        .back-link:hover { color:white; }
-        header h1 { font-size:1.6rem; font-weight:700; margin-bottom:.3rem; }
-        header p  { font-size:.9rem; opacity:.82; }
+        header h1 { font-size:1.8rem; font-weight:700; margin-bottom:0.3rem; }
+        header p  { font-size:0.95rem; opacity:0.85; }
+        header .badge { display:inline-block; background:var(--accent); color:var(--navy); font-size:0.75rem; font-weight:600; padding:0.2em 0.7em; border-radius:4px; margin-top:0.8rem; }
+        .back-link { display:inline-block; color:var(--blue); font-size:0.85rem; text-decoration:none; margin-bottom:1rem; }
+        .back-link:hover { text-decoration:underline; }
         .step-flow { margin-bottom:2rem; }
         .step-entry { display:flex; gap:1.1rem; align-items:flex-start; margin-bottom:1.6rem; }
         .step-entry:last-child { margin-bottom:0; }
@@ -33,16 +34,11 @@
         .code-block { position:relative; background:#1e2533; border-radius:6px; margin:.5rem 0 1rem; overflow:hidden; }
         .code-block-label { background:#2d3748; color:#a0aec0; font-family:'JetBrains Mono',monospace; font-size:.7rem; padding:.35rem .9rem; letter-spacing:.06em; display:flex; align-items:center; justify-content:space-between; }
         .code-block-label span { display:flex; align-items:center; gap:.5rem; }
-        .code-block pre { padding:1rem 1.2rem; overflow-x:auto; }
-        .code-block pre code { font-family:'JetBrains Mono',monospace; font-size:.82rem; background:none; padding:0; color:#e2e8f0; line-height:1.65; }
-        .code-block pre code .comment { color:#6b7a99; }
-        .code-block pre code .kw { color:#79c0ff; }
-        .code-block pre code .str { color:#a5d6a7; }
-        .code-block pre code .fn { color:#d2a8ff; }
-        .copy-btn { background:#2d3748; border:1px solid #4a5568; color:#a0aec0; font-size:.7rem; padding:.25em .6em; border-radius:3px; cursor:pointer; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
-        .copy-btn:hover { background:#4a5568; color:white; }
-        .file-badge { display:inline-flex; align-items:center; gap:.4rem; background:#1a3a5c; color:#7dd3fc; font-family:'JetBrains Mono',monospace; font-size:.72rem; padding:.25em .7em; border-radius:3px; border:1px solid #2d5a8a; }
-        .file-badge::before { content:'📄'; font-size:.85em; }
+        .code-block pre { padding:1rem 1.2rem; overflow-x:auto; max-height:520px; overflow-y:auto; }
+        .code-block pre code { font-family:'JetBrains Mono',monospace; font-size:.78rem; background:none; padding:0; color:#ffffff; line-height:1.6; }
+        .copy-btn { margin-left:auto; background:none; border:1px solid #4a5568; color:#a0aec0; font-family:'JetBrains Mono',monospace; font-size:0.68rem; padding:0.15em 0.6em; border-radius:3px; cursor:pointer; transition:background 0.15s,color 0.15s; }
+        .copy-btn:hover { background:#4a5568; color:#e2e8f0; }
+        .copy-btn.copied { border-color:var(--success); color:#4ade80; }
         .callout { border-left:4px solid; padding:.8rem 1rem; margin:.8rem 0; border-radius:0 6px 6px 0; font-size:.88rem; }
         .callout-info    { border-color:var(--info);    background:#eff6ff; }
         .callout-warn    { border-color:var(--warn);    background:#fffbeb; }
@@ -50,14 +46,8 @@
         .callout-title { display:block; margin-bottom:.2rem; font-weight:600; }
         .output-block { background:#0f1724; border:1px solid #2d3748; border-radius:6px; margin:.4rem 0 1rem; overflow:hidden; }
         .output-label { font-family:'JetBrains Mono',monospace; font-size:.68rem; color:#64748b; letter-spacing:.06em; padding:.5rem .9rem; background:#1a2233; border-bottom:1px solid #2d3748; display:flex; align-items:center; gap:.5rem; }
-        .output-label::before { content:'▶'; color:#4ade80; font-size:.65rem; }
+        .output-label::before { content:''; }
         .output-block pre { font-family:'JetBrains Mono',monospace; font-size:.8rem; color:#94a3b8; line-height:1.7; overflow-x:auto; padding:.9rem 1.1rem; }
-        .output-block pre .grn { color:#4ade80; font-weight:600; }
-        .output-block pre .ylw { color:#fde68a; }
-        .output-block pre .blu { color:#7dd3fc; }
-        .output-block pre .red { color:#f87171; font-weight:600; }
-        .output-block pre .sep { color:#334155; }
-        .output-block pre .hdr { color:#c084fc; font-weight:600; }
         .result-table-wrap { overflow-x:auto; margin:.6rem 0 1rem; }
         .result-table { width:100%; border-collapse:collapse; font-size:.85rem; }
         .result-table th { background:var(--navy); color:white; padding:.55rem .9rem; text-align:center; font-weight:600; }
@@ -70,9 +60,7 @@
         .metric-box { background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:.9rem 1rem; text-align:center; }
         .metric-label { font-size:.72rem; color:#64748b; margin-bottom:.3rem; letter-spacing:.04em; }
         .metric-val { font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:500; color:var(--navy); }
-        .script-overview { background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.1rem; margin:.5rem 0 1rem; display:flex; gap:1rem; align-items:flex-start; }
-        .script-overview-icon { font-size:1.4rem; flex-shrink:0; }
-        .script-overview-body { flex:1; }
+        .script-overview { background:#f1f5f9; border:1px solid var(--border); border-radius:6px; padding:.9rem 1.1rem; margin:.5rem 0 1rem; }
         .script-overview-body strong { font-size:.88rem; color:var(--navy); display:block; margin-bottom:.3rem; }
         .script-steps { list-style:none; margin:.5rem 0 0; }
         .script-steps li { font-size:.82rem; color:#374151; padding:.15rem 0; display:flex; gap:.5rem; align-items:center; }
@@ -98,6 +86,10 @@
         .nav-btn { font-size:.82rem; color:var(--blue); text-decoration:none; padding:.45em 1em; border:1px solid var(--border); border-radius:5px; background:white; transition:background .15s,border-color .15s; }
         .nav-btn:hover { background:#eff6ff; border-color:var(--blue); }
         .section-label { font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#94a3b8; margin:1.8rem 0 .8rem; padding-bottom:.4rem; border-bottom:1px solid var(--border); }
+        .file-tree { background:#1e2533; color:#e2e8f0; border-radius:6px; padding:1rem 1.2rem; margin:.5rem 0 1rem; font-family:'JetBrains Mono',monospace; font-size:.82rem; line-height:1.7; }
+        .file-tree .dir  { color:#7dd3fc; }
+        .file-tree .file { color:#fde68a; }
+        .file-tree .note { color:#6b7a99; }
         footer { text-align:center; color:#94a3b8; font-size:.8rem; padding:2rem 0; }
         @media(max-width:640px){ .container{padding:1rem;} header h1{font-size:1.3rem;} .waf-compare{grid-template-columns:1fr;} .metric-row{grid-template-columns:1fr 1fr;} }
     </style>
@@ -106,636 +98,1193 @@
 
 <header>
     <div class="container">
-        <a class="back-link" href="lab2.html">← 실습 2로</a>
-        <h1>실습 3: F2FS 파일시스템 레벨 WAF 측정</h1>
-        <p>Conv 환경 구성 · Conv WAF 측정 · ZNS 환경 구성 · ZNS WAF 측정 · 비교 분석</p>
+        <h1>실습 3: F2FS Host-visible WAF 측정과 한계</h1>
+        <p>scripts/f2fs-waf · null_blk + F2FS · Conv vs Zoned · host-visible WAF 측정의 한계</p>
     </div>
 </header>
 
 <div class="container">
 
+    <a class="back-link" href="lab2.html">← 실습 2로</a>
+
     <!-- ── 실습 목표 ── -->
     <div class="card">
         <h2>실습 목표</h2>
-        <p><strong>F2FS(Flash-Friendly File System)</strong>는 로그 구조 파일시스템으로, 파일시스템 레벨에서 자체 GC(Garbage Collection)를 수행합니다. 이 GC는 NAND 펌웨어 GC와 달리 <strong>null_blk 에뮬레이터에서도 실제로 동작</strong>하므로, 파일시스템 레벨 WAF가 1보다 클 수 있습니다.</p>
-        <p>Conventional SSD(<code>/dev/nullb0</code>)에 F2FS를 마운트해 랜덤 쓰기 부하를 주면, F2FS GC가 유효 데이터를 세그먼트 간에 복사(Copy-back)하여 블록 장치 실제 기록량이 앱 요청량보다 커집니다. ZNS SSD(<code>/dev/nullb1</code>)에서는 F2FS가 Zone 단위로 GC를 수행하므로 Copy-back이 줄어들어 WAF가 낮게 측정됩니다.</p>
+        <p>이번 실습은 <strong>QEMU + null_blk + F2FS</strong> 환경에서 WAF를 계산해 보고, 그 값이 무엇을 의미하는지 구분하는 데 목적이 있습니다. 여기서 측정하는 값은 실제 SSD 내부 NAND write amplification이 아니라, F2FS가 블록 장치에 발행한 <strong>host-visible WAF</strong>입니다.</p>
+        <p><code>null_blk</code>에는 SSD FTL, NAND page, erase block, device-side GC가 없습니다. 따라서 이 실습만으로 "conventional SSD 내부 WAF가 ZNS SSD보다 크다"를 실측 증명할 수 없습니다. 오히려 ZNS F2FS가 host-visible write를 더 많이 발행하는 결과도 나올 수 있습니다.</p>
         <div class="formula-box">
-            <div class="formula">WAF<sub style="font-size:.7em;">fs</sub> = 블록 장치 실제 기록량 / 애플리케이션 요청 기록량</div>
-            <div class="formula-note">측정 근거: <code>/sys/block/nullb*/stat</code> field 7 (write_sectors) 전후 차이</div>
+            <div class="formula">WAF<sub style="font-size:.7em;">host</sub> = device write bytes (Δ stat field 7 × 512) / fio logical write bytes</div>
+            <div class="formula-note">Linux block layer가 <code>/dev/nullb*</code>에 발행한 sector 수 증가량을 fio가 요청한 논리 write 바이트로 나눈 비율</div>
         </div>
         <div class="metric-row">
-            <div class="metric-box"><div class="metric-label">Phase A (3.1 ~ 3.2)</div><div class="metric-val" style="font-size:.88rem;">Conv F2FS 측정</div></div>
-            <div class="metric-box"><div class="metric-label">Phase B (3.3 ~ 3.4)</div><div class="metric-val" style="font-size:.88rem;">ZNS F2FS 측정</div></div>
-            <div class="metric-box"><div class="metric-label">Step 3.5</div><div class="metric-val" style="font-size:.88rem;">WAF 비교 분석</div></div>
+            <div class="metric-box"><div class="metric-label">Step 3.1 ~ 3.6</div><div class="metric-val" style="font-size:.88rem;">스크립트 구조</div></div>
+            <div class="metric-box"><div class="metric-label">Step 3.7 ~ 3.8</div><div class="metric-val" style="font-size:.88rem;">Conv/Zoned 측정</div></div>
+            <div class="metric-box"><div class="metric-label">Step 3.9</div><div class="metric-val" style="font-size:.88rem;">한계 분석</div></div>
         </div>
         <div class="waf-compare" style="margin-top:1rem;">
             <div class="waf-box conv">
-                <div class="waf-box-title">Conv F2FS (/dev/nullb0)</div>
-                <div class="waf-val">1.2 ~ 2.0×</div>
-                <div class="waf-sub">세그먼트 GC Copy-back으로 인한 추가 블록 쓰기</div>
+                <div class="waf-box-title">Conv null_blk + F2FS</div>
+                <div class="waf-val">≈ 1.0×</div>
+                <div class="waf-sub">F2FS metadata · checkpoint · cleaner overhead 반영</div>
             </div>
             <div class="waf-box zns">
-                <div class="waf-box-title">ZNS F2FS (/dev/nullb1)</div>
-                <div class="waf-val">≈ 1.0×</div>
-                <div class="waf-sub">Zone 단위 GC — Zone Reset으로 Copy-back 최소화</div>
+                <div class="waf-box-title">Zoned null_blk + F2FS</div>
+                <div class="waf-val">변동</div>
+                <div class="waf-sub">Zone 제약 + F2FS zoned mode overhead로 더 클 수 있음</div>
             </div>
         </div>
-        <div class="callout callout-info">
-            <span class="callout-title">장치 초기화 안내</span>
-            <code>memory_backed=1</code> null_blk 장치는 데이터를 커널 메모리에 유지합니다. QEMU 메모리가 4GB로 제한되어 있어 nullb0(2GB)와 nullb1(2GB)을 <strong>동시에 올리면 메모리가 부족</strong>하므로 Conv와 ZNS를 순차적으로 측정합니다.
+        <div class="callout callout-warn">
+            <span class="callout-title">중요한 정정</span>
+            이 실습의 결론은 "ZNS WAF가 1이고 Conv WAF가 더 크다"가 아닙니다. 결론은 <strong>null_blk와 F2FS만으로는 SSD 내부 WAF를 비교할 수 없고, host-visible WAF와 device-internal WAF를 구분해야 한다</strong>입니다.
         </div>
     </div>
 
     <!-- ── STEP 3.1 ── -->
-    <div class="section-label">Step 3.1 — Conv F2FS 환경 준비</div>
+    <div class="section-label">Step 3.1 — 스크립트 구조 개요</div>
 
     <div class="step-flow">
         <div class="step-entry">
-
             <div class="step-body">
-                <h3>재부팅으로 기존 디스크 초기화 후 nullb0(2GB) 생성 및 F2FS 포맷/마운트 <code style="font-size:.75em; margin-left:.4rem;">setup_conv.sh</code></h3>
-                <p>lab1·2에서 사용하던 null_blk 장치와 backing memory를 완전히 초기화하기 위해 <strong>먼저 재부팅</strong>합니다. 재부팅 후 커널 모듈을 로드하고 nullb0을 <strong>2GB로 새로 생성</strong>합니다. nullb1은 이 단계에서 건드리지 않습니다.</p>
+                <h3>scripts/f2fs-waf 디렉터리 구성</h3>
+                <p>실습 스크립트는 <code>scripts/f2fs-waf/</code>에 모듈화되어 있습니다. <code>common.sh</code>는 공통 함수 라이브러리이며 직접 실행하지 않습니다. 나머지 5개 스크립트는 <code>setup → bench(or bench_gc) → cleanup</code>의 순서로 실행하거나 <code>run_all.sh</code>로 자동 반복합니다.</p>
 
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부 (재부팅)</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code><span class="comment"># 특정 커널로 재부팅하여 기존 null_blk 장치 초기화</span>
-sudo grub-reboot <span class="str">"Advanced options for Ubuntu>Ubuntu, with Linux 5.18.0-dpas"</span>
-sudo reboot</code></pre>
-                </div>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부 (재부팅 후 — crc32 모듈 설치)</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code><span class="comment"># F2FS가 의존하는 crc32_generic 커널 모듈 빌드 및 설치</span>
-cd linux-5.18
-make crypto/crc32_generic.ko
-sudo cp crypto/crc32_generic.ko /lib/modules/$(uname -r)/kernel/crypto/
-sudo depmod -a
-sudo modprobe crc32_generic</code></pre>
+                <div class="file-tree">scripts/<span class="dir">f2fs-waf/</span>
+├── <span class="file">common.sh</span>      <span class="note"># 공통 함수 (env, configfs, sysfs 헬퍼)</span>
+├── <span class="file">setup.sh</span>       <span class="note"># null_blk 생성 + F2FS mkfs + mount</span>
+├── <span class="file">bench.sh</span>       <span class="note"># 안정형 (low GC pressure) WAF 측정</span>
+├── <span class="file">bench_gc.sh</span>    <span class="note"># 적응형 (GC pressure) WAF 측정</span>
+├── <span class="file">cleanup.sh</span>     <span class="note"># umount + null_blk 제거</span>
+└── <span class="file">run_all.sh</span>     <span class="note"># conv/zoned × N회 자동 반복 + CSV 요약</span>
                 </div>
 
                 <div class="script-overview">
-                    <div class="script-overview-icon">⚙️</div>
                     <div class="script-overview-body">
-                        <strong>setup_conv.sh 동작 순서</strong>
+                        <strong>스크립트 실행 흐름</strong>
                         <ul class="script-steps">
-                            <li>null_blk 모듈 로드: <code>modprobe null_blk nr_devices=0</code></li>
-                            <li>f2fs 의존 모듈 로드: <code>modprobe crc32_generic &amp;&amp; modprobe f2fs</code></li>
-                            <li>nullb0 (nvme0 configfs) 신규 생성, size=2048 (2GB)</li>
-                            <li>f2fs-tools 설치 여부 확인 (mkfs.f2fs -V)</li>
-                            <li>마운트 포인트 <code>/mnt/conv</code> 생성 · 장치 크기 확인</li>
-                            <li class="dim" style="opacity:.6">※ 포맷·마운트는 <code>workload_conv.sh</code>가 LFS 모드로 수행</li>
+                            <li><code>setup.sh conv|zoned</code> — null_blk configfs 장치 생성, F2FS 포맷, <code>/mnt/f2fs-waf</code>에 마운트</li>
+                            <li><code>bench.sh conv|zoned</code> — fill → fragment → 4K randwrite로 host-visible WAF 측정</li>
+                            <li><code>bench_gc.sh conv|zoned</code> — free_segments 목표치까지 적응형 fill로 GC 압박 후 측정</li>
+                            <li><code>cleanup.sh</code> — 마운트 해제, null_blk 장치 제거 (다음 모드로 넘어가기 전 필수)</li>
+                            <li><code>run_all.sh [bench|bench_gc] [runs]</code> — conv/zoned 자동 반복 + <code>results.csv</code>에 누적 + 요약 출력</li>
                         </ul>
                     </div>
                 </div>
 
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span><span class="file-badge">setup_conv.sh</span></span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
-# setup_conv.sh — create nullb0 (2 GB) after reboot and set up F2FS
-# usage: sudo bash setup_conv.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-
-printf <span class="str">'── [1/4] Load kernel modules ────────────────────────\n'</span>
-modprobe null_blk nr_devices=0
-modprobe crc32_generic
-modprobe f2fs
-
-printf <span class="str">'── [2/4] Create nullb0 (2 GB) ───────────────────────\n'</span>
-<span class="kw">if</span> [ -d /sys/kernel/config/nullb/nvme0 ]; <span class="kw">then</span>
-    echo 0 &gt; /sys/kernel/config/nullb/nvme0/power
-    rmdir /sys/kernel/config/nullb/nvme0
-<span class="kw">fi</span>
-mkdir /sys/kernel/config/nullb/nvme0
-echo 4096 &gt; /sys/kernel/config/nullb/nvme0/blocksize
-echo 2048 &gt; /sys/kernel/config/nullb/nvme0/size
-echo 1    &gt; /sys/kernel/config/nullb/nvme0/memory_backed
-echo 1    &gt; /sys/kernel/config/nullb/nvme0/power
-
-printf <span class="str">'── [3/4] Check f2fs-tools ───────────────────────────\n'</span>
-<span class="kw">if</span> ! command -v mkfs.f2fs &amp;&gt;/dev/null; <span class="kw">then</span>
-    apt-get install -y f2fs-tools
-<span class="kw">fi</span>
-mkfs.f2fs -V 2&gt;&amp;1 | head -1
-
-printf <span class="str">'── [4/4] Create mount point &amp; verify device ─────────\n'</span>
-mkdir -p /mnt/conv
-printf <span class="str">'  /dev/nullb0 size: %s bytes\n'</span> <span class="str">"$(blockdev --getsize64 /dev/nullb0)"</span></code></pre></div>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>scp -P 2222 setup_conv.sh user@localhost:~/</code></pre>
-                </div>
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>chmod +x setup_conv.sh &amp;&amp; sudo bash setup_conv.sh</code></pre>
+                <div class="callout callout-info">
+                    <span class="callout-title">메모리 조건</span>
+                    QEMU RAM이 5GB라면 2GB 또는 3GB <code>memory_backed=1</code> null_blk를 <strong>순차 실행</strong>하는 구성이 안전합니다. Conv와 Zoned 장치를 동시에 올리지 않고, 항상 <code>cleanup.sh</code>로 이전 장치를 내린 뒤 다음 <code>setup.sh</code>를 실행합니다.
                 </div>
 
-                <div class="output-block">
-                    <div class="output-label">예상 출력 — 장치 크기 확인</div>
-                    <pre>  /dev/nullb0 size: <span class="blu">2147483648</span> bytes</pre>
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — 스크립트 권한 부여</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>cd ~/codex/scripts/f2fs-waf
+chmod +x *.sh
+which fio mkfs.f2fs jq
+grep f2fs /proc/filesystems || sudo modprobe f2fs</code></pre>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ── STEP 3.2 ── -->
-    <div class="section-label">Step 3.2 — Conv F2FS WAF 측정</div>
+    <div class="section-label">Step 3.2 — common.sh: 공통 함수 라이브러리</div>
 
     <div class="step-flow">
         <div class="step-entry">
-
             <div class="step-body">
-                <h3>GC 유발 워크로드 실행 및 언마운트 <code style="font-size:.75em; margin-left:.4rem;">workload_conv.sh</code></h3>
-                <p>F2FS GC가 동작하려면 파일시스템이 충분히 채워진 상태에서 <strong>덮어쓰기(overwrite)</strong>가 일어나야 합니다. 먼저 1,400MB 파일을 순차 write로 채운 뒤, 같은 파일에 랜덤 4KB write를 800MB만큼 인가합니다 (Conv/ZNS 앱 write량 동일 → WAF 비율만으로 공정 비교). 덮어쓰인 페이지는 F2FS 세그먼트 내에서 무효(invalid) 상태로 남아 GC Copy-back을 유발합니다.</p>
-                <p>측정 완료 후 <code>umount</code>로 파일시스템을 언마운트하고 <strong>재부팅</strong>하여 backing memory를 완전히 초기화합니다. <code>memory_backed=1</code> null_blk은 커널 내부 radix tree에 데이터를 유지하므로, 다음 단계(ZNS 2GB)를 위한 메모리 확보는 재부팅으로 처리합니다.</p>
-
-                <div class="script-overview">
-                    <div class="script-overview-icon">🗂️</div>
-                    <div class="script-overview-body">
-                        <strong>workload_conv.sh 동작 순서</strong>
-                        <ul class="script-steps">
-                            <li><code>mkfs.f2fs -f</code> + <code>mount -o mode=lfs</code> — LFS 모드로 재포맷·마운트 (WAF 극대화)</li>
-                            <li>1,400MB 파일 순차 fill — GC 유발 환경 조성</li>
-                            <li>fill 완료 후 stat 기준점 기록 (randwrite 구간만 WAF 측정)</li>
-                            <li>동일 파일에 randwrite 800MB (io_size 고정) — F2FS invalid 페이지 누적</li>
-                            <li>sync 후 write_sectors 최종값 기록 → <code>./conv_waf_stat</code> 저장</li>
-                            <li><code>umount /mnt/conv</code> 후 재부팅 — backing memory 완전 초기화</li>
-                        </ul>
-                    </div>
-                </div>
+                <h3>모든 스크립트가 source하는 공통 헬퍼</h3>
+                <p>장치 경로/마운트 포인트/fio 파라미터의 기본값을 정의하고, configfs 기반 null_blk 장치 생성, write_sectors 측정, F2FS sysfs/debugfs 접근, CSV 로깅을 모두 함수로 제공합니다. 환경변수로 모든 기본값을 override할 수 있습니다.</p>
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span><span class="file-badge">workload_conv.sh</span></span>
+                        <span>scripts/f2fs-waf/common.sh</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
-# workload_conv.sh — measure Conv F2FS WAF
-# usage: sudo bash workload_conv.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-CONV_FILE=<span class="str">/mnt/conv/testfile</span>
-FILL_SIZE=<span class="str">1400m</span>   <span class="comment"># ~70% of 2GB</span>
-IO_SIZE=<span class="str">800m</span>     <span class="comment"># fixed write amount for fair WAF comparison</span>
-RUNTIME_CAP=<span class="str">60</span>    <span class="comment"># seconds — abort randwrite if GC too slow</span>
+                    <pre><code>#!/usr/bin/env bash
 
-printf <span class="str">'── [1/4] Format &amp; Mount (LFS mode) ─────────────────\n'</span>
-umount /mnt/conv 2&gt;/dev/null || true
-mkfs.f2fs -f /dev/nullb0
-mount -t f2fs -o mode=lfs /dev/nullb0 /mnt/conv
+set -euo pipefail
 
-printf <span class="str">'── [2/4] Initial fill (%s) ──────────────────────────\n'</span> <span class="str">"${FILL_SIZE}"</span>
-fio --name=conv_fill \
-    --filename=<span class="str">"${CONV_FILE}"</span> \
-    --size=<span class="str">"${FILL_SIZE}"</span> --bs=128k --rw=write \
-    --ioengine=libaio --direct=1 --numjobs=1 \
-    --output-format=json --output=/tmp/fio_conv_fill.json \
-    2&gt;/dev/null
-sync
+DEV="${DEV:-/dev/nullb0}"
+SYS_BLOCK="${SYS_BLOCK:-/sys/block/nullb0}"
+MNT="${MNT:-/mnt/f2fs-waf}"
+NULLB_NAME="${NULLB_NAME:-f2fs_waf0}"
+NULLB_CONFIGFS="${NULLB_CONFIGFS:-/sys/kernel/config/nullb/$NULLB_NAME}"
+NULL_GB="${NULL_GB:-2}"
+NULL_SIZE_MB="${NULL_SIZE_MB:-2048}"
+NULL_BLOCKSIZE="${NULL_BLOCKSIZE:-4096}"
+ZONE_SIZE_MB="${ZONE_SIZE_MB:-64}"
+ZONE_NR_CONV="${ZONE_NR_CONV:-4}"
 
-printf <span class="str">'── [3/4] Random write + WAF snapshot (io_size=%s) ────\n'</span> <span class="str">"${IO_SIZE}"</span>
-CONV_B=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb0/stat)
+FIO_RUNTIME="${FIO_RUNTIME:-60}"
+FIO_FILL_SIZE="${FIO_FILL_SIZE:-1200M}"
+FIO_FRAGMENT_FILES="${FIO_FRAGMENT_FILES:-64}"
+FIO_FRAGMENT_FILE_SIZE="${FIO_FRAGMENT_FILE_SIZE:-2M}"
+FIO_MEASURE_SIZE="${FIO_MEASURE_SIZE:-1200M}"
+FIO_MEASURE_BS="${FIO_MEASURE_BS:-4K}"
 
-fio --name=conv_rand \
-    --filename=<span class="str">"${CONV_FILE}"</span> \
-    --size=<span class="str">"${FILL_SIZE}"</span> --io_size=<span class="str">"${IO_SIZE}"</span> --runtime=<span class="str">"${RUNTIME_CAP}"</span> \
-    --bs=4k --rw=randwrite \
-    --ioengine=libaio --direct=1 --numjobs=1 \
-    --output-format=json --output=/tmp/fio_conv_rand.json \
-    2&gt;/dev/null || true
+GC_FILL_CHUNK="${GC_FILL_CHUNK:-64M}"
+GC_TARGET_FREE_SEGMENTS="${GC_TARGET_FREE_SEGMENTS:-260}"
+GC_MIN_AVAIL_MIB="${GC_MIN_AVAIL_MIB:-220}"
+GC_FRAGMENT_FILES="${GC_FRAGMENT_FILES:-64}"
+GC_FRAGMENT_FILE_SIZE="${GC_FRAGMENT_FILE_SIZE:-1M}"
+GC_MEASURE_SIZE="${GC_MEASURE_SIZE:-128M}"
+GC_MEASURE_BS="${GC_MEASURE_BS:-4K}"
+GC_MEASURE_RW="${GC_MEASURE_RW:-randwrite}"
 
-sync
-CONV_A=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb0/stat)
-CONV_BLK=$(( (CONV_A - CONV_B) * 512 ))
+RESULTS_CSV="${RESULTS_CSV:-$(cd "$(dirname "${BASH_SOURCE[0]}")" &amp;&amp; pwd)/results.csv}"
+RUN_TAG="${RUN_TAG:-}"
 
-CONV_APP=$(python3 <span class="str">&lt;&lt; 'EOF'</span>
-import json
-rand = json.load(open('/tmp/fio_conv_rand.json'))
-total = sum(j['write']['io_bytes'] for j in rand['jobs'])
-print(total)
-<span class="str">EOF</span>
-)
-echo <span class="str">"${CONV_APP} ${CONV_BLK}"</span> &gt; ./conv_waf_stat
-printf <span class="str">'  app: %d MB  |  blk: %d MB\n'</span> \
-    "$(( CONV_APP / 1024 / 1024 ))" "$(( CONV_BLK / 1024 / 1024 ))"
+need_root() {
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "ERROR: run as root" &gt;&amp;2
+        exit 1
+    fi
+}
 
-printf <span class="str">'── [4/4] Unmount ────────────────────────────────────\n'</span>
-umount /mnt/conv                </div>
+need_cmd() {
+    if ! command -v "$1" &gt;/dev/null 2&gt;&amp;1; then
+        echo "ERROR: missing command: $1" &gt;&amp;2
+        exit 1
+    fi
+}
 
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>scp -P 2222 workload_conv.sh user@localhost:~/</code></pre>
+ensure_prereqs() {
+    need_root
+    need_cmd awk
+    need_cmd blockdev
+    need_cmd fio
+    need_cmd mount
+    need_cmd mountpoint
+    need_cmd mkfs.f2fs
+    need_cmd modprobe
+    need_cmd rmdir
+    need_cmd umount
+}
+
+ensure_f2fs_kernel() {
+    modprobe crc32_generic || true
+    if awk '$1 == "f2fs" || $2 == "f2fs" { found = 1 } END { exit !found }' /proc/filesystems; then
+        return
+    fi
+    echo "Loading f2fs kernel module"
+    modprobe f2fs
+    if ! awk '$1 == "f2fs" || $2 == "f2fs" { found = 1 } END { exit !found }' /proc/filesystems; then
+        echo "ERROR: f2fs is not available in this kernel" &gt;&amp;2
+        echo "Check: grep CONFIG_F2FS_FS /boot/config-\$(uname -r)" &gt;&amp;2
+        exit 1
+    fi
+}
+
+ensure_configfs() {
+    modprobe configfs || true
+    mkdir -p /sys/kernel/config
+    if ! mountpoint -q /sys/kernel/config; then
+        mount -t configfs none /sys/kernel/config
+    fi
+}
+
+load_nullblk_configfs() {
+    modprobe null_blk nr_devices=0
+    ensure_configfs
+}
+
+write_sectors() { awk '{ print $7 }' "$SYS_BLOCK/stat"; }
+sectors_to_mib() { awk -v sectors="$1" 'BEGIN { printf "%.2f", sectors * 512 / 1024 / 1024 }'; }
+bytes_to_mib()   { awk -v bytes="$1"   'BEGIN { printf "%.2f", bytes / 1024 / 1024 }'; }
+
+print_device_stats() {
+    local label="$1" sectors="$2" mib
+    mib="$(sectors_to_mib "$sectors")"
+    printf "%-24s %12s sectors  %10s MiB\n" "$label" "$sectors" "$mib"
+}
+
+mounted_on_mnt() { mountpoint -q "$MNT"; }
+
+cleanup_mount() {
+    if mounted_on_mnt; then
+        sync
+        umount "$MNT"
+    fi
+}
+
+cleanup_nullblk() {
+    if [ -d "$NULLB_CONFIGFS" ]; then
+        if [ -w "$NULLB_CONFIGFS/power" ]; then
+            echo 0 &gt; "$NULLB_CONFIGFS/power" || true
+        fi
+        rmdir "$NULLB_CONFIGFS" || true
+    fi
+    if lsmod | awk '{ print $1 }' | grep -qx null_blk; then
+        modprobe -r null_blk
+    fi
+}
+
+write_configfs_attr() {
+    local attr="$1" value="$2"
+    if [ ! -e "$NULLB_CONFIGFS/$attr" ]; then
+        echo "ERROR: null_blk configfs attribute not found: $attr" &gt;&amp;2
+        exit 1
+    fi
+    echo "$value" &gt; "$NULLB_CONFIGFS/$attr"
+}
+
+write_configfs_attr_if_exists() {
+    local attr="$1" value="$2"
+    if [ -e "$NULLB_CONFIGFS/$attr" ]; then
+        echo "$value" &gt; "$NULLB_CONFIGFS/$attr"
+    fi
+}
+
+create_nullblk_conv() {
+    load_nullblk_configfs
+    mkdir "$NULLB_CONFIGFS"
+    write_configfs_attr blocksize "$NULL_BLOCKSIZE"
+    write_configfs_attr size "$NULL_SIZE_MB"
+    write_configfs_attr memory_backed 1
+    write_configfs_attr_if_exists discard 0
+    write_configfs_attr power 1
+}
+
+create_nullblk_zoned() {
+    load_nullblk_configfs
+    mkdir "$NULLB_CONFIGFS"
+    write_configfs_attr blocksize "$NULL_BLOCKSIZE"
+    write_configfs_attr size "$NULL_SIZE_MB"
+    write_configfs_attr memory_backed 1
+    write_configfs_attr zoned 1
+    write_configfs_attr zone_size "$ZONE_SIZE_MB"
+    write_configfs_attr zone_nr_conv "$ZONE_NR_CONV"
+    write_configfs_attr power 1
+}
+
+parse_fio_write_io_bytes() {
+    local file="$1"
+    if command -v jq &gt;/dev/null 2&gt;&amp;1; then
+        jq -r '.jobs[0].write.io_bytes' "$file"
+        return
+    fi
+    awk '
+        /"write" *: *{/ { in_write = 1 }
+        in_write &amp;&amp; /"io_bytes" *:/ {
+            line = $0
+            sub(/^.*"io_bytes" *: */, "", line)
+            sub(/[, ].*$/, "", line)
+            print line
+            exit
+        }
+    ' "$file"
+}
+
+drop_caches() {
+    sync
+    if [ -w /proc/sys/vm/drop_caches ]; then
+        echo 3 &gt; /proc/sys/vm/drop_caches
+    fi
+}
+
+find_f2fs_sysfs_dir() {
+    local base="/sys/fs/f2fs" name
+    [ -d "$base" ] || return 1
+    name="$(basename "$DEV")"
+    if [ -d "$base/$name" ]; then
+        printf "%s/%s\n" "$base" "$name"
+        return 0
+    fi
+    find "$base" -mindepth 1 -maxdepth 1 -type d | head -n 1
+}
+
+f2fs_sysfs_value() {
+    local file="$1" dir
+    dir="$(find_f2fs_sysfs_dir || true)"
+    if [ -z "$dir" ] || [ ! -r "$dir/$file" ]; then
+        return 1
+    fi
+    cat "$dir/$file"
+}
+
+free_segments() {
+    local v
+    v="$(f2fs_sysfs_value free_segments)" || return 1
+    v="${v//[!0-9]/}"
+    [ -n "$v" ] || return 1
+    printf '%s\n' "$v"
+}
+
+ensure_debugfs() {
+    if ! mountpoint -q /sys/kernel/debug 2&gt;/dev/null; then
+        mount -t debugfs none /sys/kernel/debug 2&gt;/dev/null || true
+    fi
+}
+
+f2fs_debugfs_status() {
+    ensure_debugfs
+    local f=/sys/kernel/debug/f2fs/status
+    [ -r "$f" ] || return 1
+    cat "$f"
+}
+
+# Echo: gc_calls gc_calls_bg blocks_moved blocks_moved_bg
+f2fs_gc_counters() {
+    local status
+    if ! status="$(f2fs_debugfs_status 2&gt;/dev/null)"; then
+        echo "0 0 0 0"; return
+    fi
+    awk '
+        /^GC calls:/      { calls = $3; bg = $5; gsub(/[^0-9]/, "", bg) }
+        /^Try to move/    { moved = $4; mbg = $6; gsub(/[^0-9]/, "", mbg) }
+        END {
+            printf "%s %s %s %s\n",
+                (calls == "" ? 0 : calls), (bg == "" ? 0 : bg),
+                (moved == "" ? 0 : moved), (mbg == "" ? 0 : mbg)
+        }
+    ' &lt;&lt;&lt;"$status"
+}
+
+csv_init() {
+    if [ ! -f "$RESULTS_CSV" ]; then
+        mkdir -p "$(dirname "$RESULTS_CSV")"
+        echo "timestamp,tag,bench,mode,logical_bytes,device_bytes,waf,gc_calls_delta,gc_calls_bg_delta,blocks_moved_delta,blocks_moved_bg_delta,free_segments_after" &gt; "$RESULTS_CSV"
+    fi
+}
+
+csv_append() {
+    local bench="$1" mode="$2" logical="$3" device="$4" waf="$5"
+    local gc_d="$6" gc_bg_d="$7" mv_d="$8" mv_bg_d="$9" free_after="${10}"
+    local ts
+    ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    csv_init
+    printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" \
+        "$ts" "$RUN_TAG" "$bench" "$mode" \
+        "$logical" "$device" "$waf" \
+        "$gc_d" "$gc_bg_d" "$mv_d" "$mv_bg_d" "$free_after" \
+        &gt;&gt; "$RESULTS_CSV"
+}
+
+avail_mib() { df -Pm "$MNT" | awk 'NR == 2 { print $4 }'; }
+
+print_f2fs_hint_stats() {
+    local dir
+    dir="$(find_f2fs_sysfs_dir || true)"
+    echo
+    echo "F2FS sysfs snapshot:"
+    if [ -z "$dir" ]; then
+        echo "  unavailable"; return
+    fi
+    for file in gc_urgent gc_idle dirty_segments free_segments ovp_segments unusable; do
+        if [ -r "$dir/$file" ]; then
+            printf "  %-16s %s\n" "$file" "$(cat "$dir/$file")"
+        fi
+    done
+}</code></pre>
                 </div>
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부 (완료까지 약 2~4분 소요)</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>chmod +x workload_conv.sh &amp;&amp; sudo bash workload_conv.sh</code></pre>
-                </div>
-                <div class="callout callout-warn">
-                    <span class="callout-title">direct=1 + sync 병용 이유</span>
-                    <code>--direct=1</code>은 페이지 캐시를 우회해 블록 장치에 직접 쓰며, 이후 <code>sync</code>로 남은 writeback을 플러시합니다. 이 두 가지를 함께 사용해야 <code>write_sectors</code> 스냅샷이 실제 기록량과 일치합니다.
+
+                <div class="callout callout-info">
+                    <span class="callout-title">핵심 함수 요약</span>
+                    <code>create_nullblk_conv/zoned</code>은 configfs로 장치를 생성하고, <code>write_sectors</code>는 <code>/sys/block/.../stat</code> field 7로 device-side write를 읽습니다. <code>f2fs_gc_counters</code>는 debugfs에서 GC 호출/이동 블록 수를 가져와 측정 구간 동안의 cleaning 활동을 정량화합니다.
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ── STEP 3.3 ── -->
-    <div class="section-label">Step 3.3 — ZNS F2FS 환경 준비</div>
+    <div class="section-label">Step 3.3 — setup.sh: 환경 구성</div>
 
     <div class="step-flow">
         <div class="step-entry">
-
             <div class="step-body">
-                <h3>재부팅 후 nullb1(2GB, zone_nr_conv=1) 생성 및 ZNS F2FS 포맷/마운트 <code style="font-size:.75em; margin-left:.4rem;">setup_zns.sh</code></h3>
-                <p>Conv 측정 완료 후 <strong>재부팅</strong>하여 backing memory를 초기화합니다. 재부팅 후 null_blk 모듈을 새로 로드하고 nullb1을 생성합니다. F2FS는 ZNS 장치에서 슈퍼블록, 체크포인트 등 메타데이터를 저장하기 위해 <strong>최소 1개의 Conventional Zone</strong>을 요구하므로, <code>zone_nr_conv=1</code>을 포함하여 생성합니다.</p>
+                <h3>null_blk 생성 → mkfs.f2fs → mount</h3>
+                <p>인자로 <code>conv</code> 또는 <code>zoned</code>를 받아 그에 맞는 null_blk을 생성하고 F2FS를 포맷·마운트합니다. <code>background_gc=off,noatime</code>으로 마운트하여 측정 구간 외의 GC 노이즈를 줄입니다.</p>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>scripts/f2fs-waf/setup.sh</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &amp;&amp; pwd)"
+. "$SCRIPT_DIR/common.sh"
+
+usage() {
+    cat &lt;&lt;EOF
+Usage: sudo $0 conv|zoned
+
+Environment overrides:
+  NULL_SIZE_MB=$NULL_SIZE_MB
+  NULL_BLOCKSIZE=$NULL_BLOCKSIZE
+  MNT=$MNT
+  ZONE_SIZE_MB=$ZONE_SIZE_MB
+  ZONE_NR_CONV=$ZONE_NR_CONV
+
+Examples:
+  sudo $0 conv
+  sudo $0 zoned
+EOF
+}
+
+mode="${1:-}"
+case "$mode" in
+    conv|zoned) ;;
+    -h|--help|"") usage; exit 0 ;;
+    *) usage &gt;&amp;2; exit 1 ;;
+esac
+
+ensure_prereqs
+ensure_f2fs_kernel
+
+if ! command -v jq &gt;/dev/null 2&gt;&amp;1; then
+    echo "Note: jq not found; falling back to awk JSON parsing. Install jq for robustness." &gt;&amp;2
+fi
+mkdir -p "$MNT"
+cleanup_mount
+cleanup_nullblk
+
+echo "Setting up null_blk + F2FS mode=$mode"
+
+if [ "$mode" = "conv" ]; then
+    create_nullblk_conv
+    mkfs.f2fs -f -o 1 "$DEV"
+else
+    create_nullblk_zoned
+    mkfs.f2fs -f -m "$DEV"
+fi
+
+if ! mount -t f2fs -o background_gc=off,noatime "$DEV" "$MNT"; then
+    echo
+    echo "ERROR: mount failed. Recent kernel messages:"
+    dmesg | tail -n 30 || true
+    exit 1
+fi
+
+echo
+echo "Mounted:"
+findmnt "$MNT"
+
+echo
+echo "Block device:"
+blockdev --getsize64 "$DEV" | awk '{ printf "  size: %.2f GiB\n", $1 / 1024 / 1024 / 1024 }'
+if [ -r "$SYS_BLOCK/queue/zoned" ]; then
+    printf "  zoned: %s\n" "$(cat "$SYS_BLOCK/queue/zoned")"
+fi
+if [ -r "$SYS_BLOCK/queue/chunk_sectors" ]; then
+    printf "  chunk_sectors: %s\n" "$(cat "$SYS_BLOCK/queue/chunk_sectors")"
+fi
+
+print_f2fs_hint_stats
+
+echo
+echo "Ready. Run:"
+echo "  sudo $SCRIPT_DIR/bench.sh $mode"</code></pre>
+                </div>
 
                 <div class="zone-layout">
-<span class="dim">변경 전 (lab1/lab2)</span>
-  zone[ 0~31] = <span class="seq-zone">32개 Sequential</span>   <span class="dim">← 모두 순차 쓰기 전용</span>
+<span class="dim">Conv 모드</span>
+  size              = <span class="seq-zone">2048 MB</span>
+  blocksize         = <span class="seq-zone">4096</span>
+  zoned             = <span class="dim">0 (일반 block device)</span>
 
-<span class="dim">변경 후 (lab3)</span>
-  zone[   0 ] = <span class="conv-zone"> 1개 Conventional</span>  <span class="dim">← F2FS 메타데이터 저장소</span>
-  zone[ 1~31] = <span class="seq-zone">31개 Sequential</span>   <span class="dim">← 데이터 영역 (총 용량 동일)</span>
-                </div>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부 (재부팅)</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code><span class="comment"># Conv 측정 완료 후 재부팅하여 backing memory 초기화</span>
-sudo grub-reboot <span class="str">"Advanced options for Ubuntu>Ubuntu, with Linux 5.18.0-dpas"</span>
-sudo reboot</code></pre>
-                </div>
-
-                <div class="script-overview">
-                    <div class="script-overview-icon">⚙️</div>
-                    <div class="script-overview-body">
-                        <strong>setup_zns.sh 동작 순서</strong>
-                        <ul class="script-steps">
-                            <li>null_blk 모듈 로드: <code>modprobe null_blk nr_devices=0</code></li>
-                            <li>f2fs 의존 모듈 로드: <code>modprobe crc32_generic &amp;&amp; modprobe f2fs</code></li>
-                            <li>nullb1 (zns0 configfs) 신규 생성, zone_nr_conv=1 포함</li>
-                            <li>마운트 포인트 <code>/mnt/zns</code> 생성 · zone 구성 확인</li>
-                            <li class="dim" style="opacity:.6">※ 포맷·마운트는 <code>workload_zns.sh</code>가 수행</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span><span class="file-badge">setup_zns.sh</span></span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
-# setup_zns.sh — create nullb1 (ZNS, zone_nr_conv=1) after reboot and set up ZNS F2FS
-# usage: sudo bash setup_zns.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-
-printf <span class="str">'── [1/3] Load kernel modules ────────────────────────\n'</span>
-modprobe null_blk nr_devices=0
-modprobe crc32_generic
-modprobe f2fs
-
-printf <span class="str">'── [2/3] Create nullb1 (ZNS, zone_nr_conv=1) ────────\n'</span>
-<span class="kw">if</span> [ -d /sys/kernel/config/nullb/zns0 ]; <span class="kw">then</span>
-    echo 0 &gt; /sys/kernel/config/nullb/zns0/power
-    rmdir /sys/kernel/config/nullb/zns0
-<span class="kw">fi</span>
-mkdir /sys/kernel/config/nullb/zns0
-echo 2048 &gt; /sys/kernel/config/nullb/zns0/size
-echo 1    &gt; /sys/kernel/config/nullb/zns0/zoned
-echo 64   &gt; /sys/kernel/config/nullb/zns0/zone_size
-echo 1    &gt; /sys/kernel/config/nullb/zns0/zone_nr_conv
-echo 4096 &gt; /sys/kernel/config/nullb/zns0/blocksize
-echo 1    &gt; /sys/kernel/config/nullb/zns0/memory_backed
-echo 1    &gt; /sys/kernel/config/nullb/zns0/power
-
-printf <span class="str">'── [3/3] Create mount point &amp; verify zones ──────────\n'</span>
-mkdir -p /mnt/zns
-blkzone report /dev/nullb1 | head -4</code></pre>
-                </div>
-
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>scp -P 2222 setup_zns.sh user@localhost:~/</code></pre>
-                </div>
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>chmod +x setup_zns.sh &amp;&amp; sudo bash setup_zns.sh</code></pre>
-                </div>
-            </div>
-        </div>
-
-        <div class="step-entry">
-
-            <div class="step-body">
-                <h3>Zone 구성 확인 (setup_zns.sh 출력)</h3>
-                <p>setup_zns.sh는 마지막 단계에서 <code>blkzone report</code>로 zone 구성을 출력합니다. Conventional Zone 1개 + Sequential Zone 31개 구성을 확인하세요.</p>
-
-                <div class="output-block">
-                    <div class="output-label">예상 출력 — blkzone report (처음 4 zone)</div>
-                    <pre>  start: 0x000000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="ylw">0(nw) [type: 1(CONVENTIONAL)]</span>
-  start: 0x020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="grn">1(em) [type: 2(SEQ_WRITE_REQUIRED)]</span>
-  start: 0x040000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="grn">1(em) [type: 2(SEQ_WRITE_REQUIRED)]</span>
-  start: 0x060000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: <span class="grn">1(em) [type: 2(SEQ_WRITE_REQUIRED)]</span></pre>
+<span class="dim">Zoned 모드 (실습 권장값)</span>
+  size              = <span class="seq-zone">3072 MB</span>   <span class="dim">← 2GB는 usable space 부족</span>
+  zone_size         = <span class="seq-zone">32 MB</span>
+  zone_nr_conv      = <span class="conv-zone">8 conventional zones</span>
+  나머지            = <span class="seq-zone">sequential write required zones</span>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ── STEP 3.4 ── -->
-    <div class="section-label">Step 3.4 — ZNS F2FS WAF 측정</div>
+    <div class="section-label">Step 3.4 — bench.sh: 안정형 측정</div>
 
     <div class="step-flow">
         <div class="step-entry">
-
             <div class="step-body">
-                <h3>GC 유발 워크로드 실행 <code style="font-size:.75em; margin-left:.4rem;">workload_zns.sh</code></h3>
-                <p>Conv와 동일한 워크로드(1,400MB fill + randwrite 800MB)를 nullb1에 적용하여 WAF 비교의 공정성을 유지합니다.</p>
+                <h3>fill → fragment → 4K randwrite (low GC pressure)</h3>
+                <p>1,200MiB 파일로 채우고 작은 파일을 만들어 절반을 삭제해 fragment를 만든 뒤, 동일 파일에 4K randwrite를 60초간 가해 host-visible WAF를 측정합니다. GC가 거의 돌지 않는 sanity 측정으로, 결과는 1에 매우 가깝게 나옵니다.</p>
 
                 <div class="script-overview">
-                    <div class="script-overview-icon">🗂️</div>
                     <div class="script-overview-body">
-                        <strong>workload_zns.sh 동작 순서</strong>
+                        <strong>bench.sh 동작 순서</strong>
                         <ul class="script-steps">
-                            <li><code>mkfs.f2fs -f -m</code> + <code>mount -t f2fs</code> — ZNS 모드 포맷·마운트</li>
-                            <li>1,400MB 파일 순차 fill — GC 유발 환경 조성</li>
-                            <li>fill 완료 후 stat 기준점 기록 (randwrite 구간만 WAF 측정)</li>
-                            <li>동일 파일에 randwrite 800MB (io_size 고정) — F2FS invalid 페이지 누적</li>
-                            <li>sync 후 write_sectors 최종값 기록 → <code>./zns_waf_stat</code> 저장</li>
-                            <li><code>umount /mnt/zns</code></li>
+                            <li><code>drop_caches</code> 후 <code>fillfile</code> 1,200MiB 순차 write</li>
+                            <li>4K × 64개 small file 생성 후 짝수 인덱스 삭제 (fragment 유발)</li>
+                            <li><code>f2fs_gc_counters</code> · <code>write_sectors</code> 스냅샷 (before)</li>
+                            <li><code>fillfile</code>에 4K randwrite + <code>fsync=256</code>, runtime 60초</li>
+                            <li>스냅샷 (after) → WAF · GC delta 계산 → CSV append</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span><span class="file-badge">workload_zns.sh</span></span>
+                        <span>scripts/f2fs-waf/bench.sh</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
-# workload_zns.sh — measure ZNS F2FS WAF
-# usage: sudo bash workload_zns.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-ZNS_FILE=<span class="str">/mnt/zns/testfile</span>
-FILL_SIZE=<span class="str">1400m</span>   <span class="comment"># ~70% of 2GB</span>
-IO_SIZE=<span class="str">800m</span>     <span class="comment"># fixed write amount for fair WAF comparison</span>
-RUNTIME_CAP=<span class="str">60</span>    <span class="comment"># seconds — abort randwrite if too slow</span>
+                    <pre><code>#!/usr/bin/env bash
 
-printf <span class="str">'── [1/4] Format &amp; Mount (ZNS mode) ──────────────────\n'</span>
-umount /mnt/zns 2&gt;/dev/null || true
-mkfs.f2fs -f -m /dev/nullb1   <span class="comment"># -m: ZNS mode (requires zone_nr_conv=1)</span>
-mount -t f2fs /dev/nullb1 /mnt/zns
+set -euo pipefail
 
-printf <span class="str">'── [2/4] Initial fill (1,400 MB) ────────────────────\n'</span>
-fio --name=zns_fill \
-    --filename=<span class="str">"${ZNS_FILE}"</span> \
-    --size=<span class="str">"${FILL_SIZE}"</span> --bs=128k --rw=write \
-    --ioengine=libaio --direct=1 --numjobs=1 \
-    --output-format=json --output=/tmp/fio_zns_fill.json \
-    2&gt;/dev/null
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &amp;&amp; pwd)"
+. "$SCRIPT_DIR/common.sh"
+
+usage() {
+    cat &lt;&lt;EOF
+Usage: sudo $0 conv|zoned
+
+Sanity-level WAF measurement (low GC pressure). For meaningful
+conv-vs-zoned WAF differences run bench_gc.sh instead.
+
+  WAF = null_blk write bytes delta / fio logical write bytes
+
+Environment overrides:
+  FIO_FILL_SIZE=$FIO_FILL_SIZE
+  FIO_FRAGMENT_FILES=$FIO_FRAGMENT_FILES
+  FIO_FRAGMENT_FILE_SIZE=$FIO_FRAGMENT_FILE_SIZE
+  FIO_MEASURE_SIZE=$FIO_MEASURE_SIZE
+  FIO_MEASURE_BS=$FIO_MEASURE_BS
+  FIO_RUNTIME=$FIO_RUNTIME
+  RESULTS_CSV=$RESULTS_CSV
+  RUN_TAG=$RUN_TAG
+EOF
+}
+
+mode="${1:-}"
+case "$mode" in
+    conv|zoned) ;;
+    -h|--help|"") usage; exit 0 ;;
+    *) usage &gt;&amp;2; exit 1 ;;
+esac
+
+ensure_prereqs
+if ! mounted_on_mnt; then
+    echo "ERROR: $MNT is not mounted. Run setup.sh first." &gt;&amp;2
+    exit 1
+fi
+
+WORKDIR="$MNT/waf-work"
+mkdir -p "$WORKDIR"
+
+echo "Benchmark mode=$mode"
+echo "Mount: $MNT"
+echo "Measure: size=$FIO_MEASURE_SIZE bs=$FIO_MEASURE_BS runtime=${FIO_RUNTIME}s"
+echo
+
+drop_caches
+
+echo "[1/3] Fill filesystem to create pressure"
+rm -f "$WORKDIR"/fillfile "$WORKDIR"/measurefile "$WORKDIR"/frag.*
+fio --name=fill \
+    --directory="$WORKDIR" --filename=fillfile \
+    --rw=write --bs=1M --size="$FIO_FILL_SIZE" \
+    --ioengine=sync --direct=0 --fsync_on_close=1 \
+    --output-format=normal
+
 sync
+print_f2fs_hint_stats
+echo
 
-printf <span class="str">'── [3/4] Random write + WAF snapshot (io_size=%s) ────\n'</span> <span class="str">"${IO_SIZE}"</span>
-ZNS_B=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb1/stat)
+echo "[2/3] Fragment: create small files, then delete every other file"
+fio --name=fragment \
+    --directory="$WORKDIR" \
+    --filename_format=frag.\$jobnum.\$filenum \
+    --rw=write --bs=4K \
+    --nrfiles="$FIO_FRAGMENT_FILES" \
+    --filesize="$FIO_FRAGMENT_FILE_SIZE" \
+    --ioengine=sync --direct=0 --fsync_on_close=1 \
+    --output-format=normal
 
-fio --name=zns_rand \
-    --filename=<span class="str">"${ZNS_FILE}"</span> \
-    --size=<span class="str">"${FILL_SIZE}"</span> --io_size=<span class="str">"${IO_SIZE}"</span> --runtime=<span class="str">"${RUNTIME_CAP}"</span> \
-    --bs=4k --rw=randwrite \
-    --ioengine=libaio --direct=1 --numjobs=1 \
-    --output-format=json --output=/tmp/fio_zns_rand.json \
-    2&gt;/dev/null || true
+idx=0
+for file in "$WORKDIR"/frag.*; do
+    if [ $((idx % 2)) -eq 0 ]; then
+        rm -f "$file"
+    fi
+    idx=$((idx + 1))
+done
+sync
+drop_caches
+print_f2fs_hint_stats
+echo
+
+echo "[3/3] Measure random writes"
+echo "  fio output is hidden while JSON is collected; wait about ${FIO_RUNTIME}s."
+read -r gc_calls_b gc_bg_b mv_b mv_bg_b &lt; &lt;(f2fs_gc_counters)
+before="$(write_sectors)"
+fio_output="$(mktemp)"
+
+fio --name=measure \
+    --directory="$WORKDIR" --filename=fillfile \
+    --rw=randwrite --bs="$FIO_MEASURE_BS" \
+    --size="$FIO_MEASURE_SIZE" --runtime="$FIO_RUNTIME" --time_based=1 \
+    --ioengine=sync --direct=1 --fsync=256 \
+    --output-format=json &gt; "$fio_output"
 
 sync
-ZNS_A=$(awk <span class="str">'{print $7}'</span> /sys/block/nullb1/stat)
-ZNS_BLK=$(( (ZNS_A - ZNS_B) * 512 ))
+after="$(write_sectors)"
+read -r gc_calls_a gc_bg_a mv_a mv_bg_a &lt; &lt;(f2fs_gc_counters)
 
-ZNS_APP=$(python3 <span class="str">&lt;&lt; 'EOF'</span>
-import json
-rand = json.load(open('/tmp/fio_zns_rand.json'))
-total = sum(j['write']['io_bytes'] for j in rand['jobs'])
-print(total)
-<span class="str">EOF</span>
-)
-echo <span class="str">"${ZNS_APP} ${ZNS_BLK}"</span> &gt; ./zns_waf_stat
-printf <span class="str">'  app: %d MB  |  blk: %d MB\n'</span> \
-    "$(( ZNS_APP / 1024 / 1024 ))" "$(( ZNS_BLK / 1024 / 1024 ))"
+logical_bytes="$(parse_fio_write_io_bytes "$fio_output")"
+delta_sectors=$((after - before))
+device_bytes=$((delta_sectors * 512))
 
-printf <span class="str">'── [4/4] Unmount ────────────────────────────────────\n'</span>
-umount /mnt/zns</code></pre>
-                </div>
+if [ -z "$logical_bytes" ] || [ "$logical_bytes" -eq 0 ]; then
+    echo "ERROR: failed to parse fio logical write bytes" &gt;&amp;2
+    echo "fio JSON output kept at: $fio_output" &gt;&amp;2
+    exit 1
+fi
 
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>scp -P 2222 workload_zns.sh user@localhost:~/</code></pre>
-                </div>
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부 (완료까지 약 2~4분 소요)</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>chmod +x workload_zns.sh &amp;&amp; sudo bash workload_zns.sh</code></pre>
-                </div>
-                <div class="callout callout-warn">
-                    <span class="callout-title">WAF가 낮게 나오는 경우</span>
-                    null_blk은 메모리 기반 장치이므로 I/O 속도가 매우 빠릅니다. GC가 충분히 돌지 못하면 Conv WAF가 예상보다 낮게 나올 수 있습니다. 이 경우 두 <code>workload_*.sh</code>의 <code>IO_SIZE</code> 값을 <code>1200m</code> 이상으로 늘려 재측정하세요.
+rm -f "$fio_output"
+
+waf="$(awk -v dev="$device_bytes" -v user="$logical_bytes" 'BEGIN { printf "%.3f", dev / user }')"
+gc_calls_d=$((gc_calls_a - gc_calls_b))
+gc_bg_d=$((gc_bg_a - gc_bg_b))
+mv_d=$((mv_a - mv_b))
+mv_bg_d=$((mv_bg_a - mv_bg_b))
+free_after="$(free_segments 2&gt;/dev/null || echo NA)"
+
+echo
+echo "Result:"
+print_device_stats "before write sectors" "$before"
+print_device_stats "after write sectors"  "$after"
+print_device_stats "delta write sectors"  "$delta_sectors"
+printf "%-24s %12s bytes    %10s MiB\n" "fio logical writes" "$logical_bytes" "$(bytes_to_mib "$logical_bytes")"
+printf "%-24s %12s bytes    %10s MiB\n" "device writes"      "$device_bytes"  "$(bytes_to_mib "$device_bytes")"
+printf "%-24s %12s\n" "host-visible WAF" "$waf"
+printf "%-24s calls=%s (bg=%s) blocks_moved=%s (bg=%s)\n" \
+    "F2FS GC delta" "$gc_calls_d" "$gc_bg_d" "$mv_d" "$mv_bg_d"
+
+print_f2fs_hint_stats
+
+csv_append "bench" "$mode" "$logical_bytes" "$device_bytes" "$waf" \
+    "$gc_calls_d" "$gc_bg_d" "$mv_d" "$mv_bg_d" "$free_after"
+echo
+echo "Logged to: $RESULTS_CSV"
+
+echo
+echo "Interpretation:"
+echo "  This is F2FS/block-layer visible WAF, not real SSD-internal NAND WAF."
+echo "  Compare conv and zoned runs under the same workload and device size."
+echo "  GC delta near 0 means cleaning did not run; use bench_gc.sh for pressure."</code></pre>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ── STEP 3.5 ── -->
-    <div class="section-label">Step 3.5 — WAF 비교 분석</div>
+    <div class="section-label">Step 3.5 — bench_gc.sh: GC 압박형 측정</div>
 
     <div class="step-flow">
         <div class="step-entry">
-
             <div class="step-body">
-                <h3>WAF 계산 및 비교 출력 <code style="font-size:.75em; margin-left:.4rem;">calc_waf.sh</code></h3>
-                <p>저장된 스냅샷에서 앱 기록량(fio io_bytes)과 블록 장치 기록량(stat write_sectors)을 읽어 WAF를 계산하고 두 장치를 비교합니다.</p>
+                <h3>적응형 fill로 free_segments 목표치까지 채워 cleaning 유발</h3>
+                <p><code>bench.sh</code>는 GC가 거의 돌지 않아 WAF 차이가 드러나지 않습니다. <code>bench_gc.sh</code>는 <code>free_segments</code>를 목표값(<code>GC_TARGET_FREE_SEGMENTS</code>) 이하가 될 때까지 chunk 단위로 fill을 반복하고, fragment 후 측정 파일을 미리 layout한 뒤 <strong>측정 구간 안에서 F2FS cleaner가 실제로 동작</strong>하도록 만듭니다.</p>
 
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span><span class="file-badge">calc_waf.sh</span></span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                <div class="script-overview">
+                    <div class="script-overview-body">
+                        <strong>bench_gc.sh 핵심 차이</strong>
+                        <ul class="script-steps">
+                            <li>고정 크기 fill 대신 <code>free_segments &lt;= TARGET</code> 또는 <code>avail &lt;= MIN_AVAIL_MIB</code>까지 적응형 fill</li>
+                            <li>fragment 후 측정 파일을 <strong>먼저 1MB 순차로 layout</strong>한 뒤 그 위에 randwrite 측정 (pre-layout 구간은 측정 제외)</li>
+                            <li>측정 size 기본값이 작음 (128MiB) — GC 압박 상태에서 ENOSPC 회피</li>
+                            <li>측정 구간 GC delta가 0이면 압박이 약한 것 → <code>GC_TARGET_FREE_SEGMENTS</code>를 더 낮춰 재시도</li>
+                        </ul>
                     </div>
-                    <pre><code><span class="comment">#!/usr/bin/env bash
-# calc_waf.sh — compute and display F2FS WAF
-# usage: sudo bash calc_waf.sh
-</span>
-<span class="kw">set</span> -euo pipefail
-
-<span class="fn">sep()</span> { printf <span class="str">'%s\n'</span> <span class="str">"$(printf '─%.0s' {1..58})"</span>; }
-
-<span class="kw">if</span> [[ ! -f ./conv_waf_stat || ! -f ./zns_waf_stat ]]; <span class="kw">then</span>
-    printf <span class="str">'error: run workload_conv.sh and workload_zns.sh first.\n'</span>; exit 1
-<span class="kw">fi</span>
-
-read CONV_APP CONV_BLK &lt; ./conv_waf_stat
-read ZNS_APP  ZNS_BLK  &lt; ./zns_waf_stat
-
-<span class="kw">if</span> [[ <span class="str">"${CONV_APP}"</span> -eq 0 || <span class="str">"${ZNS_APP}"</span> -eq 0 ]]; <span class="kw">then</span>
-    printf <span class="str">'error: write count is 0. re-run workload scripts.\n'</span>; exit 1
-<span class="kw">fi</span>
-
-CONV_APP_MB=$(( CONV_APP / 1024 / 1024 ))
-CONV_BLK_MB=$(( CONV_BLK / 1024 / 1024 ))
-ZNS_APP_MB=$(( ZNS_APP   / 1024 / 1024 ))
-ZNS_BLK_MB=$(( ZNS_BLK   / 1024 / 1024 ))
-
-CONV_WAF=$(awk <span class="str">"BEGIN{printf \"%.2f\", ${CONV_BLK}/${CONV_APP}}"</span>)
-ZNS_WAF=$(awk  <span class="str">"BEGIN{printf \"%.2f\", ${ZNS_BLK}/${ZNS_APP}}"</span>)
-
-sep
-printf <span class="str">'  F2FS filesystem-level WAF comparison\n'</span>
-sep
-printf <span class="str">'  %-24s  %-10s  %-10s  %-6s\n'</span> <span class="str">"Device"</span> <span class="str">"App Write"</span> <span class="str">"Blk Write"</span> <span class="str">"WAF"</span>
-sep
-printf <span class="str">'  %-24s  %-10s  %-10s  %-6s\n'</span> \
-    <span class="str">"Conv F2FS (nullb0)"</span> <span class="str">"${CONV_APP_MB} MB"</span> <span class="str">"${CONV_BLK_MB} MB"</span> <span class="str">"${CONV_WAF}"</span>
-printf <span class="str">'  %-24s  %-10s  %-10s  %-6s\n'</span> \
-    <span class="str">"ZNS  F2FS (nullb1)"</span> <span class="str">"${ZNS_APP_MB} MB"</span>  <span class="str">"${ZNS_BLK_MB} MB"</span>  <span class="str">"${ZNS_WAF}"</span>
-sep
-printf <span class="str">'\n  Conv WAF &gt; 1.0: extra block writes due to F2FS segment GC copy-back\n'</span>
-printf <span class="str">'  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC\n\n'</span></code></pre>
                 </div>
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 호스트에서 파일 전송</span>
+                        <span>scripts/f2fs-waf/bench_gc.sh</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
-                    <pre><code>scp -P 2222 calc_waf.sh user@localhost:~/</code></pre>
-                </div>
-                <div class="code-block">
-                    <div class="code-block-label">
-                        <span>bash — QEMU VM 내부</span>
-                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
-                    </div>
-                    <pre><code>chmod +x calc_waf.sh &amp;&amp; sudo bash calc_waf.sh</code></pre>
-                </div>
+                    <pre><code>#!/usr/bin/env bash
 
-                <div class="output-block">
-                    <div class="output-label">Expected output — calc_waf.sh (values vary per run)</div>
-                    <pre><span class="sep">──────────────────────────────────────────────────────────</span>
-  F2FS filesystem-level WAF comparison
-<span class="sep">──────────────────────────────────────────────────────────</span>
-  Device                    App Write   Blk Write   WAF
-<span class="sep">──────────────────────────────────────────────────────────</span>
-  <span class="ylw">Conv F2FS (nullb0)        2435 MB     3408 MB     1.40</span>
-  <span class="grn">ZNS  F2FS (nullb1)        2441 MB     2563 MB     1.05</span>
-<span class="sep">──────────────────────────────────────────────────────────</span>
+set -euo pipefail
 
-  Conv WAF &gt; 1.0: extra block writes due to F2FS segment GC copy-back
-  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC</pre>
-                </div>
-            </div>
-        </div>
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &amp;&amp; pwd)"
+. "$SCRIPT_DIR/common.sh"
 
-        <div class="step-entry">
+usage() {
+    cat &lt;&lt;EOF
+Usage: sudo $0 conv|zoned
 
-            <div class="step-body">
-                <h3>F2FS GC 동작 구조 비교</h3>
-                <p>같은 랜덤 쓰기 워크로드를 받아도 Conv F2FS와 ZNS F2FS의 GC 전략이 달라 WAF 차이가 발생합니다.</p>
-                <div class="output-block">
-                    <div class="output-label">Conv F2FS vs ZNS F2FS — GC copy-back structure</div>
-                    <pre><span class="hdr">Conv F2FS (segment-based GC)</span>
-<span class="sep">──────────────────────────────────────────────────────────</span>
-  random 4KB write  -> F2FS: appended to new segment tail
-  stale pages        -> marked invalid in that segment
-  GC triggered when segment has mixed valid/invalid pages:
-    [segment A: valid 10 + invalid 54 pages]
-    -> copy 10 valid pages to new segment B (copy-back)   <span class="red">← extra write</span>
-    -> erase segment A  -> reuse
-  actual block writes &gt; app writes  ->  <span class="red">WAF &gt; 1.0</span>
+Adaptive GC-pressure benchmark:
+  1. Fill in chunks until F2FS free_segments reaches a target.
+  2. Create small files and delete half to make invalid blocks.
+  3. Measure a new append/write file, so F2FS may need cleaning.
 
-<span class="hdr">ZNS F2FS (zone-based GC)</span>
-<span class="sep">──────────────────────────────────────────────────────────</span>
-  F2FS segment boundary = zone boundary (64MB aligned)
-  random write -> F2FS converts to sequential internally, writes to zone
-  zone full -> select victim zone with low valid-page ratio (GC victim)
-    -> if few valid pages, zone reset alone suffices for reuse   <span class="grn">← minimal copy-back</span>
-  actual block writes ~= app writes  ->  <span class="grn">WAF ~= 1.0</span>
-<span class="sep">──────────────────────────────────────────────────────────</span>
-  key: zone size (64MB) = F2FS GC unit -> fewer partial copy-back intervals</pre>
-                </div>
-                <div class="callout callout-success">
-                    <span class="callout-title">ZNS WAF 개선 핵심</span>
-                    ZNS F2FS의 WAF 개선 핵심은 <strong>Zone Reset이 Erase 단위와 정확히 일치</strong>한다는 점입니다. Zone 전체가 invalid이면 복사 없이 Reset 하나로 재사용 가능하므로 GC Copy-back 비용이 대폭 줄어듭니다.
+Environment overrides:
+  GC_FILL_CHUNK=$GC_FILL_CHUNK
+  GC_TARGET_FREE_SEGMENTS=$GC_TARGET_FREE_SEGMENTS
+  GC_MIN_AVAIL_MIB=$GC_MIN_AVAIL_MIB
+  GC_FRAGMENT_FILES=$GC_FRAGMENT_FILES
+  GC_FRAGMENT_FILE_SIZE=$GC_FRAGMENT_FILE_SIZE
+  GC_MEASURE_SIZE=$GC_MEASURE_SIZE
+  GC_MEASURE_BS=$GC_MEASURE_BS
+  GC_MEASURE_RW=$GC_MEASURE_RW   (randwrite recommended to invalidate blocks)
+  RESULTS_CSV=$RESULTS_CSV
+  RUN_TAG=$RUN_TAG
+EOF
+}
+
+mode="${1:-}"
+case "$mode" in
+    conv|zoned) ;;
+    -h|--help|"") usage; exit 0 ;;
+    *) usage &gt;&amp;2; exit 1 ;;
+esac
+
+ensure_prereqs
+if ! mounted_on_mnt; then
+    echo "ERROR: $MNT is not mounted. Run setup.sh first." &gt;&amp;2
+    exit 1
+fi
+
+WORKDIR="$MNT/waf-gc-work"
+mkdir -p "$WORKDIR"
+
+echo "Adaptive GC benchmark mode=$mode"
+echo "Mount: $MNT"
+echo "Target: free_segments&lt;=$GC_TARGET_FREE_SEGMENTS, keep at least ${GC_MIN_AVAIL_MIB}MiB available"
+echo "Measure: rw=$GC_MEASURE_RW size=$GC_MEASURE_SIZE bs=$GC_MEASURE_BS"
+echo
+
+drop_caches
+rm -f "$WORKDIR"/fill.* "$WORKDIR"/frag.* "$WORKDIR"/measurefile
+
+echo "[1/3] Adaptive fill"
+idx=0
+while :; do
+    free="$(free_segments || echo 999999)"
+    avail="$(avail_mib)"
+    printf "  free_segments=%s avail=%sMiB\n" "$free" "$avail"
+
+    if [ "$free" -le "$GC_TARGET_FREE_SEGMENTS" ]; then break; fi
+    if [ "$avail" -le "$GC_MIN_AVAIL_MIB" ]; then
+        echo "  stop fill: available space guard reached"; break
+    fi
+
+    fio --name="gc-fill-$idx" \
+        --directory="$WORKDIR" --filename="fill.$idx" \
+        --rw=write --bs=1M --size="$GC_FILL_CHUNK" \
+        --ioengine=sync --direct=0 --fsync_on_close=1 \
+        --output-format=terse &gt;/dev/null
+
+    idx=$((idx + 1))
+    sync
+done
+
+print_f2fs_hint_stats
+echo
+
+echo "[2/3] Fragment: create small files, then delete every other file"
+fio --name=gc-fragment \
+    --directory="$WORKDIR" \
+    --filename_format=frag.\$jobnum.\$filenum \
+    --rw=write --bs=4K \
+    --nrfiles="$GC_FRAGMENT_FILES" \
+    --filesize="$GC_FRAGMENT_FILE_SIZE" \
+    --ioengine=sync --direct=0 --fsync_on_close=1 \
+    --output-format=normal
+
+idx=0
+for file in "$WORKDIR"/frag.*; do
+    if [ $((idx % 2)) -eq 0 ]; then rm -f "$file"; fi
+    idx=$((idx + 1))
+done
+sync
+drop_caches
+print_f2fs_hint_stats
+echo
+
+echo "[3a/3] Pre-create measure file (not measured)"
+fio --name=gc-prelayout \
+    --directory="$WORKDIR" --filename=measurefile \
+    --rw=write --bs=1M --size="$GC_MEASURE_SIZE" \
+    --ioengine=sync --direct=0 --fsync_on_close=1 \
+    --output-format=terse &gt;/dev/null
+sync
+drop_caches
+
+echo "[3b/3] Measure rw=$GC_MEASURE_RW under GC pressure"
+read -r gc_calls_b gc_bg_b mv_b mv_bg_b &lt; &lt;(f2fs_gc_counters)
+before="$(write_sectors)"
+fio_output="$(mktemp)"
+
+if ! fio --name=gc-measure \
+    --directory="$WORKDIR" --filename=measurefile \
+    --rw="$GC_MEASURE_RW" --bs="$GC_MEASURE_BS" --size="$GC_MEASURE_SIZE" \
+    --ioengine=sync --direct=1 --fsync=256 \
+    --output-format=json &gt; "$fio_output"; then
+    echo "ERROR: fio measurement failed. Recent df:"
+    df -h "$MNT"
+    echo "fio JSON output kept at: $fio_output" &gt;&amp;2
+    exit 1
+fi
+
+sync
+after="$(write_sectors)"
+read -r gc_calls_a gc_bg_a mv_a mv_bg_a &lt; &lt;(f2fs_gc_counters)
+logical_bytes="$(parse_fio_write_io_bytes "$fio_output")"
+
+delta_sectors=$((after - before))
+device_bytes=$((delta_sectors * 512))
+
+if [ -z "$logical_bytes" ] || [ "$logical_bytes" -eq 0 ]; then
+    echo "ERROR: failed to parse fio logical write bytes" &gt;&amp;2
+    echo "fio JSON output kept at: $fio_output" &gt;&amp;2
+    exit 1
+fi
+
+rm -f "$fio_output"
+waf="$(awk -v dev="$device_bytes" -v user="$logical_bytes" 'BEGIN { printf "%.3f", dev / user }')"
+
+gc_calls_d=$((gc_calls_a - gc_calls_b))
+gc_bg_d=$((gc_bg_a - gc_bg_b))
+mv_d=$((mv_a - mv_b))
+mv_bg_d=$((mv_bg_a - mv_bg_b))
+free_after="$(free_segments 2&gt;/dev/null || echo NA)"
+
+echo
+echo "Result:"
+print_device_stats "before write sectors" "$before"
+print_device_stats "after write sectors"  "$after"
+print_device_stats "delta write sectors"  "$delta_sectors"
+printf "%-24s %12s bytes    %10s MiB\n" "fio logical writes" "$logical_bytes" "$(bytes_to_mib "$logical_bytes")"
+printf "%-24s %12s bytes    %10s MiB\n" "device writes"      "$device_bytes"  "$(bytes_to_mib "$device_bytes")"
+printf "%-24s %12s\n" "host-visible WAF" "$waf"
+printf "%-24s calls=%s (bg=%s) blocks_moved=%s (bg=%s)\n" \
+    "F2FS GC delta" "$gc_calls_d" "$gc_bg_d" "$mv_d" "$mv_bg_d"
+
+print_f2fs_hint_stats
+
+csv_append "bench_gc" "$mode" "$logical_bytes" "$device_bytes" "$waf" \
+    "$gc_calls_d" "$gc_bg_d" "$mv_d" "$mv_bg_d" "$free_after"
+echo
+echo "Logged to: $RESULTS_CSV"
+
+echo
+echo "Interpretation:"
+echo "  GC delta &gt; 0 means F2FS cleaning ran inside the measured interval."
+echo "  If WAF is ~1.0 with GC delta = 0, raise pressure (lower GC_TARGET_FREE_SEGMENTS)."
+echo "  If it hits ENOSPC, lower GC_MEASURE_SIZE or relax GC_TARGET_FREE_SEGMENTS."</code></pre>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ── 결과표 ── -->
-    <div class="card">
-        <h2>WAF 측정 결과표</h2>
-        <div class="result-table-wrap">
-            <table class="result-table">
-                <thead>
-                    <tr>
-                        <th>장치</th>
-                        <th>앱 기록량 (MB)</th>
-                        <th>블록 기록량 (MB)</th>
-                        <th>WAF</th>
-                        <th>비고</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="tag-col">Conv F2FS (/dev/nullb0)</td>
-                        <td class="fill">기록하세요</td>
-                        <td class="fill">기록하세요</td>
-                        <td class="fill">기록하세요</td>
-                        <td style="font-size:.78rem;color:#64748b;">세그먼트 GC, randwrite 800MB</td>
-                    </tr>
-                    <tr>
-                        <td class="tag-col">ZNS F2FS (/dev/nullb1)</td>
-                        <td class="fill">기록하세요</td>
-                        <td class="fill">기록하세요</td>
-                        <td class="highlight-cell">기록하세요</td>
-                        <td style="font-size:.78rem;color:#64748b;">Zone GC, randwrite 800MB</td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- ── STEP 3.6 ── -->
+    <div class="section-label">Step 3.6 — cleanup.sh & run_all.sh</div>
+
+    <div class="step-flow">
+        <div class="step-entry">
+            <div class="step-body">
+                <h3>cleanup.sh — 마운트 해제 및 null_blk 제거</h3>
+                <p>모드 전환 전에 반드시 호출합니다. <code>common.sh</code>의 <code>cleanup_mount</code>와 <code>cleanup_nullblk</code>를 호출해 마운트를 풀고 configfs 디렉터리를 제거하며 <code>null_blk</code> 모듈을 unload합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>scripts/f2fs-waf/cleanup.sh</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &amp;&amp; pwd)"
+. "$SCRIPT_DIR/common.sh"
+
+need_root
+cleanup_mount
+cleanup_nullblk
+
+echo "Cleaned up $MNT and null_blk"</code></pre>
+                </div>
+            </div>
         </div>
-        <div class="callout callout-warn" style="margin-top:.8rem;">
-            <span class="callout-title">파일시스템 레벨 WAF</span>
-            이 실습의 WAF는 <strong>파일시스템 레벨</strong> 측정값입니다. 실제 NAND 기반 SSD에서는 여기에 더해 펌웨어 레벨 GC WAF가 추가로 곱해져 최종 WAF는 더 높아집니다.
+
+        <div class="step-entry">
+            <div class="step-body">
+                <h3>run_all.sh — conv/zoned × N회 자동 반복 + CSV 요약</h3>
+                <p>한 번의 실행으로 setup → bench(_gc) → cleanup을 conv·zoned 양쪽에서 N회 반복합니다. 각 run마다 <code>RUN_TAG=&lt;bench&gt;-r&lt;i&gt;</code>로 태깅되어 CSV에 누적되고, 마지막에 모드별 평균/최소/최대 WAF가 요약됩니다.</p>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>scripts/f2fs-waf/run_all.sh</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &amp;&amp; pwd)"
+. "$SCRIPT_DIR/common.sh"
+
+usage() {
+    cat &lt;&lt;EOF
+Usage: sudo $0 [bench|bench_gc] [runs]
+
+Runs setup -&gt; bench[_gc] -&gt; cleanup for both conv and zoned, repeated 'runs' times.
+Appends each run to \$RESULTS_CSV with RUN_TAG=&lt;bench&gt;-r&lt;i&gt;.
+
+Defaults: bench_gc, runs=3
+Env:
+  RESULTS_CSV=$RESULTS_CSV
+  MODES="conv zoned"   (override to e.g. "zoned" only)
+EOF
+}
+
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+esac
+
+bench="${1:-bench_gc}"
+runs="${2:-3}"
+modes="${MODES:-conv zoned}"
+
+case "$bench" in
+    bench|bench_gc) ;;
+    *) usage &gt;&amp;2; exit 1 ;;
+esac
+
+need_root
+
+echo "Plan: bench=$bench runs=$runs modes='$modes'"
+echo "CSV : $RESULTS_CSV"
+echo
+
+for mode in $modes; do
+    for i in $(seq 1 "$runs"); do
+        echo "==============================="
+        echo " mode=$mode run=$i/$runs"
+        echo "==============================="
+        RUN_TAG="${bench}-r${i}" "$SCRIPT_DIR/setup.sh" "$mode"
+        RUN_TAG="${bench}-r${i}" "$SCRIPT_DIR/${bench}.sh" "$mode"
+        "$SCRIPT_DIR/cleanup.sh"
+        echo
+    done
+done
+
+echo
+echo "All runs done. Summary:"
+if command -v awk &gt;/dev/null 2&gt;&amp;1 &amp;&amp; [ -f "$RESULTS_CSV" ]; then
+    awk -F, '
+        NR == 1 { next }
+        {
+            key = $3 "/" $4
+            sum[key] += $7
+            n[key]++
+            if (!(key in min) || $7 &lt; min[key]) min[key] = $7
+            if (!(key in max) || $7 &gt; max[key]) max[key] = $7
+        }
+        END {
+            printf "  %-20s %6s %8s %8s %8s\n", "bench/mode", "n", "avg_waf", "min", "max"
+            for (k in sum) {
+                printf "  %-20s %6d %8.3f %8.3f %8.3f\n", k, n[k], sum[k]/n[k], min[k], max[k]
+            }
+        }
+    ' "$RESULTS_CSV"
+fi</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── STEP 3.7 ── -->
+    <div class="section-label">Step 3.7 — Conv F2FS 측정 실행</div>
+
+    <div class="step-flow">
+        <div class="step-entry">
+            <div class="step-body">
+                <h3>2GB conventional null_blk 위에서 host-visible WAF 측정</h3>
+                <p>일반 block device처럼 보이는 <code>zoned=0</code> null_blk 위에 F2FS를 올립니다. 이 실험은 conventional SSD 내부 FTL WAF가 아니라, F2FS가 <code>/dev/nullb0</code>에 발행한 write량을 측정합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — 안정형 (sanity) 측정</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>cd ~/codex/scripts/f2fs-waf
+sudo bash cleanup.sh
+sudo bash setup.sh conv
+sudo FIO_RUNTIME=15 bash bench.sh conv</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — GC 압박형 측정</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>sudo bash cleanup.sh
+sudo bash setup.sh conv
+sudo GC_TARGET_FREE_SEGMENTS=230 GC_MIN_AVAIL_MIB=120 GC_APPEND_SIZE=48M bash bench_gc.sh conv</code></pre>
+                </div>
+
+                <div class="output-block">
+                    <div class="output-label">예상출력 — Conv 결과 예시</div>
+                    <pre>Result:
+fio logical writes        50331648 bytes         48.00 MiB
+device writes             50937856 bytes         48.58 MiB
+host-visible WAF                1.012
+
+F2FS sysfs snapshot:
+  dirty_segments   1
+  free_segments    228
+  ovp_segments     216</pre>
+                </div>
+
+                <div class="callout callout-warn">
+                    <span class="callout-title">결과 해석</span>
+                    <code>1.012</code>처럼 1을 살짝 넘는 값은 F2FS metadata, checkpoint, 일부 cleaning overhead로 설명할 수 있습니다. 이 값만으로 "conventional SSD 내부 GC 때문에 WAF가 증가했다"고 말하면 안 됩니다.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── STEP 3.8 ── -->
+    <div class="section-label">Step 3.8 — Zoned F2FS 측정 실행</div>
+
+    <div class="step-flow">
+        <div class="step-entry">
+            <div class="step-body">
+                <h3>3GB zoned null_blk 위에서 host-visible WAF 측정</h3>
+                <p>2GB zoned null_blk에서는 F2FS zoned mode의 usable space가 너무 작게 잡혀 fill 단계에서 실패할 수 있습니다. ZNS 쪽만 3GB로 늘리고, zone 수를 확보하기 위해 <code>ZONE_SIZE_MB=32</code>, <code>ZONE_NR_CONV=8</code>을 사용합니다.</p>
+
+                <div class="zone-layout">
+<span class="dim">Zoned null_blk (실습 권장값)</span>
+  size              = <span class="seq-zone">3072 MB</span>
+  zone_size         = <span class="seq-zone">32 MB</span>
+  zone_nr_conv      = <span class="conv-zone">8 conventional zones</span>
+  remaining zones   = <span class="seq-zone">sequential write required zones</span>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — Zoned 안정형 측정</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>sudo bash cleanup.sh
+sudo NULL_SIZE_MB=3072 ZONE_SIZE_MB=32 ZONE_NR_CONV=8 bash setup.sh zoned
+sudo FIO_FILL_SIZE=512M FIO_MEASURE_SIZE=512M FIO_RUNTIME=15 bash bench.sh zoned</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — Zoned GC 압박형 측정</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>sudo bash cleanup.sh
+sudo NULL_SIZE_MB=3072 ZONE_SIZE_MB=32 ZONE_NR_CONV=8 bash setup.sh zoned
+sudo GC_TARGET_FREE_SEGMENTS=260 GC_MIN_AVAIL_MIB=200 bash bench_gc.sh zoned</code></pre>
+                </div>
+
+                <div class="output-block">
+                    <div class="output-label">예상출력 — Zoned 결과 예시</div>
+                    <pre>Result:
+host-visible WAF                2.111
+
+F2FS sysfs snapshot:
+  gc_urgent        GC_NORMAL
+  dirty_segments   82
+  free_segments    1121
+  ovp_segments     981</pre>
+                </div>
+
+                <div class="callout callout-info">
+                    <span class="callout-title">예상과 다른 결과가 정상일 수 있음</span>
+                    Zoned라고 해서 이 실습의 WAF가 반드시 1에 가까워지지는 않습니다. F2FS zoned mode는 zone sequential write 제약, conventional zone metadata 영역, discard/zone reset, checkpoint 정책 때문에 host-visible write가 오히려 더 크게 측정될 수 있습니다.
+                </div>
+            </div>
+        </div>
+
+        <div class="step-entry">
+            <div class="step-body">
+                <h3>한 번에 conv/zoned 반복 측정</h3>
+                <p>수동으로 cleanup → setup → bench를 반복하는 대신 <code>run_all.sh</code>로 자동화할 수 있습니다.</p>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — bench_gc를 conv/zoned 각 3회 반복</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>cd ~/codex/scripts/f2fs-waf
+sudo bash run_all.sh bench_gc 3</code></pre>
+                </div>
+
+                <div class="output-block">
+                    <div class="output-label">예상출력 — run_all.sh 요약</div>
+                    <pre>All runs done. Summary:
+  bench/mode                n  avg_waf      min      max
+  bench_gc/conv             3    1.018    1.012    1.025
+  bench_gc/zoned            3    2.054    1.880    2.211</pre>
+                </div>
+
+                <div class="code-block">
+                    <div class="code-block-label">
+                        <span>bash — CSV 직접 확인</span>
+                        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+                    </div>
+                    <pre><code>column -s, -t scripts/f2fs-waf/results.csv | less -S</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── STEP 3.9 ── -->
+    <div class="section-label">Step 3.9 — 왜 SSD 내부 WAF가 아닌가</div>
+
+    <div class="step-flow">
+        <div class="step-entry">
+            <div class="step-body">
+                <h3>측정 대상의 계층 분리</h3>
+                <p>이번 실습의 핵심은 숫자를 얻는 것보다, 숫자가 가리키는 계층을 구분하는 것입니다. <code>/sys/block/nullb*/stat</code>은 Linux block layer가 장치에 제출한 write sector를 보여줍니다. 실제 SSD의 NAND program 횟수나 FTL GC copy량을 보여주지 않습니다.</p>
+
+                <div class="result-table-wrap">
+                    <table class="result-table">
+                        <thead>
+                            <tr><th>측정 항목</th><th>null_blk + F2FS</th><th>실제 SSD 내부</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="tag-col">관찰 가능한 write</td><td>Host가 block device에 보낸 sector</td><td>NAND page program 횟수</td></tr>
+                            <tr><td class="tag-col">GC 주체</td><td>F2FS cleaner / checkpoint</td><td>SSD FTL firmware</td></tr>
+                            <tr><td class="tag-col">Conv SSD FTL</td><td>없음</td><td>있음</td></tr>
+                            <tr><td class="tag-col">ZNS 내부 WAF 비교</td><td>직접 비교 불가</td><td>장치 counter 또는 emulator 필요</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="output-block">
+                    <div class="output-label">정확한 표현 vs 잘못된 표현</div>
+                    <pre>말할 수 있는 것:
+  F2FS가 null_blk에 발행한 host-visible WAF를 측정했다.
+  Conv mode와 zoned mode의 F2FS write behavior가 다르게 나타났다.
+  Zoned mode에서도 host-visible WAF가 1보다 클 수 있다.
+
+말하면 안 되는 것:
+  Conventional SSD 내부 WAF가 ZNS SSD 내부 WAF보다 크다는 것을 증명했다.
+  ZNS SSD 내부 WAF가 1임을 null_blk로 측정했다.</pre>
+                </div>
+
+                <div class="script-overview">
+                    <div class="script-overview-body">
+                        <strong>진짜 device-internal WAF 비교에 필요한 것</strong>
+                        <ul class="script-steps">
+                            <li>실제 NVMe SSD의 host writes와 NAND writes / vendor SMART counter</li>
+                            <li>실제 ZNS SSD의 zone reset/write 통계와 NAND write counter</li>
+                            <li>FEMU, SimpleSSD, MQSim 같은 SSD/ZNS emulator 또는 simulator</li>
+                            <li>동일 workload, 동일 유효 용량, 동일 over-provision 조건</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="callout callout-success">
+                    <span class="callout-title">수정된 실습 결론</span>
+                    이 실습은 "Conv SSD vs ZNS SSD 내부 WAF 비교"가 아니라, <strong>F2FS host-visible WAF 측정과 그 한계 확인</strong> 실습입니다. 실제 SSD 내부 WAF 비교는 다음 단계의 장치 counter 또는 emulator 실습으로 분리해야 합니다.
+                </div>
+            </div>
         </div>
     </div>
 
@@ -745,16 +1294,20 @@ printf <span class="str">'  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC
         <h2>생각해보기</h2>
         <div class="question-list">
             <div class="question-item">
-                <div class="q">Q1. 이 실습의 WAF는 "파일시스템 레벨 WAF"입니다. null_blk에서 NAND 펌웨어 GC는 발생하지 않는데, F2FS WAF가 1보다 클 수 있는 이유는 무엇인가요?</div>
-                <div class="hint">힌트: F2FS의 로그 구조 쓰기 방식과 세그먼트 GC Copy-back이 블록 장치에 어떤 추가 I/O를 발생시키는지 생각해보세요.</div>
+                <div class="q">Q1. 이 실습에서 계산한 WAF가 SSD 내부 NAND WAF가 아닌 이유는 무엇인가요?</div>
+                <div class="hint">힌트: <code>null_blk</code>에 FTL, NAND page, erase block, firmware GC가 존재하는지 생각해보세요.</div>
             </div>
             <div class="question-item">
-                <div class="q">Q2. ZNS F2FS에서 WAF가 낮은 이유를 Zone Reset 관점에서 설명하세요. Zone 내 valid 데이터가 아예 없는 경우와 일부 남아있는 경우 GC 동작은 어떻게 달라질까요?</div>
-                <div class="hint">힌트: Zone Reset은 Zone 전체를 한 번에 Erase합니다. Copy-back이 필요한 조건은 무엇인가요?</div>
+                <div class="q">Q2. <code>bench.sh</code>에서는 WAF가 1.0 근처로 나오는데, <code>bench_gc.sh</code>에서는 다르게 나옵니다. 두 스크립트의 어떤 동작이 이 차이를 만드나요?</div>
+                <div class="hint">힌트: <code>GC_TARGET_FREE_SEGMENTS</code>까지 적응형 fill을 한다는 점, 측정 구간 동안 <code>f2fs_gc_counters</code>의 delta가 어떻게 변하는지 비교해 보세요.</div>
             </div>
             <div class="question-item">
-                <div class="q">Q3. ZNS F2FS 포맷 시 <code>zone_nr_conv=0</code>이면 <code>mkfs.f2fs -m</code>이 실패합니다. F2FS가 ZNS 장치에서 Conventional Zone을 반드시 필요로 하는 이유는 무엇인가요?</div>
-                <div class="hint">힌트: F2FS의 슈퍼블록, 체크포인트, NAT 영역은 임의 위치에 덮어써야 합니다. Sequential Zone에서 이것이 가능할까요?</div>
+                <div class="q">Q3. Zoned F2FS에서 host-visible WAF가 Conv보다 크게 나올 수 있는 이유는 무엇인가요?</div>
+                <div class="hint">힌트: zone sequential write 제약, conventional zone에 저장되는 metadata, checkpoint, discard/zone reset 처리가 host write량에 어떤 영향을 줄 수 있을까요?</div>
+            </div>
+            <div class="question-item">
+                <div class="q">Q4. 실제 Conv SSD와 ZNS SSD의 device-internal WAF를 비교하려면 어떤 추가 측정값과 환경이 필요할까요?</div>
+                <div class="hint">힌트: host write bytes만으로는 NAND 내부 program/write 횟수를 알 수 없습니다. SMART counter, ZNS zone counter, emulator를 떠올려 보세요.</div>
             </div>
         </div>
     </div>
@@ -765,27 +1318,17 @@ printf <span class="str">'  ZNS  WAF ~= 1.0: minimal copy-back with zone-unit GC
     </div>
 </div>
 
-<footer><p>시스템최신기술 &middot; ZNS SSD 성능 비교 실습</p></footer>
+<footer><p>시스템최신기술 &middot; F2FS Host-visible WAF와 ZNS 실습 한계</p></footer>
 
 <script>
 function copyCode(btn) {
-    const pre = btn.closest('.code-block').querySelector('pre');
-    const tmp = document.createElement('div');
-    tmp.innerHTML = pre.innerHTML;
-    const text = (tmp.innerText || tmp.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(() => flash(btn)).catch(() => fallback(text, btn));
-    } else { fallback(text, btn); }
+    const code = btn.closest('.code-block').querySelector('pre code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+        btn.textContent = 'copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+    });
 }
-function fallback(text, btn) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try { document.execCommand('copy') ? flash(btn) : err(btn); } catch(e) { err(btn); }
-    finally { document.body.removeChild(ta); }
-}
-function flash(btn) { btn.textContent='copied!'; btn.style.color='#4ade80'; setTimeout(()=>{btn.textContent='copy';btn.style.color='';},1800); }
-function err(btn)   { btn.textContent='failed';  btn.style.color='#f87171'; setTimeout(()=>{btn.textContent='copy';btn.style.color='';},1800); }
 </script>
 </body>
 </html>
