@@ -170,7 +170,7 @@ sudo reboot</code></pre>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code><span class="comment"># F2FS가 의존하는 crc32_generic 커널 모듈 빌드 및 설치</span>
-cd linux-5.18
+cd /linux-5.18.0
 make crypto/crc32_generic.ko
 sudo cp crypto/crc32_generic.ko /lib/modules/$(uname -r)/kernel/crypto/
 sudo depmod -a
