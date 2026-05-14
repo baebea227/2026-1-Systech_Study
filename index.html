@@ -52,7 +52,6 @@
         }
         .step-num.setup { background:var(--warn); }
         .step-num.lab   { background:var(--success); }
-        .step-num.lab4  { background:var(--accent); color:#1a202c; }
 
         .step-card {
             flex:1; background:white; border:1px solid var(--border);
@@ -100,7 +99,7 @@
 <header>
     <div class="container">
         <h1>ZNS SSD 성능 비교 실습</h1>
-        <p>배경지식 &rarr; 실습 준비 &rarr; Lab 1: 쓰기 제약 &rarr; Lab 2: Zone 상태 전이 &rarr; Lab 3: Host-visible WAF 측정 &rarr; Lab 4: Zoned UFS Case Study</p>
+        <p>배경지식 &rarr; 실습 준비 &rarr; Lab 1: 쓰기 제약 &rarr; Lab 2: Zone 상태 전이 &rarr; Lab 3: Host-visible WAF 측정</p>
         <span class="badge">2026-1 시스템최신기술</span>
     </div>
 </header>
@@ -120,8 +119,6 @@
             ZNS SSD 역할의 <code>/dev/nullb1</code> 두 가상 장치를 구성합니다.
             <code>fio</code>·<code>blkzone</code> 명령으로 순차 쓰기 처리량 비교(Lab 1), Zone 상태 머신 조작(Lab 2),
             F2FS 환경에서 host-visible WAF를 간접 측정하고 그 한계를 분석하는 Lab 3을 단계별로 실험합니다.
-            이어지는 Lab 4 (Case Study)에서는 동일한 Zone 개념이
-            모바일 스마트폰(Zoned UFS)에 이식될 때 발생하는 시스템 과제와 해결 전략을 FAST '26 논문을 통해 탐구합니다.
         </p>
     </div>
 
@@ -211,27 +208,6 @@
                 <div class="tools">
                     <span class="tool-badge ok">WAF</span>
                     <span class="tool-badge ok">F2FS</span>
-                </div>
-            </a>
-        </div>
-
-        <!-- Step 6: Lab 4 Case Study -->
-        <div class="step-item">
-            <div class="step-num lab4">6</div>
-            <a href="lab4.html" class="step-card">
-                <h3>Lab 4 (Case Study): ZNS 기술의 모바일 스토리지 확장 — Zoned UFS</h3>
-                <p>Lab 1~3에서 직접 경험한 ZNS 제약들(쓰기 위반 에러, Zone 상태 전이, WAF≈1)이 모바일 스마트폰 환경(ZUFS)에서 어떤 시스템 과제로 이어지는지 탐구합니다. FAST '26 논문 <em>Unleashing Zoned UFS</em>를 통해 펌웨어~Android 5계층 크로스 레이어 최적화 전략을 학습합니다.</p>
-                <p style="font-size:.82rem; color:#64748b; margin-top:.3rem;">
-                    <strong>Step 4.1</strong> 스토리지 패러다임 변화 분석 (CUFS vs ZUFS, L2P 오버헤드 수백MB→수십KB) &bull;
-                    <strong>Step 4.2</strong> 3대 과제 분석 (제한된 SRAM · 쓰기 순서 · GC 오버헤드) &bull;
-                    <strong>Step 4.3</strong> 5계층 협력 아키텍처 (펌웨어~Android 크로스 레이어) &bull;
-                    <strong>Step 4.4</strong> 실무 성능 평가 (단편화 환경 쓰기 2× 이상, 게임 로딩 14% 단축)
-                </p>
-                <div class="tools">
-                    <span class="tool-badge bonus">Lab 4 Case Study</span>
-                    <span class="tool-badge bonus">Zoned UFS</span>
-                    <span class="tool-badge bonus">크로스 레이어 최적화</span>
-                    <span class="tool-badge bonus">FAST '26</span>
                 </div>
             </a>
         </div>

@@ -32,11 +32,11 @@
 - **Step 3.2 [워크로드 인가]:** `workload.sh` 스크립트를 통해 각 드라이브에 60초간 특정 워크로드를 인가합니다. (Conventional SSD: 랜덤 70% + 순차 30% 혼합 워크로드 / ZNS SSD: 100% 순차 워크로드)
 - **Step 3.3 [WAF 수치 도출 및 분석]:** `calc_waf.sh` 스크립트를 활용해 워크로드 실행 전후의 `/sys/block/DEV/stat` 파일 내 `write_sectors` 변화량을 측정합니다. 호스트가 요청한 쓰기 양과 실제 디바이스에 기록된 쓰기 양을 기반으로 WAF를 계산하고, ZNS SS와 Conventional SSD의 결과를 비교 분석합니다.
 
-### Lab 4 (Case Study) — ZNS 기술의 모바일 스토리지 확장 (Zoned UFS) 학습
+### Case Study — ZNS 기술의 모바일 스토리지 확장 (Zoned UFS) 학습
 
-- **Step 4.1 [스토리지 패러다임 변화 분석]:** 기존 스마트폰에 쓰이는 CUFS(Conventional UFS)가 겪는 수백 MB 규모의 L2P(Logical-to-Physical) 매핑 테이블 SRAM 오버헤드 문제를 분석하고, ZUFS가 순차 쓰기 제약을 통해 이를 수십 KB 수준으로 어떻게 혁신적으로 줄이는지 학습합니다.
-- **Step 4.2 [크로스 레이어 최적화 토론]:** 모바일 환경의 3대 과제(제한된 SRAM, 쓰기 순서 보장, GC 오버헤드 완화)를 해결하기 위해 제안된 5계층(Android ➔ F2FS ➔ 블록 레이어 ➔ 드라이버 ➔ 장치 펌웨어) 협력 아키텍처를 분석합니다. 앞선 Lab 1~3에서 실습한 에러 제어 및 상태 전이 개념이 각 계층의 최적화 기법에 어떻게 적용되었는지 매핑하여 토론합니다.
-- **Step 4.3 [실무 성능 평가 및 리뷰]:** 실제 ZUFS가 탑재된 기기에서 단편화(Fragmentation)가 심화될 때 CUFS 대비 쓰기 처리량이 2배 이상 우수하게 유지되는 원리를 살펴보고, WAF≈1.0 달성이 스토리지 수명 및 게임 로딩 속도 등 사용자 체감 성능에 미치는 영향을 종합적으로 평가합니다.
+- **[스토리지 패러다임 변화 분석]:** 기존 스마트폰에 쓰이는 CUFS(Conventional UFS)가 겪는 수백 MB 규모의 L2P(Logical-to-Physical) 매핑 테이블 SRAM 오버헤드 문제를 분석하고, ZUFS가 순차 쓰기 제약을 통해 이를 수십 KB 수준으로 어떻게 혁신적으로 줄이는지 학습합니다.
+- **Step 4.2 [크로스 레이어 최적화 토론]:** 모바일 환경의 3대 과제(제한된 SRAM, 쓰기 순서 보장, GC 오버헤드 완화)를 해결하기 위해 제안된 5계층(Android ➔ F2FS ➔ 블록 레이어 ➔ 드라이버 ➔ 장치 펌웨어) 협력 아키텍처를 분석합니다.
+- **Step 4.3 [실무 성능 평가 및 리뷰]:** 실제 ZUFS가 탑재된 기기에서 단편화(Fragmentation)가 심화될 때 CUFS 대비 쓰기 처리량이 2배 이상 우수하게 유지되는 원리를 살펴보고, 수명 및 게임 로딩 속도 등 사용자 체감 성능에 미치는 영향을 종합적으로 평가합니다.
 
 ## **4. 기대 효과**
 
@@ -48,5 +48,3 @@
 ## 5. 참고자료
 
 https://www.usenix.org/conference/fast26/presentation/kim-jungae
-
-https://www.usenix.org/system/files/fast26_slides_kim-jungae.pdf
