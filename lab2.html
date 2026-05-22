@@ -78,6 +78,7 @@
     <div class="container">
         <h1>실습 2: Zone 관리 상태 전이</h1>
         <p>blkzone report · Explicit Open · Write Pointer 이동 · Zone Reset</p>
+        <span class="badge">2026-1 시스템최신기술</span>
     </div>
 </header>
 
@@ -116,7 +117,7 @@
                 <h3>초기 Zone 상태 확인</h3>
                 <p><code>blkzone report</code>로 모든 Zone의 현재 상태, 시작 LBA, 크기, Write Pointer 위치를 확인합니다.</p>
                 <div class="code-block">
-                    <div class="code-block-label"><span>bash — Zone 목록 조회</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+                    <div class="code-block-label"><span>bash — List zones</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
                     <pre><code>sudo blkzone reset /dev/nullb1
                         
 sudo blkzone report /dev/nullb1 | head -5
@@ -129,7 +130,7 @@ sudo blkzone report /dev/nullb1 \
 cat /sys/block/nullb1/queue/nr_zones</code></pre>
                 </div>
                 <div class="output-block">
-                    <div class="output-label">예상출력 — initial state (all EMPTY)</div>
+                    <div class="output-label">Expected output — initial state (all EMPTY)</div>
                     <pre>  start: 0x000000000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
   start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
   start: 0x000040000, len 0x020000, cap 0x020000, wptr 0x000000 reset:0 non-seq:0, zcond: 1(em) [type: 2(SEQ_WRITE_REQUIRED)]
@@ -166,9 +167,6 @@ cat /sys/block/nullb1/queue/nr_zones</code></pre>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>#!/usr/bin/env bash
-# implicit_open.sh — trigger and verify Implicit Open state
-# usage: sudo bash implicit_open.sh
-
 set -euo pipefail
 DEV=/dev/nullb1
 
@@ -205,21 +203,21 @@ sudo blkzone report "${DEV}" \
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 파일 생성</span>
+                        <span>bash — Create file</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>vi implicit_open.sh</code></pre>
                 </div>
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 파일 권한 부여 및 실행</span>
+                        <span>bash — Make executable and run</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>chmod +x implicit_open.sh &amp;&amp; sudo bash implicit_open.sh</code></pre>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상출력 — implicit_open.sh</div>
+                    <div class="output-label">Expected output — implicit_open.sh</div>
                     <pre>── [1] Full reset ───────────────────────────────
 Zone 0 state: wptr=0x000000       state=em
 ── [2] Write 32MB (no OPEN ZONE) ───────────────
@@ -273,9 +271,6 @@ Zone 0 state: wptr=0x010000       state=oi
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>#!/usr/bin/env bash
-# zone_lifecycle.sh — zone state transition (Open -> Write -> Close -> Finish)
-# usage: sudo bash zone_lifecycle.sh
-
 set -euo pipefail
 DEV=/dev/nullb1
 
@@ -318,21 +313,21 @@ show_zone</code></pre>
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 파일 생성</span>
+                        <span>bash — Create file</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>vi zone_lifecycle.sh</code></pre>
                 </div>
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 파일 권한 부여 및 실행</span>
+                        <span>bash — Make executable and run</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>chmod +x zone_lifecycle.sh &amp;&amp; sudo bash zone_lifecycle.sh</code></pre>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상출력 — zone_lifecycle.sh</div>
+                    <div class="output-label">Expected output — zone_lifecycle.sh</div>
                     <pre>── [1] Full reset ───────────────────────────────
 Zone 1 state: wptr=0x000000       state=em
 ── [2] Explicit Open ────────────────────────────
@@ -377,22 +372,16 @@ Zone 1 state: wptr=0x020000       state=fu</pre>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>#!/usr/bin/env bash
-# zone_reset.sh — single zone reset, then bulk reset all zones
-# usage: sudo bash zone_reset.sh
-
 set -euo pipefail
 DEV=/dev/nullb1
 
-# ── 1) Zone 1 state before reset ─────────────────────
 printf '[1/3] Zone 1 state before reset:\n'
 sudo blkzone report "${DEV}" | sed -n '2p'
 
-# ── 2) single zone 1 reset ───────────────────────────
 printf '\n[2/3] Zone 1 Reset...\n'
 sudo blkzone reset --offset 0x20000 --length 0x20000 "${DEV}"
 sudo blkzone report "${DEV}" | sed -n '2p'
 
-# ── 3) bulk reset all zones ──────────────────────────
 printf '\n[3/3] Bulk reset all zones...\n'
 sudo blkzone reset "${DEV}"
 
@@ -408,21 +397,21 @@ printf '\nAll zones restored to EMPTY\n'</code></pre>
 
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 파일 생성</span>
+                        <span>bash — Create file</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>vi zone_reset.sh</code></pre>
                 </div>
                 <div class="code-block">
                     <div class="code-block-label">
-                        <span>bash — 파일 권한 부여 및 실행</span>
+                        <span>bash — Make executable and run</span>
                         <button class="copy-btn" onclick="copyCode(this)">copy</button>
                     </div>
                     <pre><code>chmod +x zone_reset.sh &amp;&amp; sudo bash zone_reset.sh</code></pre>
                 </div>
 
                 <div class="output-block">
-                    <div class="output-label">예상출력 — zone_reset.sh</div>
+                    <div class="output-label">Expected output — zone_reset.sh</div>
                     <pre>[1/3] Zone 1 state before reset:
   start: 0x000020000, len 0x020000, cap 0x020000, wptr 0x020000 reset:0 non-seq:0, zcond:14(fu) [type: 2(SEQ_WRITE_REQUIRED)]
 

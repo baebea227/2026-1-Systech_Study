@@ -242,7 +242,8 @@
 <header>
     <div class="container">
         <h1>실습 1: 쓰기 제약 및 기본 성능 비교</h1>
-        <p>Sequential Write 처리량 비교 · Random Write 위반 에러 체득</p>
+        <p>순차 쓰기 처리량 비교 · 랜덤 쓰기 위반 오류 확인</p>
+        <span class="badge">2026-1 시스템최신기술</span>
     </div>
 </header>
 
@@ -255,7 +256,7 @@
     <ol>
         <li><a href="#s1">실습 목표</a></li>
         <li><a href="#s2">순차 쓰기 처리량 비교</a></li>
-        <li><a href="#s3">Random Write 제약 확인</a></li>
+        <li><a href="#s3">랜덤 쓰기 제약 확인</a></li>
         <li><a href="#s4">분석 질문</a></li>
     </ol>
 </nav>
@@ -264,13 +265,13 @@
 <section id="s1">
     <h2>실습 목표</h2>
     <p>Conventional SSD(<code>/dev/nullb0</code>)와 ZNS 장치(<code>/dev/nullb1</code>)에 <strong>동일한 순차 쓰기</strong>를 수행하여 처리량(Throughput)을 비교합니다.</p>
-    <p>이어서 ZNS 장치에 <strong>임의 쓰기(Random Write)</strong>를 시도하여 Write Pointer 위반 에러가 발생하는 것을 직접 확인하고, ZNS의 쓰기 제약 조건을 체득합니다.</p>
+    <p>이어서 ZNS 장치에 <strong>랜덤 쓰기(Random Write)</strong>를 시도하여 Write Pointer 위반 오류가 발생하는 것을 직접 확인하고, ZNS의 쓰기 제약 조건을 체득합니다.</p>
     <div class="metric-row">
         <div class="metric-box">
-            <div class="metric-val">Sequential Write</div>
+            <div class="metric-val">순차 쓰기</div>
         </div>
         <div class="metric-box">
-            <div class="metric-val">Random Write 위반</div>
+            <div class="metric-val">랜덤 쓰기 위반</div>
         </div>
         <div class="metric-box">
             <div class="metric-val">Conv vs ZNS</div>
@@ -282,7 +283,7 @@
 <section id="s2">
     <h2>순차 쓰기 처리량 비교</h2>
 
-    <p>ZNS Zone 초기화 후 두 장치에 순차 쓰기를 수행하고 Bandwidth · Latency를 비교 출력합니다. <code>/dev/nullb1</code>은 <code>zonemode=zbd</code>로, <code>/dev/nullb0</code>은 일반 write로 실행됩니다.</p>
+    <p>ZNS Zone 초기화 후 두 장치에 순차 쓰기를 수행하고 처리량(Bandwidth) · 지연 시간(Latency)을 비교 출력합니다. <code>/dev/nullb1</code>은 <code>zonemode=zbd</code>로, <code>/dev/nullb0</code>은 일반 write로 실행됩니다.</p>
 
     <div class="script-overview">
         <div class="script-overview-body">
@@ -291,7 +292,7 @@
                 <li>ZNS Zone 초기화 — <code>blkzone reset /dev/nullb1</code></li>
                 <li>ZNS 순차 쓰기 — <code>fio zonemode=zbd rw=write</code> → <code>/tmp/fio_zns_seq.log</code></li>
                 <li>Conventional SSD 순차 쓰기 — <code>fio rw=write /dev/nullb0</code> → <code>/tmp/fio_conv_seq.log</code></li>
-                <li>BW / Latency 자동 파싱 후 비교표 출력</li>
+                <li>BW / 지연 시간 자동 파싱 후 비교표 출력</li>
             </ul>
         </div>
     </div>
@@ -299,9 +300,6 @@
     <div class="code-block">
         <div class="code-label">bench_seqwrite.sh<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
         <pre><code>#!/usr/bin/env bash
-# bench_seqwrite.sh — sequential write throughput comparison (ZNS vs Conventional)
-# usage: sudo bash bench_seqwrite.sh
-
 set -euo pipefail
 ZNS_DEV=/dev/nullb1
 CONV_DEV=/dev/nullb0
@@ -311,12 +309,10 @@ QD=4
 
 sep() { printf '%s\n' "$(printf '─%.0s' {1..52})"; }
 
-# ── 1) reset ZNS zones ───────────────────────────────
 printf '[1/4] Initializing ZNS zones...\n'
 sudo blkzone reset "${ZNS_DEV}"
 printf '      done — all zones EMPTY\n\n'
 
-# ── 2) ZNS sequential write ──────────────────────────
 printf '[2/4] ZNS sequential write (iodepth=%s)...\n' "${QD}"
 sudo fio \
   --name=zns_seqwrite \
@@ -336,7 +332,6 @@ ZNS_BW=$(grep -oP '(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s' /tmp/fio_zns_seq.log
 ZNS_LAT=$(grep -oP 'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?' /tmp/fio_zns_seq.log | head -1 || echo 'N/A')
 printf '      ZNS  BW=%s  cLat=%s us\n\n' "${ZNS_BW}" "${ZNS_LAT}"
 
-# ── 3) Conventional sequential write ─────────────────
 printf '[3/4] Conventional sequential write (iodepth=%s)...\n' "${QD}"
 sudo fio \
   --name=conv_seqwrite \
@@ -355,7 +350,6 @@ CONV_BW=$(grep -oP '(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s' /tmp/fio_conv_seq.l
 CONV_LAT=$(grep -oP 'clat \(usec\):.*?avg=\K[0-9]+(\.[0-9]+)?' /tmp/fio_conv_seq.log | head -1 || echo 'N/A')
 printf '      CONV BW=%s  cLat=%s us\n\n' "${CONV_BW}" "${CONV_LAT}"
 
-# ── 4) result summary ────────────────────────────────
 printf '[4/4] Result summary\n'
 sep
 printf '  %-16s  %-18s  %-14s\n' "Device" "Bandwidth" "Avg clat"
@@ -365,12 +359,12 @@ printf '  %-16s  %-18s  %-14s\n' "Conv (nullb0)" "${CONV_BW}" "${CONV_LAT} us"</
     </div>
 
     <div class="code-block">
-        <div class="code-label">bash — 벤치마크 파일 생성<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <div class="code-label">bash — Create benchmark file<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
         <pre><code>vi bench_seqwrite.sh</code></pre>
     </div>
 
     <div class="code-block">
-        <div class="code-label">bash — 파일 권한 부여 및 실행<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <div class="code-label">bash — Make executable and run<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
         <pre><code>chmod +x bench_seqwrite.sh &amp;&amp; sudo bash bench_seqwrite.sh</code></pre>
     </div>
 
@@ -400,21 +394,21 @@ printf '  %-16s  %-18s  %-14s\n' "Conv (nullb0)" "${CONV_BW}" "${CONV_LAT} us"</
 </section>
 
 <section id="s3">
-    <h2>Random Write 제약 확인</h2>
+    <h2>랜덤 쓰기 제약 확인</h2>
 
-    <p>ZNS 장치에 <code>zonemode=none</code>으로 Random Write를 시도하여 Write Pointer 위반 에러를 유발하고, Conventional 장치에서 동일 Random Write가 정상 동작함을 한 번에 비교합니다.</p>
+    <p>ZNS 장치에 <code>zonemode=none</code>으로 랜덤 쓰기를 시도하여 Write Pointer 위반 오류를 유발하고, Conventional 장치에서 동일 랜덤 쓰기가 정상 동작함을 한 번에 비교합니다.</p>
 
     <div class="callout callout-warn">
-        이 실험은 <strong>의도적으로 에러를 유발</strong>합니다. 에러 발생이 정상적인 결과입니다. 장치 손상은 없습니다.
+        이 실험은 <strong>의도적으로 오류를 유발</strong>합니다. 오류 발생이 정상적인 결과입니다. 장치 손상은 없습니다.
     </div>
 
     <div class="script-overview">
         <div class="script-overview-body">
             <strong>bench_randwrite.sh 동작 순서</strong>
             <ul class="script-steps">
-                <li>ZNS Zone 초기화 후 <code>zonemode=none randwrite</code> 시도 → 에러 캡처</li>
+                <li>ZNS Zone 초기화 후 <code>zonemode=none randwrite</code> 시도 → 오류 캡처</li>
                 <li><code>dmesg</code>에서 Write Pointer 위반 로그 확인</li>
-                <li>Conventional 장치에 동일 Random Write → 정상 동작 확인</li>
+                <li>Conventional 장치에 동일 랜덤 쓰기 → 정상 동작 확인</li>
                 <li>두 결과 나란히 출력</li>
             </ul>
         </div>
@@ -423,16 +417,12 @@ printf '  %-16s  %-18s  %-14s\n' "Conv (nullb0)" "${CONV_BW}" "${CONV_LAT} us"</
     <div class="code-block">
         <div class="code-label">bench_randwrite.sh<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
         <pre><code>#!/usr/bin/env bash
-# bench_randwrite.sh — ZNS random write constraint verification
-# usage: sudo bash bench_randwrite.sh
-
 set -euo pipefail
 ZNS_DEV=/dev/nullb1
 CONV_DEV=/dev/nullb0
 
 sep() { printf '%s\n' "$(printf '─%.0s' {1..52})"; }
 
-# ── 1) attempt ZNS random write (expects error) ───────
 printf '[1/3] Resetting ZNS zones, attempting random write...\n'
 sudo blkzone reset "${ZNS_DEV}"
 
@@ -454,12 +444,10 @@ ZNS_ERR=$(grep -oP 'io_u error[^:]*: \K.+' /tmp/fio_zns_rand.log \
           | head -1 || echo 'no error captured')
 printf '      ZNS result: %s\n\n' "${ZNS_ERR}"
 
-# ── 2) check kernel error log ────────────────────────
 printf '[2/3] Kernel error log...\n'
 sudo dmesg | tail -n 50 | grep -iE 'blk_update_request|nullb1' | grep -iE 'error|I/O' || true
 printf '\n'
 
-# ── 3) Conventional random write (expected OK) ───────
 printf '[3/3] Conventional random write...\n'
 sudo fio \
   --name=conv_randwrite \
@@ -476,7 +464,6 @@ sudo fio \
 CONV_BW=$(grep -oP '(?i)bw=\K[0-9]+(\.[0-9]+)?\s*(MiB|MB)/s' /tmp/fio_conv_rand.log | head -1 || echo 'N/A')
 printf '      CONV BW=%s\n\n' "${CONV_BW}"
 
-# ── result summary ────────────────────────────────────
 sep
 printf '  %-16s  %s\n' "Device" "Random Write Result"
 sep
@@ -485,12 +472,12 @@ printf '  %-16s  %s\n' "Conv (nullb0)" "OK:   BW=${CONV_BW}"</code></pre>
     </div>
 
     <div class="code-block">
-        <div class="code-label">bash — 벤치마크 파일 생성<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <div class="code-label">bash — Create benchmark file<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
         <pre><code>vi bench_randwrite.sh</code></pre>
     </div>
 
     <div class="code-block">
-        <div class="code-label">bash — 파일 권한 부여 및 실행<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <div class="code-label">bash — Make executable and run<button class="copy-btn" onclick="copyCode(this)">copy</button></div>
         <pre><code>chmod +x bench_randwrite.sh &amp;&amp; sudo bash bench_randwrite.sh</code></pre>
     </div>
 
@@ -516,7 +503,7 @@ zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, e
     </div>
 
     <div class="callout callout-warn">
-        <code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 err=5 에러를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.
+        <code>zonemode=none</code>으로 ZNS 쓰기 제약 우회를 시도하면 커널 블록 레이어가 Write Pointer 위반을 감지하여 err=5 오류를 반환합니다. 이전 실행 기록이 dmesg에 누적되어 여러 줄로 표시될 수 있습니다.
     </div>
 
 </section>
@@ -530,12 +517,12 @@ zns_randwrite: (groupid=0, jobs=1): err= 5 (file:io_u.c:2018, func=io_u error, e
             <div class="answer">이번 실습의 <code>null_blk</code>는 메모리 기반 block device라 실제 NAND program, erase, FTL GC 비용이 거의 반영되지 않습니다. 따라서 순차 쓰기에서는 Conventional과 ZNS 모두 block layer에 들어온 요청을 빠르게 처리해 처리량 차이가 작게 보입니다.</div>
         </div>
         <div class="question-item">
-            <div class="q">Q2. ZNS에서 Random Write를 허용하지 않는 이유는 무엇일까요?</div>
-            <div class="answer">NAND flash는 page 단위로 쓰지만, 이미 기록된 page를 덮어쓰려면 더 큰 erase block 단위의 erase가 필요합니다. Random Write를 장치가 직접 허용하면 내부에서 valid data 복사, erase, 재배치가 필요해 write amplification과 GC 비용이 커지므로 ZNS는 zone 안의 순차 쓰기만 허용합니다.</div>
+            <div class="q">Q2. ZNS에서 랜덤 쓰기를 허용하지 않는 이유는 무엇일까요?</div>
+            <div class="answer">NAND flash는 page 단위로 쓰지만, 이미 기록된 page를 덮어쓰려면 더 큰 erase block 단위의 erase가 필요합니다. 랜덤 쓰기를 장치가 직접 허용하면 내부에서 valid data 복사, erase, 재배치가 필요해 write amplification과 GC 비용이 커지므로 ZNS는 zone 안의 순차 쓰기만 허용합니다.</div>
         </div>
         <div class="question-item">
-            <div class="q">Q3. ZNS에서 기존 애플리케이션이 Random Write를 수행해야 한다면 어떤 방법으로 이를 처리해줄 수 있을까요?</div>
-            <div class="answer">Random Write가 필요한 기존 애플리케이션은 ZNS를 직접 다루기보다 중간 소프트웨어 계층의 도움을 받을 수 있습니다. 예를 들어 <code>dm-zoned</code>는 zoned device를 일반 block device처럼 보이게 하고, F2FS 같은 파일시스템은 로그 구조 배치와 cleaning으로 zone 순차 쓰기 제약을 흡수합니다.</div>
+            <div class="q">Q3. ZNS에서 기존 애플리케이션이 랜덤 쓰기를 수행해야 한다면 어떤 방법으로 이를 처리해줄 수 있을까요?</div>
+            <div class="answer">랜덤 쓰기가 필요한 기존 애플리케이션은 ZNS를 직접 다루기보다 중간 소프트웨어 계층의 도움을 받을 수 있습니다. 예를 들어 <code>dm-zoned</code>는 zoned device를 일반 block device처럼 보이게 하고, F2FS 같은 파일시스템은 로그 구조 배치와 cleaning으로 zone 순차 쓰기 제약을 흡수합니다.</div>
         </div>
     </div>
 </section>

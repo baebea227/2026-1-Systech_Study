@@ -2,7 +2,7 @@
 
 - 차세대 스토리지 기술인 ZNS(Zoned Namespace) SSD의 핵심 구조 및 동작 원리를 이해하고, 기존 NVMe SSD와의 성능, 상태 전이, 수명(WAF) 차이를 직접 비교 및 분석합니다.
 
-## 2.실습 환경
+## 2. 실습 환경
 
 - **운영체제 (OS):** Linux Kernel 5.18.0
 - **가상화 환경:** QEMU
@@ -18,7 +18,7 @@
 ### **Lab 1 — 쓰기 제약 및 기본 성능 비교**
 
 - **Step 1.1 [순차 쓰기 성능 비교]:** ZNS 및 Conventional SSD에 동일한 조건의 순차 쓰기 워크로드를 인가하여 처리량(BW, Bandwidth)과 평균 지연 시간(Latency)을 측정하고 비교합니다.
-- **Step 1.2 [랜덤 쓰기 예외 처리 확인]:** ZNS 스토리지에 `zonemode=none` 옵션을 주어 랜덤 쓰기를 시도합니다. 이 때 발생하는 Write Pointer 위반 에러(`EINVAL`) 로그를 확인하고, 정상적으로 랜덤 쓰기를 처리하는 Conventional SSD의 동작과 대조하여 분석합니다.
+- **Step 1.2 [랜덤 쓰기 예외 처리 확인]:** ZNS 스토리지에 `zonemode=none` 옵션을 주어 랜덤 쓰기를 시도합니다. 이때 발생하는 Write Pointer 위반 오류 로그를 확인하고, 정상적으로 랜덤 쓰기를 처리하는 Conventional SSD의 동작과 대조하여 분석합니다.
 
 ### **Lab 2 — Zone 관리 상태 전이**
 
@@ -26,15 +26,15 @@
 - **Step 2.2 [명시적 수명주기 제어]:** `zone_lifecycle.sh` 스크립트를 구동하여 특정 Zone(예: Zone 1)에 대해 `Explicit Open` ➔ `Write` ➔ `Close` ➔ `Finish` 단계를 순서대로 실행하며, 각 단계마다 Write Pointer가 어떻게 이동하고 고정되는지 관찰합니다.
 - **Step 2.3 [Zone 초기화]:** `zone_reset.sh` 스크립트를 사용하여 용량이 가득 찬 `FULL` 상태의 Zone을 Reset 합니다. Write Pointer가 초기화되고 Zone의 상태가 다시 `EMPTY`로 성공적으로 복구되는지 검증합니다.
 
-### **Lab 3 — WAF 비교 측정**
+### **Lab 3 — F2FS Host-visible WAF 측정과 한계**
 
-- **Step 3.1 [Steady-State 조성]:** `precondition.sh` 스크립트를 실행하여 드라이브 전체 용량을 채워 테스트를 위한 정상 상태(Steady-State)를 만듭니다. (Conventional SSD: 순차 Fill 진행 후 랜덤 워크로드 2회 인가 / ZNS SSD: 순차 Fill 진행)
-- **Step 3.2 [워크로드 인가]:** `workload.sh` 스크립트를 통해 각 드라이브에 60초간 특정 워크로드를 인가합니다. (Conventional SSD: 랜덤 70% + 순차 30% 혼합 워크로드 / ZNS SSD: 100% 순차 워크로드)
-- **Step 3.3 [WAF 수치 도출 및 분석]:** `calc_waf.sh` 스크립트를 활용해 워크로드 실행 전후의 `/sys/block/DEV/stat` 파일 내 `write_sectors` 변화량을 측정합니다. 호스트가 요청한 쓰기 양과 실제 디바이스에 기록된 쓰기 양을 기반으로 WAF를 계산하고, ZNS SS와 Conventional SSD의 결과를 비교 분석합니다.
+- **Step 3.1 [Conv/Zoned F2FS 환경 준비]:** `cleanup.sh`와 `setup.sh conv|zoned`를 사용하여 3 GB `null_blk` 장치를 Conventional SSD 또는 Zoned F2FS 실험용 장치로 순차 구성하고 F2FS를 포맷·마운트합니다.
+- **Step 3.2 [GC 압박 워크로드 인가]:** `bench.sh conv|zoned`를 실행하여 적응형 fill, fragment, 측정 write를 수행하고 `/sys/block/nullb*/stat`의 `write_sectors` 변화량과 `fio` logical write bytes를 함께 수집합니다.
+- **Step 3.3 [proxy WAF와 한계 분석]:** host-visible WAF를 `block-layer submitted write bytes / fio logical write bytes`로 계산하고, `null_blk` 환경에서는 실제 flash/NAND 기록량을 볼 수 없으므로 proxy WAF와 device-internal WAF를 구분해 해석합니다.
 
-### Case Study — ZNS 기술의 모바일 스토리지 확장 (Zoned UFS) 학습
+### **Lab 4 — ZUFS 논문 스터디**
 
-- **[스토리지 패러다임 변화 분석]:** 기존 스마트폰에 쓰이는 CUFS(Conventional UFS)가 겪는 수백 MB 규모의 L2P(Logical-to-Physical) 매핑 테이블 SRAM 오버헤드 문제를 분석하고, ZUFS가 순차 쓰기 제약을 통해 이를 수십 KB 수준으로 어떻게 혁신적으로 줄이는지 학습합니다.
+- **[스토리지 패러다임 변화 분석]:** 기존 스마트폰에 쓰이는 CUFS(Conventional UFS)가 겪는 L2P(Logical-to-Physical) 매핑 테이블 SRAM 오버헤드 문제를 분석하고, ZUFS가 순차 쓰기 제약을 통해 1 TB 기준 매핑 크기를 약 1 GB에서 약 8 KB 수준으로 줄이는 원리를 학습합니다.
 - **[크로스 레이어 최적화 토론]:** 모바일 환경의 3대 과제(제한된 SRAM, 쓰기 순서 보장, GC 오버헤드 완화)를 해결하기 위해 제안된 5계층(Android ➔ F2FS ➔ 블록 레이어 ➔ 드라이버 ➔ 장치 펌웨어) 협력 아키텍처를 분석합니다.
 - **[실무 성능 평가 및 리뷰]:** 실제 ZUFS가 탑재된 기기에서 단편화(Fragmentation)가 심화될 때 CUFS 대비 쓰기 처리량이 2배 이상 우수하게 유지되는 원리를 살펴보고, 수명 및 게임 로딩 속도 등 사용자 체감 성능에 미치는 영향을 종합적으로 평가합니다.
 

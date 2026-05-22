@@ -433,7 +433,7 @@
     <h2>5. 배경 지식과 실습 연결</h2>
 
     <p>
-        앞서 학습한 개념들이 아래 세 가지 실습에서 직접 확인됩니다.
+        앞서 학습한 개념들이 아래 Lab 1~4에서 직접 확인됩니다.
         각 실습 항목에 연결된 배경 지식 섹션을 참고하여 실험 결과를 해석하세요.
     </p>
 
@@ -450,7 +450,7 @@
         <div class="cmd-card reset">
             <div class="cmd-name">랜덤 쓰기 예외 처리</div>
             <div class="cmd-desc">
-                ZNS에서 랜덤 쓰기 시 Write Pointer 위반 → <strong>EINVAL 에러</strong> 발생 확인<br>
+                ZNS에서 랜덤 쓰기 시 Write Pointer 위반 오류 발생 확인<br>
                 Conventional SSD는 랜덤 쓰기 정상 처리<br><br>
                 <span style="font-size:0.78rem; color:#64748b;">→ 배경 지식 &gt; 2. Write Pointer 동작 원리</span>
             </div>
@@ -490,45 +490,68 @@
     </table>
 
     <!-- Lab 3 -->
-    <h3>Lab 3 — WAF 비교 측정</h3>
+    <h3>Lab 3 — F2FS Host-visible WAF 측정과 한계</h3>
     <table class="cmp-table">
-        <thead><tr><th>단계</th><th>Conventional SSD</th><th>ZNS SSD</th></tr></thead>
+        <thead><tr><th>단계</th><th>Conventional F2FS</th><th>Zoned F2FS</th></tr></thead>
         <tbody>
             <tr>
-                <td class="row-label">Steady-State 조성</td>
+                <td class="row-label">실험 환경 구성</td>
                 <td>
-                    <code>free_segments</code> 목표치까지 적응형 fill<br>
-                    fragment로 invalid block 생성
+                    3 GB conventional <code>null_blk</code> 위 F2FS 구성<br>
+                    <code>cleanup.sh</code> 후 <code>setup.sh conv</code> 실행
                 </td>
                 <td>
-                    2GB zoned <code>null_blk</code> 위 F2FS 구성<br>
-                    usable space를 고려해 fill 강도 조절
+                    3 GB zoned <code>null_blk</code> 위 F2FS 구성<br>
+                    usable space를 고려해 <code>setup.sh zoned</code> 실행
                 </td>
             </tr>
             <tr>
-                <td class="row-label">워크로드 인가</td>
+                <td class="row-label">GC 압박 측정</td>
                 <td>
-                    측정 파일을 1MB 순차로 pre-layout한 뒤<br>
-                    <code>randwrite</code>로 WAF 측정
+                    적응형 fill과 fragment로 invalid block 생성<br>
+                    <code>bench.sh conv</code>로 proxy WAF 측정
                 </td>
                 <td>
-                    동일한 pre-layout 후 <code>randwrite</code> 측정<br>
-                    ZNS에서도 WAF가 1에 가깝게 나오는지 확인
+                    Zoned F2FS 조건에서 측정 write 수행<br>
+                    <code>bench.sh zoned</code>로 host-visible write 측정
                 </td>
             </tr>
             <tr>
                 <td class="row-label">WAF 계산 및 분석</td>
                 <td colspan="2" style="text-align:left;">
-                    <code>write_sectors</code> 변화량 기반 WAF 계산<br>
-                    Host Write vs Device Write 비교 → WAF가 1에 가깝게 측정되는지 확인
+                    <code>write_sectors</code> 변화량과 <code>fio</code> logical write bytes 기반 proxy WAF 계산<br>
+                    host-visible write와 실제 SSD 내부 device-internal WAF를 구분해 해석
                 </td>
             </tr>
         </tbody>
     </table>
 
     <div class="callout callout-success">
-        WAF(Write Amplification Factor) = Device Write / Host Write. Lab 3에서는 GC 압박 상태에서 측정 워크로드를 인가하고, Conventional과 ZNS 모두에서 WAF가 1에 가깝게 측정되는지 확인합니다. 결과 해석은 실습 수행 후 관찰값을 기준으로 진행합니다.
+        WAF(Write Amplification Factor)의 기본 정의는 flash/NAND에 실제 기록된 양을 host가 요청한 write 양으로 나눈 값입니다. Lab 3의 <code>null_blk</code> 환경에는 실제 flash가 없으므로, Linux block layer에서 관찰 가능한 host-visible proxy WAF를 계산하고 device-internal WAF와 구분해 해석합니다.
     </div>
+
+    <!-- Lab 4 -->
+    <h3>Lab 4 — ZUFS 논문 스터디</h3>
+    <table class="cmp-table">
+        <thead><tr><th>학습 항목</th><th>수행 내용</th><th>연결 개념</th></tr></thead>
+        <tbody>
+            <tr>
+                <td class="row-label">모바일 확장</td>
+                <td>ZNS의 zone 기반 순차 쓰기 모델이 UFS 환경에서 ZUFS로 확장되는 배경을 정리</td>
+                <td>1. Zoned Storage Devices · 2. Write Pointer</td>
+            </tr>
+            <tr>
+                <td class="row-label">Cross-layer 설계</td>
+                <td>ZABM, write ordering, proactive GC가 Android/F2FS/UFS 계층에서 맡는 역할 분석</td>
+                <td>3. Zone 관리 명령 · 4. Zone Append와의 차이</td>
+            </tr>
+            <tr>
+                <td class="row-label">성능 결과 해석</td>
+                <td>단편화 조건에서 CUFS와 ZUFS의 쓰기 처리량, 지연 시간, 사용자 체감 성능 차이 토론</td>
+                <td>Lab 1 성능 비교 · Lab 3 WAF/GC 한계</td>
+            </tr>
+        </tbody>
+    </table>
 </section>
 
 <div class="nav-between">

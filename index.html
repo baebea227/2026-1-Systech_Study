@@ -52,6 +52,7 @@
         }
         .step-num.setup { background:var(--warn); }
         .step-num.lab   { background:var(--success); }
+        .step-num.study { background:#7c3aed; }
 
         .step-card {
             flex:1; background:white; border:1px solid var(--border);
@@ -99,7 +100,7 @@
 <header>
     <div class="container">
         <h1>ZNS SSD 성능 비교 실습</h1>
-        <p>배경지식 &rarr; 실습 준비 &rarr; Lab 1: 쓰기 제약 &rarr; Lab 2: Zone 상태 전이 &rarr; Lab 3: Host-visible WAF 측정</p>
+        <p>배경지식 &rarr; 실습 준비 &rarr; Lab 1: 쓰기 제약 &rarr; Lab 2: Zone 상태 전이 &rarr; Lab 3: Host-visible WAF 측정 &rarr; Lab 4: ZUFS 논문 스터디</p>
         <span class="badge">2026-1 시스템최신기술</span>
     </div>
 </header>
@@ -119,6 +120,8 @@
             ZNS SSD 역할의 <code>/dev/nullb1</code> 두 가상 장치를 구성합니다.
             <code>fio</code>·<code>blkzone</code> 명령으로 순차 쓰기 처리량 비교(Lab 1), Zone 상태 머신 조작(Lab 2),
             F2FS 환경에서 host-visible WAF를 간접 측정하고 그 한계를 분석하는 Lab 3을 단계별로 실험합니다.
+            마지막으로 ZNS의 zone 개념이 모바일 UFS 환경으로 확장된 ZUFS 논문을 읽으며,
+            실제 기기에서 필요한 cross-layer 설계와 성능 결과를 정리합니다.
         </p>
     </div>
 
@@ -134,7 +137,7 @@
                    Write Pointer 동작과 Zone 상태 전이(Zone 동작 원리),
                    Reset·Open·Close·Finish 명령 의미(Zone 관리 명령),
                    원자적 LBA 할당과 병렬 I/O 지원(Zone Append)을 학습하고,
-                   Lab 1~3 실습과의 연결 관계를 확인합니다.</p>
+                   Lab 1~4 실습과의 연결 관계를 확인합니다.</p>
                 <div class="tools">
                     <span class="tool-badge">개념 학습</span>
                     <span class="tool-badge">Write Pointer</span>
@@ -151,8 +154,8 @@
             <a href="setup.html" class="step-card">
                 <h3>실습 환경 준비: null_blk 기반 가상 장치 2대 구성</h3>
                 <p><code>null_blk</code> 커널 모듈을 소스에서 빌드·적재하고, <code>configfs</code>를 이용해
-                   Conventional SSD 역할의 <code>/dev/nullb0</code>(2 GB, 비-zone)과
-                   ZNS SSD 역할의 <code>/dev/nullb1</code>(2 GB, Zone 크기 64 MB, 32 Zone)을 생성합니다.
+                   Conventional SSD 역할의 <code>/dev/nullb0</code>(1 GB, 비-zone)과
+                   ZNS SSD 역할의 <code>/dev/nullb1</code>(1 GB, Zone 크기 64 MB, 16 Zone)을 생성합니다.
                    각 장치의 Zone 인식과 EMPTY 상태를 확인하고, <code>fio</code> 버전을 검증합니다.</p>
                 <div class="tools">
                     <span class="tool-badge warn">QEMU</span>
@@ -170,12 +173,12 @@
                 <h3>Lab 1: 쓰기 제약 및 기본 성능 비교</h3>
                 <p>Conventional SSD(<code>/dev/nullb0</code>)와 ZNS SSD(<code>/dev/nullb1</code>)에 동일한 순차 쓰기를 수행해
                    처리량(Bandwidth)과 지연 시간을 비교합니다.
-                   이어서 ZNS에 Random Write를 시도하여 Write Pointer 위반 에러(<code>-EINVAL</code>)를 직접 확인합니다.</p>
+                   이어서 ZNS에 랜덤 쓰기를 시도하여 Write Pointer 위반 오류를 직접 확인합니다.</p>
                 <div class="tools">
                     <span class="tool-badge ok">fio (libaio)</span>
                     <span class="tool-badge ok">zonemode=zbd</span>
-                    <span class="tool-badge ok">Sequential Write</span>
-                    <span class="tool-badge ok">Random Write 위반</span>
+                    <span class="tool-badge ok">순차 쓰기</span>
+                    <span class="tool-badge ok">랜덤 쓰기 위반</span>
                 </div>
             </a>
         </div>
@@ -208,6 +211,24 @@
                 <div class="tools">
                     <span class="tool-badge ok">WAF</span>
                     <span class="tool-badge ok">F2FS</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Step 6: Lab 4 -->
+        <div class="step-item">
+            <div class="step-num study">6</div>
+            <a href="lab4.html" class="step-card">
+                <h3>Lab 4: ZUFS 논문 스터디</h3>
+                <p>FAST '26 논문을 바탕으로 ZNS의 zone 개념이 모바일 UFS 저장장치에 어떻게 적용되는지 살펴봅니다.
+                   기존 UFS의 SRAM 제약과 단편화 문제를 정리하고, ZABM·write ordering·proactive GC가
+                   실제 스마트폰 환경에서 왜 필요한지 분석합니다.</p>
+                <div class="tools">
+                    <span class="tool-badge bonus">논문 스터디</span>
+                    <span class="tool-badge bonus">ZUFS</span>
+                    <span class="tool-badge bonus">Cross-layer</span>
+                    <span class="tool-badge bonus">ZABM</span>
+                    <span class="tool-badge bonus">Proactive GC</span>
                 </div>
             </a>
         </div>
